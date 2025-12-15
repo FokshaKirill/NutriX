@@ -1,0 +1,101 @@
+﻿@using Presentation.Models
+@model HomeViewModel
+
+<div class="container py-4">
+    <!-- Сегодня -->
+    <div class="card">
+        <div class="card-header">
+            <h3>
+                <i class="fas fa-utensils me-3"></i>
+                Сегодня — @Model.TodayDate.ToString("dddd, d MMMM")
+            </h3>
+        </div>
+        <div class="card-body">
+            @if (!Model.TodayMeals.Any())
+            {
+                <p class="text-muted text-center py-4">
+                    На сегодня меню ещё не запланировано.<br />
+                    <a asp-controller="MealPlan" asp-action="GenerateWeek" class="text-decoration-underline">Сгенерировать автоматически?</a>
+                </p>
+            }
+            else
+            {
+                foreach (var meal in Model.TodayMeals)
+                {
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <div>
+                            <h5 class="mb-1" style="color: var(--primary);">@meal.MealType</h5>
+                            <div class="fw-medium mb-1">@meal.RecipeName <span class="text-muted">(@meal.Servings порц.)</span></div>
+                            <small class="text-muted">
+                                @meal.Calories ккал • Б: @meal.Protein г • Ж: @meal.Fat г • У: @meal.Carbs г
+                            </small>
+                        </div>
+                        <i class="fas fa-bowl-food text-success fs-3 opacity-50"></i>
+                    </div>
+                }
+
+                <div class="bg-light text-center py-4 rounded-4 mt-4">
+                    <div class="fs-4 fw-bold" style="color: var(--primary);">
+                        @Model.TodayTotalCalories ккал
+                    </div>
+                    <div class="text-muted mt-2">
+                        Белки: @Model.TodayTotalProtein г • Жиры: @Model.TodayTotalFat г • Углеводы: @Model.TodayTotalCarbs г
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Неделя -->
+    <div class="card">
+        <div class="card-header">
+            <h3>
+                <i class="fas fa-calendar-week me-3"></i>
+                Меню на неделю
+            </h3>
+            <small>@Model.WeekStart.ToString("d MMM") — @Model.WeekEnd.ToString("d MMM yyyy")</small>
+        </div>
+        <div class="card-body">
+            <div class="row g-4">
+                @foreach (var day in Model.WeekDays)
+                {
+                    var isToday = day.Date.Date == DateTime.Today;
+                    <div class="col-md-4 col-sm-6">
+                        <div class="day-card @(isToday ? "border-success" : "")">
+                            <h6>
+                                @day.Date.ToString("dddd")<br />
+                                <span class="fs-4">@day.Date.Day</span>
+                            </h6>
+
+                            @if (!day.Meals.Any())
+                            {
+                                <p class="text-muted small mb-0">— нет блюд —</p>
+                            }
+                            else
+                            {
+                                foreach (var meal in day.Meals)
+                                {
+                                    <div class="small mb-2">
+                                        <strong>@meal.MealType:</strong> @meal.RecipeName
+                                    </div>
+                                }
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <div class="text-center mt-5">
+                <a asp-controller="MealPlan" asp-action="Week" class="btn btn-success me-3">
+                    Подробно по неделе
+                </a>
+                <a asp-controller="MealPlan" asp-action="GenerateWeek" class="btn btn-outline-primary me-3">
+                    Сгенерировать меню
+                </a>
+                <a asp-controller="MealPlan" asp-action="ShoppingList" class="btn btn-outline-success">
+                    Список покупок
+                </a>
+            </div>
+        </div>
+    </div>
+</div>

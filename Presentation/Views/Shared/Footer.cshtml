@@ -1,0 +1,20 @@
+﻿<footer class="footer bg-light py-5 mt-auto">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-6">
+                <h5 class="fw-bold text-success"><i class="fas fa-leaf"></i> VNutri</h5>
+                <p class="text-muted">Твой личный помощник в планировании здорового питания</p>
+            </div>
+            <div class="col-md-6 text-md-end">
+                <a asp-controller="Home" asp-action="Index" class="text-decoration-none text-dark me-3">Главная</a>
+                <a asp-controller="Home" asp-action="Help" class="text-decoration-none text-dark me-3">Помощь</a>
+                <a asp-controller="Home" asp-action="Contact" class="text-decoration-none text-dark me-3">Контакты</a>
+                <a asp-controller="Home" asp-action="Privacy" class="text-decoration-none text-dark">Конфиденциальность</a>
+            </div>
+        </div>
+        <hr class="my-4">
+        <div class="text-center text-muted small">
+            © @DateTime.Now.Year VNutri — Здоровое питание под контролем
+        </div>
+    </div>
+</footer>

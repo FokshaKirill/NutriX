@@ -1,0 +1,37 @@
+﻿@using Microsoft.AspNetCore.Mvc.TagHelpers
+<section class="section contact p-4" id="contact">
+    <div class="contact-content">
+        <div class="contact-section mt-4 mb-4">
+            <div class="m-0">
+                <h3>Остались какие-то вопросы?</h3>
+                <p>Дайте нам знать, что мы можем улучшить</p>
+            </div>
+            <form class="contact-form">
+                <div class="justify-content-between d-flex gap-3 w-100 flex-row mt-4 mb-0">
+                    <input type="text" placeholder="Имя" required="">
+                    <input type="email" placeholder="Email" required="">
+                </div>
+                <textarea placeholder="Сообщение" rows="4" required="" style="min-height: 108px"></textarea>
+                <button type="submit" class="button">Отправить</button>
+            </form>
+        </div>
+        <div class="contact-section mt-4 mb-0">
+            <h3>Контакты</h3>
+            <p>📞 +7 (495) 123-45-67</p>
+            <p>📧 info@blackgold.ru</p>
+            <div class="social-links">
+                <a href="#"><img src="/images/social network/inst.png" alt="inst" id="inst"/></a>
+                <a href="#"><img src="/images/social network/tg.png" alt="inst" id="tg"/></a>
+                <a href="#"><img src="/images/social network/tt.png" alt="inst" id="tt"/></a>
+                <a href="#"><img src="/images/social network/gmail.png" alt="inst" id="gmail"/></a>
+                <a href="#"><img src="/images/social network/fb.png" alt="inst" id="fb"/></a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+    .contact, body {
+        background: black;
+    }
+</style>

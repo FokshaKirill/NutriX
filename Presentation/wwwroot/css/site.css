@@ -1,0 +1,157 @@
+﻿/* Основные цвета */
+:root {
+    --primary: #86bf92;     /* Нежный мятный зелёный */
+    --primary-light: #f0f7f2; /* Очень светлый фон для акцентов */
+    --text: #333333;
+    --text-muted: #666666;
+    --border: #e8ecef;
+    --bg: #ffffff;
+}
+
+/* Общие стили */
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: #f9fbfa;
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.main-content {
+    flex: 1;
+    padding-top: 2rem;
+    padding-bottom: 4rem;
+}
+
+/* Карточки — плоские, с мягкими скруглениями и лёгким фоном */
+.card {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 1.2rem;
+    overflow: hidden;
+    margin-bottom: 2rem;
+}
+
+/* Заголовки карточек — без градиентов, просто цветной фон */
+.card-header {
+    background: var(--primary-light);
+    border-bottom: 1px solid var(--border);
+    padding: 1.2rem 1.5rem;
+}
+
+.card-header h3 {
+    margin: 0;
+    font-weight: 600;
+    color: var(--primary);
+    font-size: 1.5rem;
+}
+
+.card-header small {
+    color: var(--text-muted);
+}
+
+/* Тело карточки — больше воздуха */
+.card-body {
+    padding: 1.8rem 1.5rem;
+}
+
+/* День в недельном меню */
+.day-card {
+    background: var(--primary-light);
+    border-radius: 1rem;
+    padding: 1.2rem;
+    min-height: 160px;
+    border: none;
+    text-align: center;
+}
+
+.day-card h6 {
+    margin-bottom: 1rem;
+    color: var(--primary);
+    font-weight: 600;
+}
+
+.day-card .fs-4 {
+    font-weight: 700;
+    color: var(--primary);
+}
+
+/* Сегодняшний день — лёгкий акцент */
+.border-success {
+    border: 2px solid var(--primary) !important;
+}
+
+/* Блюда — без нижних линий, просто отступы */
+.border-bottom {
+    border-bottom: none !important;
+    padding-bottom: 1.2rem;
+    margin-bottom: 1.2rem;
+}
+
+/* Итоги за день — мягкий блок */
+.bg-light {
+    background: var(--primary-light) !important;
+    border-radius: 1rem;
+    padding: 1.2rem;
+}
+
+/* Кнопки — монотонные, округлённые, нежные */
+.btn {
+    border-radius: 2rem;
+    padding: 0.65rem 1.5rem;
+    font-weight: 500;
+    border: none;
+    transition: all 0.2s ease;
+}
+
+.btn-success {
+    background: var(--primary);
+    color: white;
+}
+
+.btn-success:hover {
+    background: #74b080;
+    transform: translateY(-1px);
+}
+
+.btn-outline-primary {
+    border: 1.5px solid var(--primary);
+    color: var(--primary);
+    background: transparent;
+}
+
+.btn-outline-primary:hover {
+    background: var(--primary-light);
+    color: var(--primary);
+}
+
+.btn-outline-success {
+    border: 1.5px solid var(--primary);
+    color: var(--primary);
+    background: transparent;
+}
+
+.btn-outline-success:hover {
+    background: var(--primary);
+    color: white;
+}
+
+/* Убираем лишние линии */
+hr {
+    display: none;
+}
+
+/* Шапка и футер — чистые */
+.header {
+    background: white;
+    border-bottom: 1px solid var(--border);
+}
+
+.footer {
+    background: white;
+    border-top: 1px solid var(--border);
+    margin-top: auto;
+    padding: 2rem 0;
+    color: var(--text-muted);
+}
