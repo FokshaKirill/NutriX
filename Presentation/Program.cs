@@ -14,7 +14,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Подключаем DbContext из Infrastructure
 builder.Services.AddDbContext<DatabaseContext>(options =>
-    options.UseNpgsql(
+    //options.UseNpgsql(
+    options.UseSqlServer(
         builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddAutoMapper(typeof(MappingProfile));
