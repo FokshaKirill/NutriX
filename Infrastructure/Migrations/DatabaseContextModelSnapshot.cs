@@ -24,36 +24,26 @@ namespace Infrastructure.Migrations
 
             modelBuilder.Entity("Domain.Entities.MealPlan", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Name")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<DateTime>("StartDate")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<int?>("UserId")
-                        .HasColumnType("integer");
-
                     b.HasKey("Id");
-
-                    b.HasIndex("UserId");
 
                     b.ToTable("MealPlans");
                 });
 
             modelBuilder.Entity("Domain.Entities.MealType", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -62,35 +52,28 @@ namespace Infrastructure.Migrations
                     b.Property<int>("Order")
                         .HasColumnType("integer");
 
-                    b.Property<int?>("UserId")
-                        .HasColumnType("integer");
-
                     b.HasKey("Id");
-
-                    b.HasIndex("UserId");
 
                     b.ToTable("MealTypes");
                 });
 
             modelBuilder.Entity("Domain.Entities.PlannedMeal", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                        .HasColumnType("uuid");
 
                     b.Property<int>("DayOffset")
                         .HasColumnType("integer");
 
-                    b.Property<int>("MealPlanId")
-                        .HasColumnType("integer");
+                    b.Property<Guid>("MealPlanId")
+                        .HasColumnType("uuid");
 
-                    b.Property<int>("MealTypeId")
-                        .HasColumnType("integer");
+                    b.Property<Guid>("MealTypeId")
+                        .HasColumnType("uuid");
 
-                    b.Property<int?>("RecipeId")
-                        .HasColumnType("integer");
+                    b.Property<Guid?>("RecipeId")
+                        .HasColumnType("uuid");
 
                     b.Property<int>("Servings")
                         .HasColumnType("integer");
@@ -109,11 +92,9 @@ namespace Infrastructure.Migrations
 
             modelBuilder.Entity("Domain.Entities.Product", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                        .HasColumnType("uuid");
 
                     b.Property<decimal?>("CaloriesPer100")
                         .HasPrecision(8, 2)
@@ -127,12 +108,15 @@ namespace Infrastructure.Migrations
                         .HasPrecision(6, 2)
                         .HasColumnType("numeric(6,2)");
 
+                    b.Property<string>("ImageUrl")
+                        .HasColumnType("text");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<int?>("ParentId")
-                        .HasColumnType("integer");
+                    b.Property<Guid?>("ParentId")
+                        .HasColumnType("uuid");
 
                     b.Property<decimal>("PricePerUnit")
                         .HasPrecision(10, 2)
@@ -146,25 +130,18 @@ namespace Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<int?>("UserId")
-                        .HasColumnType("integer");
-
                     b.HasKey("Id");
 
                     b.HasIndex("ParentId");
-
-                    b.HasIndex("UserId");
 
                     b.ToTable("Products");
                 });
 
             modelBuilder.Entity("Domain.Entities.Recipe", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                        .HasColumnType("uuid");
 
                     b.Property<int>("DefaultServings")
                         .HasColumnType("integer");
@@ -172,27 +149,26 @@ namespace Infrastructure.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("text");
 
+                    b.Property<string>("ImageUrl")
+                        .HasColumnType("text");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<int?>("UserId")
-                        .HasColumnType("integer");
+                    b.Property<decimal>("TotalCost")
+                        .HasColumnType("numeric");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("UserId");
 
                     b.ToTable("Recipes");
                 });
 
             modelBuilder.Entity("Domain.Entities.RecipeIngredient", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                        .HasColumnType("uuid");
 
                     b.Property<decimal>("Amount")
                         .HasPrecision(10, 3)
@@ -201,11 +177,11 @@ namespace Infrastructure.Migrations
                     b.Property<string>("Comment")
                         .HasColumnType("text");
 
-                    b.Property<int>("ProductId")
-                        .HasColumnType("integer");
+                    b.Property<Guid>("ProductId")
+                        .HasColumnType("uuid");
 
-                    b.Property<int>("RecipeId")
-                        .HasColumnType("integer");
+                    b.Property<Guid>("RecipeId")
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Unit")
                         .IsRequired()
@@ -222,11 +198,9 @@ namespace Infrastructure.Migrations
 
             modelBuilder.Entity("Domain.Entities.RecipeStep", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Description")
                         .IsRequired()
@@ -238,8 +212,8 @@ namespace Infrastructure.Migrations
                     b.Property<int>("Order")
                         .HasColumnType("integer");
 
-                    b.Property<int>("RecipeId")
-                        .HasColumnType("integer");
+                    b.Property<Guid>("RecipeId")
+                        .HasColumnType("uuid");
 
                     b.Property<int?>("TimerSeconds")
                         .HasColumnType("integer");
@@ -250,37 +224,6 @@ namespace Infrastructure.Migrations
                         .IsUnique();
 
                     b.ToTable("RecipeSteps");
-                });
-
-            modelBuilder.Entity("Domain.Entities.User", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Users");
-                });
-
-            modelBuilder.Entity("Domain.Entities.MealPlan", b =>
-                {
-                    b.HasOne("Domain.Entities.User", "User")
-                        .WithMany("MealPlans")
-                        .HasForeignKey("UserId");
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("Domain.Entities.MealType", b =>
-                {
-                    b.HasOne("Domain.Entities.User", "User")
-                        .WithMany("MealTypes")
-                        .HasForeignKey("UserId");
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Domain.Entities.PlannedMeal", b =>
@@ -315,23 +258,7 @@ namespace Infrastructure.Migrations
                         .HasForeignKey("ParentId")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("Domain.Entities.User", "User")
-                        .WithMany("Products")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade);
-
                     b.Navigation("Parent");
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("Domain.Entities.Recipe", b =>
-                {
-                    b.HasOne("Domain.Entities.User", "User")
-                        .WithMany("Recipes")
-                        .HasForeignKey("UserId");
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Domain.Entities.RecipeIngredient", b =>
@@ -388,17 +315,6 @@ namespace Infrastructure.Migrations
                     b.Navigation("PlannedMeals");
 
                     b.Navigation("Steps");
-                });
-
-            modelBuilder.Entity("Domain.Entities.User", b =>
-                {
-                    b.Navigation("MealPlans");
-
-                    b.Navigation("MealTypes");
-
-                    b.Navigation("Products");
-
-                    b.Navigation("Recipes");
                 });
 #pragma warning restore 612, 618
         }

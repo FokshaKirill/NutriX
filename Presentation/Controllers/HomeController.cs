@@ -1,7 +1,7 @@
+using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using Presentation.Models;
 using Services.Interfaces;
-using AutoMapper;
 
 namespace Presentation.Controllers
 {
@@ -23,18 +23,36 @@ namespace Presentation.Controllers
 
         public async Task<IActionResult> Index()
         {
-            int userId = 1;
-
             var today = DateTime.Today;
-            var monday = StartOfWeek(today, DayOfWeek.Monday);
+            var monday = today.AddDays(-(int)today.DayOfWeek + (int)DayOfWeek.Monday);
 
-            var todayMeals = await _mealService.GetMealsByDateAsync(today, userId);
-            var todayCalories = await _mealService.GetTotalCaloriesAsync(today, userId);
-            var todayProtein = await _mealService.GetTotalProteinAsync(today, userId);
-            var todayFat = await _mealService.GetTotalFatAsync(today, userId);
-            var todayCarbs = await _mealService.GetTotalCarbsAsync(today, userId);
+            var todayMeals = await _mealService.GetMealsByDateAsync(today);
 
-            var weekPlans = await _mealPlanService.GetUserPlansAsync(userId);
+            var todayCalories = await _mealService.GetTotalCaloriesAsync(today);
+            var todayProtein = await _mealService.GetTotalProteinAsync(today);
+            var todayFat = await _mealService.GetTotalFatAsync(today);
+            var todayCarbs = await _mealService.GetTotalCarbsAsync(today);
+
+            var currentPlan = await _mealPlanService.GetCurrentWeekPlanAsync();
+
+            var weekDays = new List<DayPlanViewModel>();
+            if (currentPlan != null)
+            {
+                for (int i = 0; i < 7; i++)
+                {
+                    var date = monday.AddDays(i);
+                    var dayMeals = currentPlan.Meals
+                        .Where(m => m.DayOffset == i)
+                        .OrderBy(m => m.MealType.Order)
+                        .ToList();
+
+                    weekDays.Add(new DayPlanViewModel
+                    {
+                        Date = date,
+                        Meals = _mapper.Map<List<PlannedMealViewModel>>(dayMeals)
+                    });
+                }
+            }
 
             var model = new HomeViewModel
             {
@@ -46,16 +64,10 @@ namespace Presentation.Controllers
                 TodayTotalCarbs = todayCarbs,
                 WeekStart = monday,
                 WeekEnd = monday.AddDays(6),
-                WeekDays = _mapper.Map<List<DayViewModel>>(weekPlans)
+                WeekDays = weekDays
             };
 
             return View(model);
-        }
-
-        private static DateTime StartOfWeek(DateTime date, DayOfWeek startOfWeek)
-        {
-            int diff = (7 + (date.DayOfWeek - startOfWeek)) % 7;
-            return date.AddDays(-diff).Date;
         }
     }
 }

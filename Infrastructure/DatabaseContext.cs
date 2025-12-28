@@ -16,10 +16,11 @@ namespace Infrastructure
         public DbSet<RecipeStep> RecipeSteps => Set<RecipeStep>();
         public DbSet<MealPlan> MealPlans => Set<MealPlan>();
         public DbSet<PlannedMeal> PlannedMeals => Set<PlannedMeal>();
-        public DbSet<User> Users => Set<User>();
 
+        // Infrastructure/DatabaseContext.cs
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            // Убираем все User-связи
             foreach (var entityType in modelBuilder.Model.GetEntityTypes())
             {
                 foreach (var property in entityType.GetProperties())
@@ -28,53 +29,26 @@ namespace Infrastructure
                     {
                         property.SetValueConverter(
                             new ValueConverter<DateTime, DateTime>(
-                                v => v.ToUniversalTime(),  
-                                v => DateTime.SpecifyKind(v, DateTimeKind.Utc) 
+                                v => v.ToUniversalTime(),
+                                v => DateTime.SpecifyKind(v, DateTimeKind.Utc)
                             ));
                     }
                 }
             }
-            // Product hierarchy
+
+            // Product hierarchy (остаётся)
             modelBuilder.Entity<Product>()
                 .HasOne(p => p.Parent)
                 .WithMany(p => p.Children)
                 .HasForeignKey(p => p.ParentId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            // Product - User
-            modelBuilder.Entity<Product>()
-                .HasOne(p => p.User)
-                .WithMany(u => u.Products)
-                .HasForeignKey(p => p.UserId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            // MealType - User
-            modelBuilder.Entity<MealType>()
-                .HasOne(mt => mt.User)
-                .WithMany(u => u.MealTypes)
-                .HasForeignKey(mt => mt.UserId);
-
-            // MealPlan - User
-            modelBuilder.Entity<MealPlan>()
-                .HasOne(mp => mp.User)
-                .WithMany(u => u.MealPlans)
-                .HasForeignKey(mp => mp.UserId);
-
-            // Recipe - User
-            modelBuilder.Entity<Recipe>()
-                .HasOne(r => r.User)
-                .WithMany(u => u.Recipes)
-                .HasForeignKey(r => r.UserId);
-
-            // Ingredient
+            // Остальные настройки
             modelBuilder.Entity<RecipeIngredient>()
                 .HasOne(ri => ri.Product)
                 .WithMany(p => p.UsedInRecipeIngredients)
                 .HasForeignKey(ri => ri.ProductId)
                 .OnDelete(DeleteBehavior.Restrict);
-
-            // Indexes
-            modelBuilder.Entity<Product>().HasIndex(p => p.ParentId);
 
             modelBuilder.Entity<PlannedMeal>()
                 .HasIndex(pm => new { pm.MealPlanId, pm.DayOffset, pm.MealTypeId })
@@ -84,7 +58,7 @@ namespace Infrastructure
                 .HasIndex(rs => new { rs.RecipeId, rs.Order })
                 .IsUnique();
 
-            // Decimal config
+            // Decimal precision
             modelBuilder.Entity<Product>(entity =>
             {
                 entity.Property(p => p.PricePerUnit).HasPrecision(10, 2);

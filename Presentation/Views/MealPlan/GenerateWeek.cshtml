@@ -1,0 +1,58 @@
+﻿@model Presentation.Models.GenerateWeekViewModel
+
+<div class="container py-5">
+    <div class="card" style="border-radius: 1.8rem;">
+        <div class="card-header text-center py-5" style="background: var(--primary-light);">
+            <h2 style="color: var(--primary);">Сгенерировать меню на неделю</h2>
+            <p class="fs-4 text-muted mt-3">Мы подберём вкусные и сбалансированные блюда под ваши цели</p>
+        </div>
+
+        <div class="card-body p-5">
+            <form asp-action="GenerateWeek" method="post">
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <label class="form-label fw-medium">Калорий в день</label>
+                        <input asp-for="DailyCalories" type="number" class="form-control form-control-lg" min="1000" max="5000" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-medium">Цель</label>
+                        <select asp-for="Goal" class="form-select form-select-lg">
+                            <option value="maintain">Поддержание веса</option>
+                            <option value="lose">Похудение</option>
+                            <option value="gain">Набор массы</option>
+                        </select>
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label fw-medium">Предпочтения</label>
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <div class="form-check form-switch">
+                                    <input asp-for="Vegetarian" class="form-check-input" type="checkbox" />
+                                    <label class="form-check-label">Вегетарианское</label>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-check form-switch">
+                                    <input asp-for="Vegan" class="form-check-input" type="checkbox" />
+                                    <label class="form-check-label">Веганское</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label fw-medium">Исключить продукты (через запятую)</label>
+                        <input asp-for="ExcludedProducts" class="form-control form-control-lg" placeholder="молоко, орехи, рыба" />
+                    </div>
+                </div>
+
+                <div class="text-center mt-5">
+                    <button type="submit" class="btn btn-success btn-lg px-5">
+                        <i class="fas fa-magic me-2"></i> Сгенерировать меню
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

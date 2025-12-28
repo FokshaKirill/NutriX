@@ -3,17 +3,19 @@
     // Models/Recipe.cs
     public class Recipe
     {
-        public int Id { get; set; }
+        public Guid Id { get; set; }
         public string Name { get; set; } = null!;
         public string? Description { get; set; }
         public int DefaultServings { get; set; } = 1;
+        public decimal TotalCost { get; set; } = 0;
+        public string? ImageUrl { get; set; }
 
-        public int? UserId { get; set; }
-        public User? User { get; set; }
+        // public Guid? UserId { get; set; }
+        // public User? User { get; set; }
 
         public ICollection<RecipeIngredient> Ingredients { get; set; } = [];
         public ICollection<RecipeStep> Steps { get; set; } = [];
-        public ICollection<PlannedMeal> PlannedMeals { get; set; } = [];// Тоталы на DefaultServings (полный рецепт)
+        public ICollection<PlannedMeal> PlannedMeals { get; set; } = [];
         public decimal TotalCalories => Ingredients.Sum(i => i.Calories ?? 0);
         public decimal TotalProtein => Ingredients.Sum(i => i.Protein ?? 0);
         public decimal TotalFat => Ingredients.Sum(i => i.Fat ?? 0);

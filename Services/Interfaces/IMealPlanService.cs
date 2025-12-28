@@ -1,18 +1,42 @@
 ﻿using Domain.Entities;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Services.Interfaces
 {
     public interface IMealPlanService
     {
-        Task<MealPlan?> GetByIdAsync(int id);
-        Task<List<MealPlan>> GetUserPlansAsync(int userId);
-        Task<MealPlan> CreateAsync(MealPlan plan);
-        Task UpdateAsync(MealPlan plan);
-        Task DeleteAsync(int id);
+        /// <summary>
+        /// Получить текущий план на эту неделю (по StartDate = понедельник текущей недели)
+        /// </summary>
+        Task<MealPlan?> GetCurrentWeekPlanAsync();
 
-        Task<List<Product>> GenerateShoppingListAsync(int mealPlanId);
+        /// <summary>
+        /// Получить план по ID
+        /// </summary>
+        Task<MealPlan?> GetByIdAsync(Guid id);
+
+        /// <summary>
+        /// Получить все планы (для админки или истории)
+        /// </summary>
+        Task<List<MealPlan>> GetAllPlansAsync();
+
+        /// <summary>
+        /// Создать новый план
+        /// </summary>
+        Task<MealPlan> CreateAsync(MealPlan plan);
+
+        /// <summary>
+        /// Обновить существующий план
+        /// </summary>
+        Task UpdateAsync(MealPlan plan);
+
+        /// <summary>
+        /// Удалить план
+        /// </summary>
+        Task DeleteAsync(Guid id);
+
+        /// <summary>
+        /// Сгенерировать список покупок по плану (с суммированием количества)
+        /// </summary>
+        Task<List<RecipeIngredient>> GenerateShoppingListAsync(Guid mealPlanId);
     }
 }

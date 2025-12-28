@@ -1,8 +1,7 @@
-﻿using Infrastructure.Interfaces;
+﻿using Domain.Entities;
+using Infrastructure.Interfaces;
+using Microsoft.EntityFrameworkCore;
 using Services.Interfaces;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Services.Services
 {
@@ -15,10 +14,16 @@ namespace Services.Services
             _mealTypes = mealTypes;
         }
 
-        public Task<List<MealType>> GetUserMealTypesAsync(int userId)
-            => _mealTypes.Query()
-                .Where(mt => mt.UserId == userId)
+        public async Task<List<MealType>> GetAllMealTypesAsync()
+        {
+            return await _mealTypes.Query()
                 .OrderBy(mt => mt.Order)
                 .ToListAsync();
+        }
+
+        public async Task<MealType?> GetByIdAsync(Guid id)
+        {
+            return await _mealTypes.Query().FirstOrDefaultAsync(mt => mt.Id == id);
+        }
     }
 }

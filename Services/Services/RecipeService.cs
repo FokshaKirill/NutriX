@@ -1,8 +1,7 @@
-﻿using Infrastructure.Interfaces;
+﻿using Domain.Entities;
+using Infrastructure.Interfaces;
+using Microsoft.EntityFrameworkCore;
 using Services.Interfaces;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Services.Services
 {
@@ -15,19 +14,30 @@ namespace Services.Services
             _recipes = recipes;
         }
 
-        public Task<Recipe?> GetByIdAsync(int id)
-            => _recipes.Query()
-               .Include(r => r.Ingredients)
-               .Include(r => r.Steps)
-               .FirstOrDefaultAsync(r => r.Id == id);
-
-        public Task<List<Recipe>> GetUserRecipesAsync(int userId)
-            => _recipes.Query()
-                .Where(r => r.UserId == userId)
+        public async Task<List<Recipe>> GetAllRecipesAsync()
+        {
+            return await _recipes.Query()
+                .Include(r => r.Ingredients)
+                .ThenInclude(i => i.Product)
+                .Include(r => r.Steps)
+                .OrderBy(r => r.Name)
                 .ToListAsync();
+        }
+
+        public async Task<Recipe?> GetByIdAsync(Guid id)
+        {
+            return await _recipes.Query()
+                .Include(r => r.Ingredients)
+                .ThenInclude(i => i.Product)
+                .Include(r => r.Steps)
+                .FirstOrDefaultAsync(r => r.Id == id);
+        }
 
         public async Task<Recipe> CreateAsync(Recipe recipe)
         {
+            if (recipe.Id == Guid.Empty)
+                recipe.Id = Guid.NewGuid();
+
             await _recipes.AddAsync(recipe);
             await _recipes.SaveChangesAsync();
             return recipe;
@@ -39,14 +49,14 @@ namespace Services.Services
             await _recipes.SaveChangesAsync();
         }
 
-        public async Task DeleteAsync(int id)
+        public async Task DeleteAsync(Guid id)
         {
             var recipe = await _recipes.GetByIdAsync(id);
-            if (recipe == null) return;
-
-            await _recipes.DeleteAsync(recipe);
-            await _recipes.SaveChangesAsync();
+            if (recipe != null)
+            {
+                await _recipes.DeleteAsync(recipe);
+                await _recipes.SaveChangesAsync();
+            }
         }
     }
-
 }

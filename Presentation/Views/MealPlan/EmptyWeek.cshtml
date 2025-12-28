@@ -1,0 +1,18 @@
+﻿<div class="container py-5">
+    <div class="card text-center" style="border-radius: 1.8rem; padding: 5rem;">
+        <i class="fas fa-calendar-times fs-1 text-muted mb-4"></i>
+        <h2 class="mb-4" style="color: var(--primary);">Меню на эту неделю ещё не создано</h2>
+        <p class="fs-4 text-muted mb-5">
+            Давайте составим вкусный и полезный план питания!
+        </p>
+
+        <div>
+            <a asp-action="GenerateWeek" class="btn btn-success btn-lg me-4">
+                <i class="fas fa-magic me-2"></i> Сгенерировать автоматически
+            </a>
+            <a asp-controller="Recipe" asp-action="Index" class="btn btn-outline-primary btn-lg">
+                Выбрать рецепты вручную
+            </a>
+        </div>
+    </div>
+</div>

@@ -14,7 +14,7 @@ namespace Infrastructure.Repositories
             _db = db;
         }
 
-        public async Task<T?> GetByIdAsync(int id)
+        public async Task<T?> GetByIdAsync(Guid id)
             => await _db.Set<T>().FindAsync(id);
 
         public IQueryable<T> Query()

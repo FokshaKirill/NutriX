@@ -1,11 +1,7 @@
 ﻿using Domain.Entities;
-using Infrastructure;
 using Infrastructure.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Services.Interfaces;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Services.Services
 {
@@ -13,31 +9,54 @@ namespace Services.Services
     {
         private readonly IRepository<MealPlan> _plans;
         private readonly IRepository<PlannedMeal> _plannedMeals;
-        private readonly IRepository<RecipeIngredient> _ingredients;
 
         public MealPlanService(
             IRepository<MealPlan> plans,
-            IRepository<PlannedMeal> plannedMeals,
-            IRepository<RecipeIngredient> ingredients)
+            IRepository<PlannedMeal> plannedMeals)
         {
             _plans = plans;
             _plannedMeals = plannedMeals;
-            _ingredients = ingredients;
         }
 
-        public Task<MealPlan?> GetByIdAsync(int id)
-            => _plans.Query()
-                .Include(p => p.Meals)
-                .ThenInclude(pm => pm.Recipe)
-                .FirstOrDefaultAsync(p => p.Id == id);
+        public async Task<MealPlan?> GetCurrentWeekPlanAsync()
+        {
+            var today = DateTime.Today;
+            var monday = today.AddDays(-(int)today.DayOfWeek + (int)DayOfWeek.Monday);
 
-        public Task<List<MealPlan>> GetUserPlansAsync(int userId)
-            => _plans.Query()
-                     .Where(p => p.UserId == userId)
-                     .ToListAsync();
+            return await _plans.Query()
+                .Include(p => p.Meals)
+                    .ThenInclude(pm => pm.Recipe)
+                        .ThenInclude(r => r.Ingredients)
+                            .ThenInclude(i => i.Product)
+                .Include(p => p.Meals)
+                    .ThenInclude(pm => pm.MealType)
+                .FirstOrDefaultAsync(p => p.StartDate == monday);
+        }
+
+        public async Task<List<MealPlan>> GetAllPlansAsync()
+        {
+            return await _plans.Query()
+                .OrderByDescending(p => p.StartDate)
+                .ToListAsync();
+        }
+
+        public async Task<MealPlan?> GetByIdAsync(Guid id)
+        {
+            return await _plans.Query()
+                .Include(p => p.Meals)
+                    .ThenInclude(pm => pm.Recipe)
+                        .ThenInclude(r => r.Ingredients)
+                            .ThenInclude(i => i.Product)
+                .Include(p => p.Meals)
+                    .ThenInclude(pm => pm.MealType)
+                .FirstOrDefaultAsync(p => p.Id == id);
+        }
 
         public async Task<MealPlan> CreateAsync(MealPlan plan)
         {
+            if (plan.Id == Guid.Empty)
+                plan.Id = Guid.NewGuid();
+
             await _plans.AddAsync(plan);
             await _plans.SaveChangesAsync();
             return plan;
@@ -49,27 +68,57 @@ namespace Services.Services
             await _plans.SaveChangesAsync();
         }
 
-        public async Task DeleteAsync(int id)
+        public async Task DeleteAsync(Guid id)
         {
             var plan = await _plans.GetByIdAsync(id);
-            if (plan == null) return;
-
-            await _plans.DeleteAsync(plan);
-            await _plans.SaveChangesAsync();
+            if (plan != null)
+            {
+                await _plans.DeleteAsync(plan);
+                await _plans.SaveChangesAsync();
+            }
         }
 
-        public async Task<List<Product>> GenerateShoppingListAsync(int mealPlanId)
+        public async Task<List<RecipeIngredient>> GenerateShoppingListAsync(Guid mealPlanId)
         {
-            var meals = await _plannedMeals.Query()
+            var plannedMeals = await _plannedMeals.Query()
                 .Where(pm => pm.MealPlanId == mealPlanId)
                 .Include(pm => pm.Recipe)
                 .ThenInclude(r => r.Ingredients)
                 .ThenInclude(i => i.Product)
                 .ToListAsync();
 
-            var result = new List<Product>();
-            // тут просто заглушка — расширишь под свои нужды
-            return result;
+            if (!plannedMeals.Any())
+                return new List<RecipeIngredient>();
+
+            // Собираем все ингредиенты с учётом порций (DefaultServings) каждого PlannedMeal
+            var allIngredientsWithServings = plannedMeals
+                .Where(pm => pm.Recipe != null)
+                .SelectMany(pm => pm.Recipe!.Ingredients.Select(ingredient => new
+                {
+                    Ingredient = ingredient,
+                    ServingsMultiplier = pm.Servings  // вот здесь берём DefaultServings конкретного блюда в плане
+                }))
+                .ToList();
+
+            // Группируем по продукту и единице измерения
+            var grouped = allIngredientsWithServings
+                .GroupBy(x => new { x.Ingredient.ProductId, x.Ingredient.Unit })
+                .Select(g => new RecipeIngredient
+                {
+                    ProductId = g.Key.ProductId,
+                    Product = g.First().Ingredient.Product,
+                    // Суммируем: базовое количество в рецепте * DefaultServings в плане
+                    Amount = g.Sum(x => x.Ingredient.Amount * x.ServingsMultiplier),
+                    Unit = g.Key.Unit,
+                    Comment = string.Join("; ", g
+                        .Where(x => !string.IsNullOrWhiteSpace(x.Ingredient.Comment))
+                        .Select(x => x.Ingredient.Comment)
+                        .Distinct())
+                })
+                .OrderBy(i => i.Product?.Name)
+                .ToList();
+
+            return grouped;
         }
     }
 }

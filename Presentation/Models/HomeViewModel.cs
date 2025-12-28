@@ -14,6 +14,6 @@
         public DateTime WeekStart { get; set; }
         public DateTime WeekEnd { get; set; }
 
-        public List<DayViewModel> WeekDays { get; set; }
+        public List<DayPlanViewModel> WeekDays { get; set; }
     }
 }

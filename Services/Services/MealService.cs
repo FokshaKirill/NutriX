@@ -1,9 +1,7 @@
-﻿using Domain.Entities;
-using Infrastructure;
-using Microsoft.EntityFrameworkCore;
+﻿using Infrastructure;
 using Services.Interfaces;
 
-namespace Services
+namespace Services.Services
 {
     public class MealService : IMealService
     {
@@ -14,44 +12,39 @@ namespace Services
             _db = db;
         }
 
-        public async Task<List<PlannedMeal>> GetMealsByDateAsync(DateTime date, int userId)
+        public async Task<List<PlannedMeal>> GetMealsByDateAsync(DateTime date)
         {
-            var monday = date.AddDays(-(int)date.DayOfWeek + 1); // понедельник недели
-            var offset = (int)(date - monday).TotalDays;
+            var monday = date.AddDays(-(int)date.DayOfWeek + 1);
+            var offset = (date - monday).Days;
 
             return await _db.PlannedMeals
-                .Include(x => x.Recipe)
-                    .ThenInclude(r => r.Ingredients)
-                        .ThenInclude(i => i.Product)
+                .Include(x => x.Recipe).ThenInclude(r => r.Ingredients).ThenInclude(i => i.Product)
                 .Include(x => x.MealType)
-                .Where(x =>
-                    x.MealPlan.UserId == userId &&
-                    x.MealPlan.StartDate == monday &&
-                    x.DayOffset == offset)
+                .Where(x => x.MealPlan.StartDate == monday && x.DayOffset == offset)
                 .ToListAsync();
         }
 
-        public async Task<int> GetTotalCaloriesAsync(DateTime date, int userId)
+        public async Task<int> GetTotalCaloriesAsync(DateTime date)
         {
-            var meals = await GetMealsByDateAsync(date, userId);
+            var meals = await GetMealsByDateAsync(date);
             return meals.Sum(m => CalcCalories(m));
         }
 
-        public async Task<int> GetTotalProteinAsync(DateTime date, int userId)
+        public async Task<int> GetTotalProteinAsync(DateTime date)
         {
-            var meals = await GetMealsByDateAsync(date, userId);
+            var meals = await GetMealsByDateAsync(date);
             return meals.Sum(m => CalcProtein(m));
         }
 
-        public async Task<int> GetTotalFatAsync(DateTime date, int userId)
+        public async Task<int> GetTotalFatAsync(DateTime date)
         {
-            var meals = await GetMealsByDateAsync(date, userId);
+            var meals = await GetMealsByDateAsync(date);
             return meals.Sum(m => CalcFat(m));
         }
 
-        public async Task<int> GetTotalCarbsAsync(DateTime date, int userId)
+        public async Task<int> GetTotalCarbsAsync(DateTime date)
         {
-            var meals = await GetMealsByDateAsync(date, userId);
+            var meals = await GetMealsByDateAsync(date);
             return meals.Sum(m => CalcCarbs(m));
         }
 

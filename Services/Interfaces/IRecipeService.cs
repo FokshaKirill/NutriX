@@ -7,11 +7,10 @@ namespace Services.Interfaces
 {
     public interface IRecipeService
     {
-        Task<Recipe?> GetByIdAsync(int id);
-        Task<List<Recipe>> GetUserRecipesAsync(int userId);
+        Task<List<Recipe>> GetAllRecipesAsync();
+        Task<Recipe?> GetByIdAsync(Guid id);
         Task<Recipe> CreateAsync(Recipe recipe);
         Task UpdateAsync(Recipe recipe);
-        Task DeleteAsync(int id);
+        Task DeleteAsync(Guid id);
     }
-
 }

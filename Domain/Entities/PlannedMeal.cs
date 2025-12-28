@@ -2,15 +2,15 @@
 {
     public class PlannedMeal
     {
-        public int Id { get; set; }
+        public Guid Id { get; set; }
 
-        public int MealPlanId { get; set; }
+        public Guid MealPlanId { get; set; }
         public MealPlan MealPlan { get; set; } = null!;
 
-        public int MealTypeId { get; set; }
+        public Guid MealTypeId { get; set; }
         public MealType MealType { get; set; } = null!;
 
-        public int? RecipeId { get; set; }
+        public Guid? RecipeId { get; set; }
         public Recipe? Recipe { get; set; }
 
         public int DayOffset { get; set; } 

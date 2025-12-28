@@ -1,0 +1,48 @@
+﻿@model Presentation.Models.ProductViewModel
+
+<div class="container py-5">
+    <div class="card" style="border-radius: 1.8rem; overflow: hidden;">
+        <div class="card-header text-center" style="background: var(--primary-light); padding: 3rem;">
+            <img src="@Model.ImageUrl" alt="@Model.Name" class="rounded-4" style="width: 100%; max-height: 400px; object-fit: cover;">
+            <h2 class="mt-4" style="color: var(--primary);">@Model.Name</h2>
+            @if (!string.IsNullOrEmpty(Model.CategoryName))
+            {
+                <p class="text-muted fs-5">Категория: @Model.CategoryName</p>
+            }
+        </div>
+
+        <div class="card-body p-5">
+            <div class="row g-5 text-center">
+                <div class="col-md-4 align-content-center">
+                    <div class="fs-1 fw-bold" style="color: var(--primary);">@Model.PricePerUnit ₽</div>
+                    <small class="text-muted">за @Model.Unit</small>
+                </div>
+                <div class="col-md-8">
+                    <h4 class="mb-4" style="color: var(--primary);">Пищевая ценность на 100 г/мл</h4>
+                    <div class="row g-4">
+                        <div class="col-3">
+                            <div class="fs-3 fw-bold" style="color: var(--primary);">@(Model.CaloriesPer100 ?? 0)</div>
+                            <small>ккал</small>
+                        </div>
+                        <div class="col-3">
+                            <div class="fs-3 fw-bold" style="color: var(--primary);">@(Model.ProteinPer100 ?? 0)</div>
+                            <small>белков</small>
+                        </div>
+                        <div class="col-3">
+                            <div class="fs-3 fw-bold" style="color: var(--primary);">@(Model.FatPer100 ?? 0)</div>
+                            <small>жиров</small>
+                        </div>
+                        <div class="col-3">
+                            <div class="fs-3 fw-bold" style="color: var(--primary);">@(Model.CarbsPer100 ?? 0)</div>
+                            <small>углеводов</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center mt-5">
+                <a asp-action="Index" class="btn btn-outline-primary btn-lg">← Назад к списку</a>
+            </div>
+        </div>
+    </div>
+</div>

@@ -3,8 +3,8 @@
     // Models/RecipeStep.cs
     public class RecipeStep
     {
-        public int Id { get; set; }
-        public int RecipeId { get; set; }
+        public Guid Id { get; set; }
+        public Guid RecipeId { get; set; }
         public Recipe Recipe { get; set; } = null!;
 
         public int Order { get; set; }

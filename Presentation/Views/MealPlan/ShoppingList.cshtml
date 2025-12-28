@@ -1,0 +1,48 @@
+﻿@model Presentation.Models.ShoppingListViewModel
+
+<div class="container py-5">
+    <div class="card" style="border-radius: 1.8rem;">
+        <div class="card-header text-center py-5" style="background: var(--primary-light);">
+            <h2 style="color: var(--primary);">Список покупок</h2>
+            <p class="fs-4 text-muted">Все ингредиенты для меню на неделю</p>
+        </div>
+
+        <div class="card-body p-5">
+            <div class="row g-4">
+                @foreach (var item in Model.Ingredients)
+                {
+                    <div class="col-md-6 col-lg-4">
+                        <div class="p-4 rounded-4 text-center" style="background: var(--primary-light);">
+                            @if (item.Product?.ImageUrl != null)
+                            {
+                                <img src="@item.Product.ImageUrl" alt="@item.Product.Name" class="rounded-4 mb-3" style="width: 120px; height: 120px; object-fit: cover;">
+                            }
+                            else
+                            {
+                                <div class="bg-light rounded-4 d-flex align-items-center justify-content-center mb-3" style="width: 120px; height: 120px;">
+                                    <i class="fas fa-carrot fs-2 text-muted"></i>
+                                </div>
+                            }
+
+                            <h5 style="color: var(--primary);">@item.Product?.Name</h5>
+                            <div class="fs-3 fw-bold">@item.Amount @item.Unit</div>
+                            @if (!string.IsNullOrEmpty(item.Comment))
+                            {
+                                <small class="text-muted d-block mt-2">@item.Comment</small>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <div class="text-center mt-5">
+                <button class="btn btn-success btn-lg me-3" onclick="window.print()">
+                    <i class="fas fa-print me-2"></i> Распечатать
+                </button>
+                <a asp-action="Week" class="btn btn-outline-primary btn-lg">
+                    ← Вернуться к меню
+                </a>
+            </div>
+        </div>
+    </div>
+</div>

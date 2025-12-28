@@ -1,0 +1,101 @@
+﻿@model Domain.Entities.Product
+
+<form id="createProductForm" asp-action="CreateModal" method="post">
+    <div class="modal-body p-5">
+        <div class="row g-4">
+            <!-- Название -->
+            <div class="col-12">
+                <label class="form-label fw-medium">Название продукта</label>
+                <input asp-for="Name" class="form-control form-control-lg" placeholder="Например, Куриная грудка" required />
+                <span asp-validation-for="Name" class="text-danger"></span>
+            </div>
+
+            <!-- Категория + кнопка добавления -->
+            <div class="col-12">
+                <label class="form-label fw-medium">Категория</label>
+                <div class="input-group">
+                    <select asp-for="ParentId" class="form-select form-select-lg" asp-items="ViewBag.ParentCategories">
+                        <option value="">Без категории</option>
+                    </select>
+                    <button type="button" class="btn btn-outline-success btn-lg" data-bs-toggle="modal" data-bs-target="#addCategoryModal" style="border-left: none;">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Цена и единица измерения -->
+            <div class="col-md-6">
+                <label class="form-label fw-medium">Цена за единицу</label>
+                <input asp-for="PricePerUnit" type="number" step="0.01" class="form-control form-control-lg" placeholder="0.00" />
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-medium">Единица измерения</label>
+                <select asp-for="Unit" class="form-select form-select-lg" required>
+                    <option value="" disabled selected>Выберите единицу</option>
+                    <option value="г">грамм (г)</option>
+                    <option value="кг">килограмм (кг)</option>
+                    <option value="мл">миллилитр (мл)</option>
+                    <option value="л">литр (л)</option>
+                    <option value="шт">штука (шт)</option>
+                    <option value="упак">упаковка</option>
+                    <option value="пучок">пучок</option>
+                    <option value="головка">головка</option>
+                    <option value="банка">банка</option>
+                    <option value="пачка">пачка</option>
+                </select>
+                <span asp-validation-for="Unit" class="text-danger"></span>
+            </div>
+
+            <!-- Пищевая ценность -->
+            <div class="col-12">
+                <h6 class="mt-4 mb-3" style="color: var(--primary);">Пищевая ценность на 100 г/мл (опционально)</h6>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small">Калории</label>
+                <input asp-for="CaloriesPer100" type="number" step="0.1" class="form-control form-control-lg" />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small">Белки (г)</label>
+                <input asp-for="ProteinPer100" type="number" step="0.1" class="form-control form-control-lg" />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small">Жиры (г)</label>
+                <input asp-for="FatPer100" type="number" step="0.1" class="form-control form-control-lg" />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small">Углеводы (г)</label>
+                <input asp-for="CarbsPer100" type="number" step="0.1" class="form-control form-control-lg" />
+            </div>
+            <div class="col-12">
+                <label class="form-label fw-medium">Фото продукта</label>
+                <input type="file" name="image" class="form-control form-control-lg" accept="image/*" />
+                <small class="text-muted">JPG, PNG до 5 МБ</small>
+            </div>
+        </div>
+    </div>
+    <div class="modal-footer" style="background: var(--primary-light);">
+        <button type="button" class="btn btn-outline-secondary btn-lg" data-bs-dismiss="modal">Отмена</button>
+        <button type="submit" class="btn btn-success btn-lg">Сохранить продукт</button>
+    </div>
+</form>
+
+<!-- Вложенная модалка для добавления категории -->
+<div class="modal fade" id="addCategoryModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius: 1.8rem;">
+            <div class="modal-header" style="background: var(--primary-light);">
+                <h5 class="modal-title" style="color: var(--primary);">Новая категория</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="addCategoryForm" asp-action="CreateCategoryModal" asp-controller="Product" method="post">
+                <div class="modal-body p-4">
+                    <input type="text" name="name" class="form-control form-control-lg" placeholder="Например, Овощи" required />
+                </div>
+                <div class="modal-footer" style="background: var(--primary-light);">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="submit" class="btn btn-success">Добавить</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

@@ -155,3 +155,21 @@ hr {
     padding: 2rem 0;
     color: var(--text-muted);
 }
+
+.badge {
+    background: var(--primary-light) !important;
+}
+
+.form-control-lg, .form-select-lg {
+    border-radius: 1.5rem;
+    padding: 1rem 1.5rem;
+    font-size: 1.1rem;
+}
+
+.gap-3 { gap: 1.5rem; }
+
+@media print {
+    body { background: white; }
+    .no-print { display: none; }
+    .card { box-shadow: none; border: 1px solid #ddd; }
+}

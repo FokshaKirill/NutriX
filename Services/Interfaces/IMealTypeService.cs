@@ -6,6 +6,7 @@ namespace Services.Interfaces
 {
     public interface IMealTypeService
     {
-        Task<List<MealType>> GetUserMealTypesAsync(int userId);
+        Task<List<MealType>> GetAllMealTypesAsync();
+        Task<MealType?> GetByIdAsync(Guid id);
     }
 }

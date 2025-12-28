@@ -6,10 +6,28 @@ namespace Services.Interfaces
 {
     public interface IProductService
     {
-        Task<Product?> GetByIdAsync(int id);
-        Task<List<Product>> GetUserProductsAsync(int userId);
+        Task<List<Product>> GetAllProductsAsync();
+        
+        Task<(List<Product> Products, int TotalCount)> GetPagedProductsAsync(
+            int page, 
+            int pageSize, 
+            string? searchTerm = null, 
+            Guid? categoryId = null,
+            decimal? minCalories = null,
+            decimal? maxCalories = null,
+            decimal? minPrice = null,
+            decimal? maxPrice = null);
+        
+        Task<Product?> GetByIdAsync(Guid id);
+        
         Task<Product> CreateAsync(Product product);
+        
         Task UpdateAsync(Product product);
-        Task DeleteAsync(int id);
+        
+        Task DeleteAsync(Guid id);
+        
+        Task<List<Product>> GetCategoriesAsync();
+        
+        Task ImportProductsAsync();
     }
 }

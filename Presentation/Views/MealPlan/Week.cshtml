@@ -1,0 +1,76 @@
+﻿@model Presentation.Models.WeekPlanViewModel
+
+<div class="container py-5">
+    <div class="card mb-5" style="border-radius: 1.8rem;">
+        <div class="card-header text-center" style="background: var(--primary-light); padding: 3rem;">
+            <h2 class="mb-0" style="color: var(--primary);">Меню на неделю</h2>
+            <p class="fs-4 text-muted">
+                @Model.StartDate.ToString("d MMMM") — @Model.StartDate.AddDays(6).ToString("d MMMM yyyy")
+            </p>
+        </div>
+    </div>
+
+    <div class="row g-5">
+        @foreach (var day in Model.Days)
+        {
+            var isToday = day.Date.Date == DateTime.Today;
+            <div class="col-lg-12 mb-5">
+                <div class="card @(isToday ? "border-success border-3" : "")" style="border-radius: 1.8rem; overflow: hidden;">
+                    <div class="card-header text-center py-4" style="background: var(--primary-light);">
+                        <h3 class="mb-0" style="color: var(--primary);">
+                            @day.Date.ToString("dddd")<br>
+                            <span class="fs-2">@day.Date.Day</span> @day.Date.ToString("MMMM")
+                        </h3>
+                    </div>
+                    <div class="card-body p-5">
+                        @if (!day.Meals.Any())
+                        {
+                            <p class="text-center text-muted fs-4 py-5">— День свободный —</p>
+                        }
+                        else
+                        {
+                            foreach (var meal in day.Meals)
+                            {
+                                <div class="d-flex align-items-center mb-5 p-4 rounded-4" style="background: var(--primary-light);">
+                                    <div class="me-4">
+                                        @if (!string.IsNullOrEmpty(meal.RecipeImageUrl))
+                                        {
+                                            <img src="@meal.RecipeImageUrl" alt="@meal.RecipeName" class="rounded-4" style="width: 120px; height: 120px; object-fit: cover;">
+                                        }
+                                        else
+                                        {
+                                            <div class="bg-light rounded-4 d-flex align-items-center justify-content-center" style="width: 120px; height: 120px;">
+                                                <i class="fas fa-utensils fs-1 text-muted"></i>
+                                            </div>
+                                        }
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <h4 style="color: var(--primary);">@meal.MealTypeName</h4>
+                                        <h5>@meal.RecipeName (@meal.Servings порц.)</h5>
+                                        <p class="mb-0 text-muted">
+                                            @meal.Calories ккал • Б: @meal.Protein г • Ж: @meal.Fat г • У: @meal.Carbs г
+                                        </p>
+                                    </div>
+                                    <a asp-controller="Recipe" asp-action="Details" asp-route-id="@meal.RecipeId" class="btn btn-outline-primary btn-lg">
+                                        Посмотреть рецепт
+                                    </a>
+                                </div>
+                            }
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <div class="text-center mt-5">
+        <a asp-action="ShoppingList" asp-route-id="@Model.MealPlanId" class="btn btn-success btn-lg">
+            <i class="fas fa-shopping-cart me-2"></i> Список покупок
+        </a>
+    </div>
+    <div class="text-center my-4">
+        <button class="btn btn-outline-secondary btn-lg" onclick="window.print()">
+            <i class="fas fa-print me-2"></i> Распечатать план
+        </button>
+    </div>
+</div>

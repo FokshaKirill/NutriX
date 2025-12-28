@@ -1,75 +1,47 @@
 ﻿using System;
 using Microsoft.EntityFrameworkCore.Migrations;
-using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
 namespace Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class Initial : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "Users",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Users", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "MealPlans",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    Name = table.Column<string>(type: "text", nullable: false),
-                    StartDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    UserId = table.Column<int>(type: "integer", nullable: true)
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Name = table.Column<string>(type: "text", nullable: true),
+                    StartDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_MealPlans", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_MealPlans_Users_UserId",
-                        column: x => x.UserId,
-                        principalTable: "Users",
-                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
                 name: "MealTypes",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
                     Name = table.Column<string>(type: "text", nullable: false),
-                    Order = table.Column<int>(type: "integer", nullable: false),
-                    UserId = table.Column<int>(type: "integer", nullable: true)
+                    Order = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_MealTypes", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_MealTypes_Users_UserId",
-                        column: x => x.UserId,
-                        principalTable: "Users",
-                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
                 name: "Products",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
                     Name = table.Column<string>(type: "text", nullable: false),
                     PricePerUnit = table.Column<decimal>(type: "numeric(10,2)", precision: 10, scale: 2, nullable: false),
                     Unit = table.Column<string>(type: "text", nullable: false),
@@ -77,8 +49,8 @@ namespace Infrastructure.Migrations
                     ProteinPer100 = table.Column<decimal>(type: "numeric(6,2)", precision: 6, scale: 2, nullable: true),
                     FatPer100 = table.Column<decimal>(type: "numeric(6,2)", precision: 6, scale: 2, nullable: true),
                     CarbsPer100 = table.Column<decimal>(type: "numeric(6,2)", precision: 6, scale: 2, nullable: true),
-                    ParentId = table.Column<int>(type: "integer", nullable: true),
-                    UserId = table.Column<int>(type: "integer", nullable: true)
+                    ImageUrl = table.Column<string>(type: "text", nullable: true),
+                    ParentId = table.Column<Guid>(type: "uuid", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -89,44 +61,31 @@ namespace Infrastructure.Migrations
                         principalTable: "Products",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_Products_Users_UserId",
-                        column: x => x.UserId,
-                        principalTable: "Users",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
                 name: "Recipes",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
                     Name = table.Column<string>(type: "text", nullable: false),
                     Description = table.Column<string>(type: "text", nullable: true),
                     DefaultServings = table.Column<int>(type: "integer", nullable: false),
-                    UserId = table.Column<int>(type: "integer", nullable: true)
+                    ImageUrl = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Recipes", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Recipes_Users_UserId",
-                        column: x => x.UserId,
-                        principalTable: "Users",
-                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
                 name: "PlannedMeals",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    MealPlanId = table.Column<int>(type: "integer", nullable: false),
-                    MealTypeId = table.Column<int>(type: "integer", nullable: false),
-                    RecipeId = table.Column<int>(type: "integer", nullable: true),
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    MealPlanId = table.Column<Guid>(type: "uuid", nullable: false),
+                    MealTypeId = table.Column<Guid>(type: "uuid", nullable: false),
+                    RecipeId = table.Column<Guid>(type: "uuid", nullable: true),
                     DayOffset = table.Column<int>(type: "integer", nullable: false),
                     Servings = table.Column<int>(type: "integer", nullable: false)
                 },
@@ -156,10 +115,9 @@ namespace Infrastructure.Migrations
                 name: "RecipeIngredients",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    RecipeId = table.Column<int>(type: "integer", nullable: false),
-                    ProductId = table.Column<int>(type: "integer", nullable: false),
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    RecipeId = table.Column<Guid>(type: "uuid", nullable: false),
+                    ProductId = table.Column<Guid>(type: "uuid", nullable: false),
                     Amount = table.Column<decimal>(type: "numeric(10,3)", precision: 10, scale: 3, nullable: false),
                     Unit = table.Column<string>(type: "text", nullable: false),
                     Comment = table.Column<string>(type: "text", nullable: true)
@@ -185,9 +143,8 @@ namespace Infrastructure.Migrations
                 name: "RecipeSteps",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    RecipeId = table.Column<int>(type: "integer", nullable: false),
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    RecipeId = table.Column<Guid>(type: "uuid", nullable: false),
                     Order = table.Column<int>(type: "integer", nullable: false),
                     Description = table.Column<string>(type: "text", nullable: false),
                     TimerSeconds = table.Column<int>(type: "integer", nullable: true),
@@ -203,16 +160,6 @@ namespace Infrastructure.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
-
-            migrationBuilder.CreateIndex(
-                name: "IX_MealPlans_UserId",
-                table: "MealPlans",
-                column: "UserId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_MealTypes_UserId",
-                table: "MealTypes",
-                column: "UserId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_PlannedMeals_MealPlanId_DayOffset_MealTypeId",
@@ -236,11 +183,6 @@ namespace Infrastructure.Migrations
                 column: "ParentId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Products_UserId",
-                table: "Products",
-                column: "UserId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_RecipeIngredients_ProductId",
                 table: "RecipeIngredients",
                 column: "ProductId");
@@ -249,11 +191,6 @@ namespace Infrastructure.Migrations
                 name: "IX_RecipeIngredients_RecipeId",
                 table: "RecipeIngredients",
                 column: "RecipeId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Recipes_UserId",
-                table: "Recipes",
-                column: "UserId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_RecipeSteps_RecipeId_Order",
@@ -285,9 +222,6 @@ namespace Infrastructure.Migrations
 
             migrationBuilder.DropTable(
                 name: "Recipes");
-
-            migrationBuilder.DropTable(
-                name: "Users");
         }
     }
 }

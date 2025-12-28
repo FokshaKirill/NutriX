@@ -2,15 +2,15 @@ using Infrastructure.Interfaces;
 using Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Presentation.Helpers;
+using PuppeteerSharp;
 using Services;
 using Services.Interfaces;
 using Services.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Удаляем ненужное, если пока не используете
-// builder.Services.AddDistributedMemoryCache();
-// builder.Services.AddHttpClient();
+builder.Services.AddControllersWithViews();
+builder.Services.AddHttpClient();
 
 // Подключаем DbContext из Infrastructure
 builder.Services.AddDbContext<DatabaseContext>(options =>
@@ -19,12 +19,6 @@ builder.Services.AddDbContext<DatabaseContext>(options =>
 
 builder.Services.AddAutoMapper(typeof(MappingProfile));
 
-// TODO: Здесь регистрируем репозитории и сервисы приложения. Лушче отдельный экстеншн  builder.Services.AddApplicationServices();
-// Пример:
-// builder.Services.AddScoped<IProductRepository, ProductRepository>();
-// builder.Services.AddScoped<IRecipeRepository, RecipeRepository>();
-// builder.Services.AddScoped<IMealPlanService, MealPlanService>();
-
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 
 builder.Services.AddScoped<IMealService, MealService>();
@@ -32,8 +26,7 @@ builder.Services.AddScoped<IMealPlanService, MealPlanService>();
 builder.Services.AddScoped<IMealTypeService, MealTypeService>();
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<IRecipeService, RecipeService>();
-
-builder.Services.AddControllersWithViews();
+builder.Services.AddScoped<IMealTypeService, MealTypeService>();
 
 var app = builder.Build();
 
@@ -45,9 +38,19 @@ using (var scope = app.Services.CreateScope())
     {
         var context = services.GetRequiredService<DatabaseContext>();
         context.Database.Migrate(); // Применяет все pending миграции
-
+        
         // Опционально: добавьте seed-данные
         // DatabaseInitializer.Seed(context);
+        var mealTypes = new[]
+        {
+            new MealType { Id = Guid.NewGuid(), Name = "Завтрак", Order = 0 },
+            new MealType { Id = Guid.NewGuid(), Name = "Обед", Order = 1 },
+            new MealType { Id = Guid.NewGuid(), Name = "Ужин", Order = 2 },
+            new MealType { Id = Guid.NewGuid(), Name = "Перекус", Order = 3 }
+        };
+
+        context.MealTypes.AddRange(mealTypes);
+        context.SaveChanges();
     }
     catch (Exception ex)
     {

@@ -1,0 +1,152 @@
+﻿@using Presentation.Models
+@model Presentation.Models.RecipeCreateViewModel
+
+@{
+    ViewData["Title"] = "Создать рецепт";
+}
+
+<div class="container py-5">
+    <h2 class="mb-5" style="color: var(--primary);">Создать новый рецепт</h2>
+
+    <form asp-action="Create" method="post" enctype="multipart/form-data">
+        <div class="row g-4">
+            <!-- Главное фото -->
+            <div class="col-12 text-center mb-4">
+                <label class="form-label fw-medium">Главное фото рецепта</label>
+                <input type="file" name="mainImage" class="form-control form-control-lg" accept="image/*" />
+                <small class="text-muted">JPG, PNG, WEBP до 5 МБ</small>
+            </div>
+
+            <!-- Название и порции -->
+            <div class="col-md-8">
+                <label class="form-label fw-medium">Название рецепта</label>
+                <input asp-for="Name" class="form-control form-control-lg" required />
+                <span asp-validation-for="Name" class="text-danger"></span>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label fw-medium">Порций по умолчанию</label>
+                <input asp-for="DefaultServings" type="number" class="form-control form-control-lg" min="1" value="1" required />
+            </div>
+
+            <!-- Описание -->
+            <div class="col-12">
+                <label class="form-label fw-medium">Описание (опционально)</label>
+                <textarea asp-for="Description" class="form-control form-control-lg" rows="3"></textarea>
+            </div>
+
+            <!-- Ингредиенты -->
+            <div class="col-12 mt-4">
+                <h5 class="mb-4" style="color: var(--primary);">Ингредиенты</h5>
+                <div id="ingredientsContainer">
+                    @for (int i = 0; i < Model.Ingredients.Count; i++)
+                    {
+                        <partial name="_IngredientRow" model="@(new Tuple<int, RecipeIngredientViewModel>(i, Model.Ingredients[i]))" />
+                    }
+                </div>
+
+                <button type="button" class="btn btn-outline-primary mt-3" id="addIngredient">
+                    <i class="fas fa-plus me-2"></i> Добавить ингредиент
+                </button>
+
+                <div class="mt-4 p-4 bg-light rounded-4 text-center">
+                    <h5 class="mb-2">Общая стоимость рецепта:</h5>
+                    <h3 id="totalPrice" class="text-success fw-bold">0.00 ₽</h3>
+                </div>
+            </div>
+
+            <!-- Шаги -->
+            <div class="col-12 mt-5">
+                <h5 class="mb-4" style="color: var(--primary);">Шаги приготовления</h5>
+                <div id="stepsContainer">
+                    @for (int i = 0; i < Model.Steps.Count; i++)
+                    {
+                        <partial name="_StepRow" model="@(new Tuple<int, RecipeStepViewModel>(i, Model.Steps[i]))" />
+                    }
+                </div>
+
+                <button type="button" class="btn btn-outline-primary mt-3" id="addStep">
+                    <i class="fas fa-plus me-2"></i> Добавить шаг
+                </button>
+            </div>
+
+            <div class="col-12 mt-5 text-center">
+                <a asp-action="Index" class="btn btn-outline-secondary btn-lg me-3">Отмена</a>
+                <button type="submit" class="btn btn-success btn-lg">Сохранить рецепт</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Шаблоны для динамического добавления -->
+<div id="ingredientTemplate" style="display: none;">
+    <partial name="_IngredientRow" model="@(new Tuple<int, RecipeIngredientViewModel>(0, new RecipeIngredientViewModel()))" />
+</div>
+
+<div id="stepTemplate" style="display: none;">
+    <partial name="_StepRow" model="@(new Tuple<int, RecipeStepViewModel>(0, new RecipeStepViewModel()))" />
+</div>
+
+@section Scripts {
+<script>
+    const allProducts = @Html.Raw(Json.Serialize(
+        ViewBag.Products == null 
+            ? new List<object>() 
+            : ((List<Domain.Entities.Product>)ViewBag.Products).Select(p => new {
+                id = p.Id.ToString(),
+                name = p.Name,
+                pricePerUnit = p.PricePerUnit,
+                unit = p.Unit
+            })
+    ));
+
+    let ingredientIndex = @Model.Ingredients.Count;
+    let stepIndex = @Model.Steps.Count;
+
+    function calculateTotalPrice() {
+        let total = 0;
+        $('.ingredient-row').each(function () {
+            const price = parseFloat($(this).find('.product-select option:selected').data('price')) || 0;
+            const amount = parseFloat($(this).find('.amount-input').val()) || 0;
+            total += price * amount;
+        });
+        $('#totalPrice').text(total.toFixed(2) + ' ₽');
+    }
+
+    $('#addIngredient').click(function () {
+        let html = $('#ingredientTemplate').html();
+        html = html.replace(/Ingredients\[0\]/g, `Ingredients[${ingredientIndex}]`);
+        $('#ingredientsContainer').append(html);
+        ingredientIndex++;
+        calculateTotalPrice();
+    });
+
+    $('#addStep').click(function () {
+        let html = $('#stepTemplate').html();
+        html = html.replace(/Steps\[0\]/g, `Steps[${stepIndex}]`);
+        html = html.replace(/step-number">1</, `step-number">${stepIndex + 1}</`);
+        $('#stepsContainer').append(html);
+        stepIndex++;
+    });
+
+    $(document).on('click', '.remove-ingredient', function () {
+        $(this).closest('.ingredient-row').remove();
+        calculateTotalPrice();
+    });
+
+    $(document).on('click', '.remove-step', function () {
+        $(this).closest('.step-row').remove();
+        $('.step-row').each(function(idx) {
+            $(this).find('.step-number').text(idx + 1);
+        });
+    });
+
+    $(document).on('change input', '.product-select, .amount-input', calculateTotalPrice);
+
+    $(document).on('change', '.product-select', function () {
+        const name = $(this).find('option:selected').data('name') || $(this).find('option:selected').text();
+        $(this).closest('.ingredient-row').find('.product-name-hidden').val(name);
+    });
+
+    calculateTotalPrice();
+</script>
+}

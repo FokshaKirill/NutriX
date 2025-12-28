@@ -11,5 +11,4 @@
         public int Fat { get; set; }
         public int Carbs { get; set; }
     }
-
 }

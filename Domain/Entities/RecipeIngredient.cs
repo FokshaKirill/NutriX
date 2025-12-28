@@ -3,12 +3,12 @@
     // Models/RecipeIngredient.cs
     public class RecipeIngredient
     {
-        public int Id { get; set; }
+        public Guid Id { get; set; }
 
-        public int RecipeId { get; set; }
+        public Guid RecipeId { get; set; }
         public Recipe Recipe { get; set; } = null!;
 
-        public int ProductId { get; set; }
+        public Guid ProductId { get; set; }
         public Product Product { get; set; } = null!; // Это будет группа (ParentId == null)
 
         public decimal Amount { get; set; }
