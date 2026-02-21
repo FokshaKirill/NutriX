@@ -1,14 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http;
+﻿using System.Globalization;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-using System.Globalization;
 using HtmlAgilityPack;
-using Domain.Entities;
 
-namespace Services
+namespace Services.Helpers
 {
     public class ProductParser
     {

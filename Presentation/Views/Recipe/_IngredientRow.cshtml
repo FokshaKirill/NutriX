@@ -27,11 +27,14 @@
         <input name="Ingredients[@Model.Item1].Amount" type="number" step="0.01" class="form-control form-control-lg amount-input" 
                placeholder="Кол-во" value="@Model.Item2.Amount" required />
     </div>
-    <div class="col-md-2">
-        <input name="Ingredients[@Model.Item1].Unit" class="form-control form-control-lg" 
-               placeholder="г/мл/шт" value="@Model.Item2.Unit" required />
+    @* <div class="col-md-2"> *@
+    @*     <input name="Ingredients[@Model.Item1].Unit" class="form-control form-control-lg"  *@
+    @*            placeholder="г/мл/шт" value="@Model.Item2.Unit" required /> *@
+    @* </div> *@
+    <div class="col-md-1" style="width: 2rem !important; height: 24px">
+        <p class="text-start justify-content-start align-content-center">г</p>
     </div>
-    <div class="col-md-2">
+    <div class="col-md-3">
         <input name="Ingredients[@Model.Item1].Comment" class="form-control form-control-lg" 
                placeholder="Комментарий" value="@Model.Item2.Comment" />
     </div>

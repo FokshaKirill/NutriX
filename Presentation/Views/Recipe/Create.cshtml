@@ -107,7 +107,7 @@
         $('.ingredient-row').each(function () {
             const price = parseFloat($(this).find('.product-select option:selected').data('price')) || 0;
             const amount = parseFloat($(this).find('.amount-input').val()) || 0;
-            total += price * amount;
+            total += price * amount / 100;
         });
         $('#totalPrice').text(total.toFixed(2) + ' ₽');
     }

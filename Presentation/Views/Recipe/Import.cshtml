@@ -1,0 +1,196 @@
+﻿@{
+    ViewData["Title"] = "Импорт рецепта";
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-header text-center">
+                    <h2 class="mb-0" style="color: var(--primary);">
+                        <i class="fas fa-download me-2"></i>
+                        Импорт рецепта
+                    </h2>
+                </div>
+
+                <div class="card-body p-5">
+                    @if (TempData["Error"] != null)
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="fas fa-exclamation-circle me-2"></i>
+                            @TempData["Error"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+
+                    @if (TempData["Success"] != null)
+                    {
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            <i class="fas fa-check-circle me-2"></i>
+                            @TempData["Success"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+
+                    <div class="mb-4 text-center">
+                        <i class="fas fa-magic fa-3x mb-3" style="color: var(--primary);"></i>
+                        <p class="lead">Вставьте ссылку на рецепт с сайта 1000.menu</p>
+                        <p class="text-muted small">
+                            Мы автоматически извлечем все ингредиенты, шаги приготовления и фотографии
+                        </p>
+                    </div>
+
+                    <form asp-action="Import" method="post" id="importForm">
+                        <div class="mb-4">
+                            <label class="form-label fw-medium">URL рецепта</label>
+                            <div class="input-group input-group-lg">
+                                <span class="input-group-text">
+                                    <i class="fas fa-link"></i>
+                                </span>
+                                <input type="url" 
+                                       name="url" 
+                                       class="form-control" 
+                                       placeholder="https://1000.menu/cooking/2797-bliny-s-myasom-i-risom" 
+                                       required 
+                                       id="recipeUrl" />
+                            </div>
+                            <small class="text-muted">
+                                Поддерживаемые сайты: 1000.menu
+                            </small>
+                        </div>
+
+                        <div class="d-grid gap-3">
+                            <button type="submit" class="btn btn-success btn-lg" id="importBtn">
+                                <i class="fas fa-download me-2"></i>
+                                Импортировать рецепт
+                            </button>
+                            <a asp-action="Create" class="btn btn-outline-primary btn-lg">
+                                <i class="fas fa-edit me-2"></i>
+                                Или создать рецепт вручную
+                            </a>
+                        </div>
+                    </form>
+
+                    <!-- Примеры ссылок -->
+                    <div class="mt-5 pt-4 border-top">
+                        <h6 class="mb-3 fw-bold">Примеры рецептов для импорта:</h6>
+                        <div class="list-group">
+                            <a href="#" class="list-group-item list-group-item-action example-link" 
+                               data-url="https://1000.menu/cooking/2797-bliny-s-myasom-i-risom">
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-utensils me-3" style="color: var(--primary);"></i>
+                                    <div>
+                                        <div class="fw-medium">Блины с мясом и рисом</div>
+                                        <small class="text-muted">1000.menu/cooking/2797-bliny-s-myasom-i-risom</small>
+                                    </div>
+                                </div>
+                            </a>
+                            <a href="#" class="list-group-item list-group-item-action example-link" 
+                               data-url="https://1000.menu/cooking/1-olivje">
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-utensils me-3" style="color: var(--primary);"></i>
+                                    <div>
+                                        <div class="fw-medium">Салат Оливье</div>
+                                        <small class="text-muted">1000.menu/cooking/1-olivje</small>
+                                    </div>
+                                </div>
+                            </a>
+                            <a href="#" class="list-group-item list-group-item-action example-link" 
+                               data-url="https://1000.menu/cooking/12-borshh">
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-utensils me-3" style="color: var(--primary);"></i>
+                                    <div>
+                                        <div class="fw-medium">Борщ классический</div>
+                                        <small class="text-muted">1000.menu/cooking/12-borshh</small>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Информация о поддержке -->
+                    <div class="alert alert-info mt-4 mb-0">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Обратите внимание:</strong> После импорта проверьте соответствие продуктов 
+                        из вашей базы с ингредиентами рецепта. При необходимости скорректируйте количество и выберите правильные продукты.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loader для индикации загрузки -->
+<div id="loadingOverlay" style="display: none;">
+    <div class="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center" 
+         style="background: rgba(0,0,0,0.7); z-index: 9999;">
+        <div class="text-center text-white">
+            <div class="spinner-border mb-3" role="status" style="width: 4rem; height: 4rem;">
+                <span class="visually-hidden">Загрузка...</span>
+            </div>
+            <h4>Импортируем рецепт...</h4>
+            <p class="text-muted">Это может занять несколько секунд</p>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    // Показываем loader при отправке формы
+    $('#importForm').on('submit', function() {
+        $('#loadingOverlay').fadeIn();
+        $('#importBtn').prop('disabled', true);
+    });
+
+    // Клик по примерам рецептов
+    $('.example-link').on('click', function(e) {
+        e.preventDefault();
+        const url = $(this).data('url');
+        $('#recipeUrl').val(url);
+        
+        // Плавная прокрутка к форме
+        $('html, body').animate({
+            scrollTop: $('#importForm').offset().top - 100
+        }, 500);
+        
+        // Анимация подсветки поля
+        $('#recipeUrl').addClass('border-success');
+        setTimeout(() => {
+            $('#recipeUrl').removeClass('border-success');
+        }, 2000);
+    });
+
+    // Валидация URL
+    $('#recipeUrl').on('input', function() {
+        const url = $(this).val();
+        const isValid = url.includes('1000.menu/cooking/');
+        
+        if (url && !isValid) {
+            $(this).addClass('is-invalid');
+        } else {
+            $(this).removeClass('is-invalid');
+        }
+    });
+</script>
+
+<style>
+    .example-link {
+        transition: all 0.3s ease;
+    }
+
+    .example-link:hover {
+        background: var(--primary-light);
+        border-left: 4px solid var(--primary);
+    }
+
+    .spinner-border {
+        border-color: var(--primary);
+        border-right-color: transparent;
+    }
+
+    .border-success {
+        border-color: var(--primary) !important;
+        box-shadow: 0 0 0 0.2rem rgba(134, 191, 146, 0.25);
+    }
+</style>
+}

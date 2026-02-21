@@ -8,10 +8,12 @@ public class RecipeDetailViewModel
     public string? ImageUrl { get; set; }
     public int DefaultServings { get; set; }
     public decimal TotalCost { get; set; } = 0;
+    public decimal CostPerServing => TotalCost / DefaultServings;
 
     public List<RecipeIngredientViewModel> Ingredients { get; set; } = [];
     public List<RecipeStepViewModel> Steps { get; set; } = [];
 
-    public decimal CaloriesPerServing => DefaultServings > 0 ? Ingredients.Sum(i => i.Calories ?? 0) / DefaultServings : 0;
+    public decimal CaloriesPerServing => TotalCalories / DefaultServings;
+    public decimal TotalCalories => DefaultServings > 0 ? Ingredients.Sum(i => i.Calories ?? 0) : 0;
     // Аналогично Protein, Fat, Carbs
 }

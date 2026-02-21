@@ -15,7 +15,7 @@
             }
 
             <div class="position-absolute bottom-0 start-0 end-0 p-5" style="background: linear-gradient(transparent, rgba(0,0,0,0.7));">
-                <h1 class="text-white mb-0">@Model.Name</h1>
+                <h1 class="text-white mb-0">@(Model.Name.Substring(0, 1).ToUpper()+Model.Name.Substring(1))</h1>
                 @if (!string.IsNullOrEmpty(Model.Description))
                 {
                     <p class="text-white-50 fs-4 mt-2">@Model.Description</p>
@@ -27,8 +27,11 @@
             <div class="row g-5">
                 <div class="col-lg-4">
                     <div class="p-4 rounded-4 text-center" style="background: var(--primary-light);">
-                        <div class="fs-1 fw-bold" style="color: var(--primary);">
-                            @(Model.CaloriesPerServing) ккал
+                        <div class="fs-2 fw-bold" style="color: var(--primary);">
+                            @Math.Round(Model.CaloriesPerServing, 2) ккал
+                        </div>
+                        <div class="fs-2 fw-bold" style="color: var(--primary);">
+                            @Math.Round(Model.CostPerServing,2 ) руб
                         </div>
                         <small class="text-muted">на порцию (@Model.DefaultServings порц.)</small>
                     </div>
@@ -40,13 +43,13 @@
                         {
                             <li class="list-group-item d-flex justify-content-between align-items-center py-3">
                                 <div>
-                                    <strong>@ing.Amount @ing.Unit</strong> @ing.ProductName
+                                    <strong>@ing.ProductName</strong>
                                     @if (!string.IsNullOrEmpty(ing.Comment))
                                     {
                                         <small class="text-muted">(@ing.Comment)</small>
                                     }
                                 </div>
-                                <small class="text-muted">@(ing.Calories?.ToString("F0") ?? "—") ккал</small>
+                                <small class="text-muted">@Math.Round(ing.Amount, 2) @ing.Unit / @(ing.Calories?.ToString("F0") ?? "—") ккал</small>
                             </li>
                         }
                     </ul>
@@ -65,7 +68,7 @@
                                 </div>
                             </div>
                             <div class="flex-grow-1">
-                                <p class="mb-3 fs-5">@step.Description</p>
+                                <p class="mb-3 fs-normal">@step.Description</p>
                                 @if (!string.IsNullOrEmpty(step.ImageUrl))
                                 {
                                     <img src="@step.ImageUrl" alt="Шаг @step.Order" class="rounded-4 w-100" style="max-height: 400px; object-fit: cover;">

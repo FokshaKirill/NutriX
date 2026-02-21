@@ -14,18 +14,19 @@
         public decimal Amount { get; set; }
         public string Unit { get; set; } = null!;
         public string? Comment { get; set; }
-        private decimal GetGrams()
-        {
-            // Здесь нужна логика конвертации Amount + Unit в граммы.
-            // Это сложная часть — зависит от продукта (плотность, стандартные конверсии).
-            // Пример упрощённый: если Unit == "g" — return Amount, иначе TODO.
-            // Рекомендую добавить метод или таблицу конверсий.
-            return Unit.Trim().ToLower() == "g" ? Amount : Amount * 100; // placeholder
-        }
+        
+        // private decimal GetGrams()
+        // {
+        //     // Здесь нужна логика конвертации Amount + Unit в граммы.
+        //     // Это сложная часть — зависит от продукта (плотность, стандартные конверсии).
+        //     // Пример упрощённый: если Unit == "g" — return Amount, иначе TODO.
+        //     // Рекомендую добавить метод или таблицу конверсий.
+        //     return Unit.Trim().ToLower() == "g" ? Amount : Amount * 100; // placeholder
+        // }
 
-        public decimal? Calories => Product?.CaloriesPer100 * (GetGrams() / 100);
-        public decimal? Protein => Product?.ProteinPer100 * (GetGrams() / 100);
-        public decimal? Fat => Product?.FatPer100 * (GetGrams() / 100);
-        public decimal? Carbs => Product?.CarbsPer100 * (GetGrams() / 100);
+        public decimal? Calories => Product?.CaloriesPer100 * (Amount / 100);
+        public decimal? Protein => Product?.ProteinPer100 * (Amount / 100);
+        public decimal? Fat => Product?.FatPer100 * (Amount / 100);
+        public decimal? Carbs => Product?.CarbsPer100 * (Amount / 100);
     }
 }

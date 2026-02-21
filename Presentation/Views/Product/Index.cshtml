@@ -4,7 +4,7 @@
     <div class="row">
         <!-- Левая колонка: Фильтры -->
         <div class="col-lg-3 mb-5">
-            <div class="card p-4" style="background: var(--primary-light); border-radius: 1.8rem;">
+            <div class="card p-4" style="background: var(--primary-light); ">
                 <h4 class="mb-4" style="color: var(--primary);">Фильтры</h4>
                 
                 <form asp-action="Index" method="get">
@@ -40,7 +40,7 @@
         <div class="col-lg-9">
             <!-- Поиск и кнопки -->
             <div class="d-flex align-items-center mb-4">
-                <div class="flex-grow-1 me-4">
+                <div class="flex-grow-1 me-2">
                     <form asp-action="Index" method="get" class="d-flex">
                         <input type="search" name="searchTerm" value="@ViewBag.SearchTerm" class="form-control form-control-lg me-2" placeholder="Поиск продуктов..." aria-label="Search">
                         <button type="submit" class="btn btn-outline-success">Найти</button>
@@ -57,7 +57,7 @@
                 <!-- Кнопка "Импорт продуктов" -->
                 <div class="text-end">
                     <form asp-action="ImportProducts" method="post">
-                        <button type="submit" class="btn btn-primary btn-lg">Импорт</button>
+                        <button type="submit" class="btn btn-success btn-lg">Импорт</button>
                     </form>
                 </div>
             </div>
@@ -77,7 +77,7 @@
                 @foreach (var product in Model)
                 {
                     <div class="col-md-6 col-lg-4">
-                        <div class="card h-100 text-center p-4" style="border-radius: 1.8rem; background: var(--primary-light);">
+                        <div class="card text-center p-4" style=" background: var(--primary-light);">
                             @if (!string.IsNullOrEmpty(product.ImageUrl))
                             {
                                 <img src="@product.ImageUrl" alt="@product.Name" class="rounded-4 mb-4" style="width: 100%; height: 220px; object-fit: cover;">
@@ -129,7 +129,7 @@
             @if (ViewBag.TotalPages > 1)
             {
                 <nav aria-label="Пагинация продуктов" class="mt-5">
-                    <ul class="pagination pagination-lg justify-content-center">
+                    <ul class="pagination justify-content-center">
                         @if (ViewBag.CurrentPage > 1)
                         {
                             <li class="page-item">
@@ -141,7 +141,7 @@
                                    asp-route-maxCalories="@ViewBag.MaxCalories"
                                    asp-route-minPrice="@ViewBag.MinPrice"
                                    asp-route-maxPrice="@ViewBag.MaxPrice">
-                                    Назад
+                                    &lt;
                                 </a>
                             </li>
                         }
@@ -173,7 +173,7 @@
                                    asp-route-maxCalories="@ViewBag.MaxCalories"
                                    asp-route-minPrice="@ViewBag.MinPrice"
                                    asp-route-maxPrice="@ViewBag.MaxPrice">
-                                    Вперёд
+                                    &gt;
                                 </a>
                             </li>
                         }
@@ -187,7 +187,7 @@
 <!-- Модальное окно создания продукта -->
 <div class="modal fade" id="createProductModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg">
-        <div class="modal-content" style="border-radius: 1.8rem; overflow: hidden;">
+        <div class="modal-content" style="overflow: hidden;">
             <div class="modal-header" style="background: var(--primary-light);">
                 <h5 class="modal-title" style="color: var(--primary);">Новый продукт</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
