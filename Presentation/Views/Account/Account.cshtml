@@ -1,0 +1,28 @@
+﻿@using System.Security.Claims
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@model dynamic
+@{
+    ViewData["Title"] = "Аккаунт";
+}
+
+<div class="welcome-container">
+    <h2>Личный кабинет</h2>
+    @if (User.Identity?.IsAuthenticated ?? false)
+    {
+        <div>
+            <p>Привет, @User.Identity.Name!</p>
+            <p>Email: @User.FindFirst(ClaimTypes.Email)?.Value</p>
+            <a asp-action="Logout" asp-controller="Auth" class="btn btn-danger">Выйти</a>
+        </div>
+    }
+    else
+    {
+        <p>Вы не авторизованы. <a asp-action="AuthPage">Войдите</a> или <a asp-action="Register" asp-controller="Auth">зарегистрируйтесь</a>.</p>
+    }
+</div>
+
+<style>
+    .welcome-container { max-width: 500px; margin: 50px auto; padding: 20px; }
+    .btn { padding: 10px 20px; }
+    .btn-danger { background-color: #dc3545; color: white; }
+</style>

@@ -161,11 +161,53 @@ namespace Presentation.Controllers
             return Json(new { success = true, id = category.Id, name = category.Name });
         }
         
+        /// <summary>
+        /// Импорт только БЖУ из Calorizator.ru
+        /// </summary>
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> ImportProducts()
         {
-            await _productService.ImportProductsAsync();
-            return RedirectToAction("Index");
+            try
+            {
+                await _productService.ImportProductsAsync();
+                TempData["Success"] = "✅ БЖУ база успешно импортирована из Calorizator.ru";
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = $"❌ Ошибка импорта: {ex.Message}";
+            }
+            
+            return RedirectToAction("ImportOptions");
+        }
+
+        /// <summary>
+        /// Полный импорт: БЖУ + Примерные цены (РЕКОМЕНДУЕТСЯ)
+        /// </summary>
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ImportCombined()
+        {
+            try
+            {
+                await _productService.ImportCombinedAsync();
+                TempData["Success"] = "✅ Полная база успешно импортирована! ~2000 продуктов с БЖУ и ценами";
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = $"❌ Ошибка импорта: {ex.Message}";
+            }
+            
+            return RedirectToAction("ImportOptions");
+        }
+
+        /// <summary>
+        /// Страница выбора источника импорта
+        /// </summary>
+        [HttpGet]
+        public IActionResult ImportOptions()
+        {
+            return View();
         }
     }
 }

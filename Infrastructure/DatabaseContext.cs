@@ -16,6 +16,7 @@ namespace Infrastructure
         public DbSet<RecipeStep> RecipeSteps => Set<RecipeStep>();
         public DbSet<MealPlan> MealPlans => Set<MealPlan>();
         public DbSet<PlannedMeal> PlannedMeals => Set<PlannedMeal>();
+        public DbSet<User> Users => Set<User>();
 
         // Infrastructure/DatabaseContext.cs
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -36,6 +37,28 @@ namespace Infrastructure
                 }
             }
 
+            modelBuilder.Entity<User>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.Email).IsUnique();
+                entity.HasIndex(e => e.GoogleId).IsUnique();
+
+                entity.Property(e => e.Username).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.Email).IsRequired().HasMaxLength(255);
+                entity.Property(e => e.GoogleId).HasMaxLength(255);
+
+                entity.Property(e => e.Role)
+                    .HasConversion<string>()
+                    .HasMaxLength(50);
+
+                entity.Property(e => e.SubscriptionType)
+                    .HasConversion<string>()
+                    .HasMaxLength(50);
+
+                entity.Property(e => e.CreatedAt).HasDefaultValueSql("NOW() AT TIME ZONE 'UTC'");
+                entity.Property(e => e.LastLoginAt).HasDefaultValueSql("NOW() AT TIME ZONE 'UTC'");
+            });
+                
             // Product hierarchy (остаётся)
             modelBuilder.Entity<Product>()
                 .HasOne(p => p.Parent)

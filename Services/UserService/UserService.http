@@ -1,0 +1,40 @@
+@UserService_HostAddress = http://localhost:5300
+
+GET {{UserService_HostAddress}}/health
+Accept: application/json
+
+###
+
+GET {{UserService_HostAddress}}/api/Auth/google/callback
+Accept: application/json
+
+###
+
+GET {{UserService_HostAddress}}/api/Auth/callback
+Accept: application/json
+
+###
+
+GET {{UserService_HostAddress}}/api/Auth/google
+Accept: application/json
+
+###
+
+GET {{UserService_HostAddress}}/api/Auth/logout
+Accept: application/json
+
+###
+
+GET {{UserService_HostAddress}}/api/auth/me
+Accept: application/json
+
+###
+
+### Send POST request with json body
+POST{{UserService_HostAddress}}/api/Auth/login
+Content-Type: application/json
+
+{
+  "email": "foksakirill@gmail.com",
+  "password": "OAuth_Google"
+}

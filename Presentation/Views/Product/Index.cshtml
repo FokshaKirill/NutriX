@@ -56,9 +56,9 @@
                 
                 <!-- Кнопка "Импорт продуктов" -->
                 <div class="text-end">
-                    <form asp-action="ImportProducts" method="post">
-                        <button type="submit" class="btn btn-success btn-lg">Импорт</button>
-                    </form>
+                    <a asp-action="ImportOptions" asp-controller="Product">
+                        <button class="btn btn-success btn-lg">Импорт</button>
+                    </a>
                 </div>
             </div>
 
@@ -124,63 +124,63 @@
                     </button>
                 </div>
             }
-
-            <!-- Пагинация -->
-            @if (ViewBag.TotalPages > 1)
-            {
-                <nav aria-label="Пагинация продуктов" class="mt-5">
-                    <ul class="pagination justify-content-center">
-                        @if (ViewBag.CurrentPage > 1)
-                        {
-                            <li class="page-item">
-                                <a class="page-link" 
-                                   asp-action="Index" 
-                                   asp-route-page="@(ViewBag.CurrentPage - 1)"
-                                   asp-route-searchTerm="@ViewBag.SearchTerm"
-                                   asp-route-categoryId="@ViewBag.SelectedCategoryId"
-                                   asp-route-maxCalories="@ViewBag.MaxCalories"
-                                   asp-route-minPrice="@ViewBag.MinPrice"
-                                   asp-route-maxPrice="@ViewBag.MaxPrice">
-                                    &lt;
-                                </a>
-                            </li>
-                        }
-
-                        @for (int i = Math.Max(1, ViewBag.CurrentPage - 2); i <= Math.Min(ViewBag.TotalPages, ViewBag.CurrentPage + 2); i++)
-                        {
-                            <li class="page-item @(i == ViewBag.CurrentPage ? "active" : "")">
-                                <a class="page-link" 
-                                   asp-action="Index" 
-                                   asp-route-page="@i"
-                                   asp-route-searchTerm="@ViewBag.SearchTerm"
-                                   asp-route-categoryId="@ViewBag.SelectedCategoryId"
-                                   asp-route-maxCalories="@ViewBag.MaxCalories"
-                                   asp-route-minPrice="@ViewBag.MinPrice"
-                                   asp-route-maxPrice="@ViewBag.MaxPrice">
-                                    @i
-                                </a>
-                            </li>
-                        }
-
-                        @if (ViewBag.CurrentPage < ViewBag.TotalPages)
-                        {
-                            <li class="page-item">
-                                <a class="page-link" 
-                                   asp-action="Index" 
-                                   asp-route-page="@(ViewBag.CurrentPage + 1)"
-                                   asp-route-searchTerm="@ViewBag.SearchTerm"
-                                   asp-route-categoryId="@ViewBag.SelectedCategoryId"
-                                   asp-route-maxCalories="@ViewBag.MaxCalories"
-                                   asp-route-minPrice="@ViewBag.MinPrice"
-                                   asp-route-maxPrice="@ViewBag.MaxPrice">
-                                    &gt;
-                                </a>
-                            </li>
-                        }
-                    </ul>
-                </nav>
-            }
         </div>
+
+        <!-- Пагинация -->
+        @if (ViewBag.TotalPages > 1)
+        {
+            <nav aria-label="Пагинация продуктов" class="mt-5">
+                <ul class="pagination justify-content-center">
+                    @if (ViewBag.CurrentPage > 1)
+                    {
+                        <li class="page-item">
+                            <a class="page-link" 
+                               asp-action="Index" 
+                               asp-route-page="@(ViewBag.CurrentPage - 1)"
+                               asp-route-searchTerm="@ViewBag.SearchTerm"
+                               asp-route-categoryId="@ViewBag.SelectedCategoryId"
+                               asp-route-maxCalories="@ViewBag.MaxCalories"
+                               asp-route-minPrice="@ViewBag.MinPrice"
+                               asp-route-maxPrice="@ViewBag.MaxPrice">
+                                &lt;
+                            </a>
+                        </li>
+                    }
+
+                    @for (int i = Math.Max(1, ViewBag.CurrentPage - 9); i <= Math.Min(ViewBag.TotalPages, ViewBag.CurrentPage + 9); i++)
+                    {
+                        <li class="page-item @(i == ViewBag.CurrentPage ? "active" : "")">
+                            <a class="page-link" 
+                               asp-action="Index" 
+                               asp-route-page="@i"
+                               asp-route-searchTerm="@ViewBag.SearchTerm"
+                               asp-route-categoryId="@ViewBag.SelectedCategoryId"
+                               asp-route-maxCalories="@ViewBag.MaxCalories"
+                               asp-route-minPrice="@ViewBag.MinPrice"
+                               asp-route-maxPrice="@ViewBag.MaxPrice">
+                                @i
+                            </a>
+                        </li>
+                    }
+
+                    @if (ViewBag.CurrentPage < ViewBag.TotalPages)
+                    {
+                        <li class="page-item">
+                            <a class="page-link" 
+                               asp-action="Index" 
+                               asp-route-page="@(ViewBag.CurrentPage + 1)"
+                               asp-route-searchTerm="@ViewBag.SearchTerm"
+                               asp-route-categoryId="@ViewBag.SelectedCategoryId"
+                               asp-route-maxCalories="@ViewBag.MaxCalories"
+                               asp-route-minPrice="@ViewBag.MinPrice"
+                               asp-route-maxPrice="@ViewBag.MaxPrice">
+                                &gt;
+                            </a>
+                        </li>
+                    }
+                </ul>
+            </nav>
+        }
     </div>
 </div>
 

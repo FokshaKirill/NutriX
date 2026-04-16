@@ -1,0 +1,251 @@
+﻿@{
+ViewData["Title"] = "Импорт продуктов";
+}
+
+<div class="container py-5">
+    <div class="text-center mb-5">
+        <h2 style="color: var(--primary);">
+            <i class="fas fa-download me-2"></i>
+            Импорт базы продуктов
+        </h2>
+        <p class="text-muted">Выберите источник для импорта данных</p>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    }
+
+    <div class="row g-4 justify-content-center">
+        <!-- Рекомендуемый: Комбинированный -->
+        <div class="col-lg-6">
+            <div class="card h-100 shadow border-success" style="border-width: 3px !important; background: var(--primary-light);">
+                <div class="card-body p-5 text-center d-flex flex-column">
+                    <div class="mb-3">
+                        <span class="badge bg-success fs-6">РЕКОМЕНДУЕТСЯ</span>
+                    </div>
+
+                    <div class="mb-4">
+                        <i class="fas fa-star fa-4x" style="color: var(--primary);"></i>
+                    </div>
+
+                    <h3 class="mb-3" style="color: var(--primary);">
+                        Полная база (БЖУ + Цены)
+                    </h3>
+
+                    <p class="text-muted mb-4">
+                        БЖУ и калории из Calorizator.ru + Средние рыночные цены
+                    </p>
+
+                    <div class="row g-3 mb-4 text-start">
+                        <div class="col-6">
+                            <div class="p-3 rounded bg-white">
+                                <i class="fas fa-check-circle text-success me-2"></i>
+                                <strong>~2000 продуктов</strong>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-3 rounded bg-white">
+                                <i class="fas fa-check-circle text-success me-2"></i>
+                                <strong>БЖУ + Калории</strong>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-3 rounded bg-white">
+                                <i class="fas fa-check-circle text-success me-2"></i>
+                                <strong>Примерные цены</strong>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-3 rounded bg-white">
+                                <i class="fas fa-clock text-warning me-2"></i>
+                                <strong>5-10 минут</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <form asp-action="ImportCombined" method="post" class="mt-auto">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-success btn-lg w-100 mb-2" style="height: 60px; font-size: 1.2rem;">
+                            <i class="fas fa-rocket me-2"></i>
+                            Импортировать полную базу
+                        </button>
+                        <small class="text-muted">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Загрузит ~2000 продуктов с БЖУ и ценами
+                        </small>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Только БЖУ -->
+        <div class="col-lg-6">
+            <div class="card h-100 shadow">
+                <div class="card-body p-5 text-center d-flex flex-column">
+                    <div class="mb-4 mt-3">
+                        <i class="fas fa-fire fa-4x" style="color: #ff6b6b;"></i>
+                    </div>
+
+                    <h3 class="mb-3" style="color: var(--primary);">
+                        Только БЖУ база
+                    </h3>
+
+                    <p class="text-muted mb-4">
+                        Пищевая ценность продуктов из Calorizator.ru (без цен)
+                    </p>
+
+                    <div class="row g-3 mb-4 text-start">
+                        <div class="col-12">
+                            <div class="p-3 rounded" style="background: var(--primary-light);">
+                                <i class="fas fa-check-circle text-success me-2"></i>
+                                <strong>~2000 продуктов</strong>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="p-3 rounded" style="background: var(--primary-light);">
+                                <i class="fas fa-check-circle text-success me-2"></i>
+                                <strong>Калории, белки, жиры, углеводы</strong>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="p-3 rounded" style="background: var(--primary-light);">
+                                <i class="fas fa-times text-danger me-2"></i>
+                                <strong>Без цен (нужно добавить вручную)</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <form asp-action="ImportProducts" method="post" class="mt-auto">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-outline-primary btn-lg w-100">
+                            <i class="fas fa-download me-2"></i>
+                            Импортировать БЖУ
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Информационная секция -->
+    <div class="card mt-5 p-4" style="background: #f8f9fa;">
+        <h5 class="mb-4 text-center">
+            <i class="fas fa-question-circle me-2"></i>
+            Какой вариант выбрать?
+        </h5>
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="p-4 rounded mb-3" style="background: white;">
+                    <h6 class="text-success mb-3">
+                        <i class="fas fa-check-circle me-2"></i>
+                        Рекомендуем: Полная база
+                    </h6>
+                    <ul class="mb-0">
+                        <li>Быстрый старт - всё готово к работе</li>
+                        <li>БЖУ из проверенного источника</li>
+                        <li>Средние рыночные цены уже установлены</li>
+                        <li>Можно скорректировать цены позже</li>
+                        <li>Импорт занимает всего 5-10 минут</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="p-4 rounded mb-3" style="background: white;">
+                    <h6 class="text-primary mb-3">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Только БЖУ база
+                    </h6>
+                    <ul class="mb-0">
+                        <li>Нужны только данные о пищевой ценности</li>
+                        <li>Цены будете добавлять вручную</li>
+                        <li>Больше контроля над данными</li>
+                        <li>Подходит для специфических задач</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="alert alert-info mt-4 mb-0">
+            <i class="fas fa-lightbulb me-2"></i>
+            <strong>Совет:</strong> Начните с "Полной базы" - это даст вам готовую систему для работы.
+            Цены можно будет откорректировать позже в разделе "Продукты".
+        </div>
+    </div>
+
+    <!-- Что будет импортировано -->
+    <div class="card mt-5 p-4">
+        <h5 class="mb-4 text-center">
+            <i class="fas fa-list me-2"></i>
+            Примеры продуктов в базе
+        </h5>
+
+        <div class="row g-3">
+            <div class="col-md-3">
+                <div class="text-center p-3 rounded" style="background: var(--primary-light);">
+                    <i class="fas fa-cheese fa-2x mb-2" style="color: var(--primary);"></i>
+                    <div class="small fw-bold">Молочные продукты</div>
+                    <div class="text-muted small">Молоко, сыр, творог</div>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="text-center p-3 rounded" style="background: var(--primary-light);">
+                    <i class="fas fa-drumstick-bite fa-2x mb-2" style="color: var(--primary);"></i>
+                    <div class="small fw-bold">Мясо и птица</div>
+                    <div class="text-muted small">Курица, говядина, свинина</div>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="text-center p-3 rounded" style="background: var(--primary-light);">
+                    <i class="fas fa-apple-alt fa-2x mb-2" style="color: var(--primary);"></i>
+                    <div class="small fw-bold">Овощи и фрукты</div>
+                    <div class="text-muted small">Яблоки, морковь, капуста</div>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="text-center p-3 rounded" style="background: var(--primary-light);">
+                    <i class="fas fa-box fa-2x mb-2" style="color: var(--primary);"></i>
+                    <div class="small fw-bold">Крупы и бакалея</div>
+                    <div class="text-muted small">Рис, гречка, макароны</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Кнопка возврата -->
+    <div class="text-center mt-5">
+        <a asp-action="Index" class="btn btn-outline-primary btn-lg">
+            <i class="fas fa-arrow-left me-2"></i>
+            Вернуться к продуктам
+        </a>
+    </div>
+</div>
+
+@section Scripts {
+<style>
+    .card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15) !important;
+    }
+</style>
+}

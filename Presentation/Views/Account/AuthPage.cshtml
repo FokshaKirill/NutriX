@@ -1,0 +1,68 @@
+﻿@model dynamic
+@{
+    ViewData["Title"] = "Страница аутентификации";
+}
+
+<div class="welcome-container">
+    <h2>Аутентификация</h2>
+
+    <!-- Форма регистрации -->
+    <div class="auth-section">
+        <h3>Регистрация</h3>
+        <form asp-action="Register" asp-controller="Auth" method="post">
+            <div class="form-group">
+                <label for="username">Имя пользователя</label>
+                <input type="text" id="username" name="Username" class="form-control" required />
+            </div>
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="Email" class="form-control" required />
+            </div>
+            <div class="form-group">
+                <label for="password">Пароль</label>
+                <input type="password" id="password" name="Password" class="form-control" required />
+            </div>
+            <button type="submit" class="btn btn-primary">Зарегистрироваться</button>
+        </form>
+        @if (TempData["RegisterMessage"] != null)
+        {
+            <div class="alert alert-success">@TempData["RegisterMessage"]</div>
+        }
+    </div>
+
+    <!-- Форма логина -->
+    <div class="auth-section">
+        <h3>Вход</h3>
+        <form asp-action="Login" asp-controller="Auth" method="post">
+            <div class="form-group">
+                <label for="loginEmail">Email</label>
+                <input type="email" id="loginEmail" name="Email" class="form-control" required />
+            </div>
+            <div class="form-group">
+                <label for="loginPassword">Пароль</label>
+                <input type="password" id="loginPassword" name="Password" class="form-control" required />
+            </div>
+            <button type="submit" class="btn btn-primary">Войти</button>
+        </form>
+        @if (TempData["LoginMessage"] != null)
+        {
+            <div class="alert alert-success">@TempData["LoginMessage"]</div>
+        }
+    </div>
+
+    <!-- Кнопка Google Login -->
+    <div class="auth-section">
+        <a asp-action="GoogleLogin" asp-controller="Auth" class="btn btn-danger">Войти через Google</a>
+    </div>
+</div>
+
+<style>
+    .welcome-container { max-width: 500px; margin: 50px auto; padding: 20px; }
+    .auth-section { margin-bottom: 20px; }
+    .form-group { margin-bottom: 15px; }
+    .form-control { width: 100%; padding: 8px; }
+    .btn { padding: 10px 20px; }
+    .btn-primary { background-color: #007bff; color: white; }
+    .btn-danger { background-color: #dc3545; color: white; }
+    .alert { margin-top: 10px; }
+</style>

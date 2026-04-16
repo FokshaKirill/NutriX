@@ -1,0 +1,276 @@
+﻿@{
+    ViewData["Title"] = "Тестирование парсера";
+}
+
+<div class="container py-5">
+    <h2 class="mb-5" style="color: var(--primary);">
+        <i class="fas fa-bug me-2"></i>
+        Тестирование парсера Пятёрочки
+    </h2>
+
+    <!-- Тест 1: Анализ селекторов -->
+    <div class="card mb-4">
+        <div class="card-header" style="background: var(--primary-light);">
+            <h5 class="mb-0" style="color: var(--primary);">
+                🔍 Шаг 1: Найти правильные селекторы
+            </h5>
+        </div>
+        <div class="card-body">
+            <p class="text-muted">Анализ HTML страницы для поиска карточек товаров</p>
+            
+            <div class="input-group mb-3">
+                <span class="input-group-text">Категория:</span>
+                <select class="form-select" id="categorySelect">
+                    <option value="moloko-syr-yajca">Молоко, сыр, яйца</option>
+                    <option value="myaso-ptitsa-kolbasa">Мясо, птица, колбаса</option>
+                    <option value="ovoshchi-frukty-yagody">Овощи, фрукты, ягоды</option>
+                    <option value="bakaleya">Бакалея</option>
+                </select>
+                <button class="btn btn-primary" onclick="findSelectors()">
+                    <i class="fas fa-search me-1"></i> Анализировать
+                </button>
+            </div>
+
+            <div id="selectorsResult" class="alert alert-secondary d-none">
+                <pre class="mb-0" style="white-space: pre-wrap;"></pre>
+            </div>
+        </div>
+    </div>
+
+    <!-- Тест 2: Парсинг категории -->
+    <div class="card mb-4">
+        <div class="card-header" style="background: var(--primary-light);">
+            <h5 class="mb-0" style="color: var(--primary);">
+                📦 Шаг 2: Тест парсинга категории
+            </h5>
+        </div>
+        <div class="card-body">
+            <p class="text-muted">Парсинг первых 5 товаров из выбранной категории</p>
+            
+            <button class="btn btn-success mb-3" onclick="testCategory()">
+                <i class="fas fa-play me-1"></i> Запустить тест
+            </button>
+
+            <div id="categoryResult" class="d-none">
+                <h6>Результаты:</h6>
+                <div id="categoryResultContent"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Тест 3: Парсинг одного продукта -->
+    <div class="card mb-4">
+        <div class="card-header" style="background: var(--primary-light);">
+            <h5 class="mb-0" style="color: var(--primary);">
+                🎯 Шаг 3: Тест парсинга одного продукта
+            </h5>
+        </div>
+        <div class="card-body">
+            <p class="text-muted">Детальный парсинг страницы товара (название, цена, БЖУ, фото)</p>
+            
+            <div class="input-group mb-3">
+                <span class="input-group-text">URL продукта:</span>
+                <input type="text" class="form-control" id="productUrl" 
+                       placeholder="https://5ka.ru/product/...">
+                <button class="btn btn-success" onclick="testProduct()">
+                    <i class="fas fa-play me-1"></i> Тест
+                </button>
+            </div>
+
+            <div id="productResult" class="d-none">
+                <div class="card">
+                    <div class="card-body" id="productResultContent"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Тест 4: Просмотр HTML -->
+    <div class="card">
+        <div class="card-header" style="background: var(--primary-light);">
+            <h5 class="mb-0" style="color: var(--primary);">
+                📄 Шаг 4: Просмотр исходного HTML
+            </h5>
+        </div>
+        <div class="card-body">
+            <p class="text-muted">Открыть HTML страницы в новой вкладке для ручного анализа</p>
+            
+            <button class="btn btn-outline-primary" onclick="openHtml()">
+                <i class="fas fa-external-link-alt me-1"></i> Открыть HTML
+            </button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    function getSelectedCategory() {
+        return document.getElementById('categorySelect').value;
+    }
+
+    async function findSelectors() {
+        const category = getSelectedCategory();
+        const resultDiv = document.getElementById('selectorsResult');
+        const resultPre = resultDiv.querySelector('pre');
+        
+        resultDiv.classList.remove('d-none');
+        resultPre.textContent = 'Загрузка...';
+        
+        try {
+            const response = await fetch(`/ParserTest/FindSelectors?category=${category}`);
+            const data = await response.json();
+            
+            resultPre.textContent = JSON.stringify(data, null, 2);
+            
+            if (data.possibleProductCardSelectors) {
+                const total = Object.values(data.possibleProductCardSelectors)
+                    .reduce((sum, count) => sum + count, 0);
+                    
+                if (total === 0) {
+                    resultDiv.classList.add('alert-warning');
+                    resultDiv.classList.remove('alert-success');
+                    alert('⚠️ Карточки товаров не найдены! Возможно структура сайта изменилась.');
+                } else {
+                    resultDiv.classList.add('alert-success');
+                    resultDiv.classList.remove('alert-warning');
+                }
+            }
+        } catch (error) {
+            resultPre.textContent = 'Ошибка: ' + error.message;
+            resultDiv.classList.add('alert-danger');
+        }
+    }
+
+    async function testCategory() {
+        const category = getSelectedCategory();
+        const resultDiv = document.getElementById('categoryResult');
+        const contentDiv = document.getElementById('categoryResultContent');
+        
+        resultDiv.classList.remove('d-none');
+        contentDiv.innerHTML = '<div class="spinner-border"></div> Загрузка...';
+        
+        try {
+            const response = await fetch(`/ParserTest/TestCategory?category=${category}`);
+            const data = await response.json();
+            
+            if (!data.success) {
+                contentDiv.innerHTML = `
+                    <div class="alert alert-danger">
+                        <strong>Ошибка:</strong> ${data.error || 'Неизвестная ошибка'}
+                        ${data.hint ? `<br><em>${data.hint}</em>` : ''}
+                    </div>
+                `;
+                return;
+            }
+            
+            let html = `
+                <div class="alert alert-success">
+                    <strong>Успешно!</strong> Найдено карточек: ${data.totalCards}
+                </div>
+                <h6>Примеры (первые 5):</h6>
+            `;
+            
+            data.parsedSamples.forEach((item, index) => {
+                html += `
+                    <div class="card mb-2">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>${index + 1}. ${item.name || item.error || 'Ошибка'}</strong>
+                                    ${item.price ? `<br><span class="text-muted">${item.price}</span>` : ''}
+                                </div>
+                                <div>
+                                    ${item.hasImage 
+                                        ? '<span class="badge bg-success">📷 Есть фото</span>' 
+                                        : '<span class="badge bg-secondary">❌ Нет фото</span>'}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            contentDiv.innerHTML = html;
+        } catch (error) {
+            contentDiv.innerHTML = `<div class="alert alert-danger">Ошибка: ${error.message}</div>`;
+        }
+    }
+
+    async function testProduct() {
+        const url = document.getElementById('productUrl').value;
+        
+        if (!url) {
+            alert('Введите URL продукта!');
+            return;
+        }
+        
+        const resultDiv = document.getElementById('productResult');
+        const contentDiv = document.getElementById('productResultContent');
+        
+        resultDiv.classList.remove('d-none');
+        contentDiv.innerHTML = '<div class="spinner-border"></div> Парсим...';
+        
+        try {
+            const response = await fetch(`/ParserTest/TestSingleProduct?url=${encodeURIComponent(url)}`);
+            const data = await response.json();
+            
+            if (!data.success) {
+                contentDiv.innerHTML = `
+                    <div class="alert alert-danger">
+                        <strong>Ошибка:</strong> ${data.error}
+                    </div>
+                `;
+                return;
+            }
+            
+            const p = data.product;
+            
+            contentDiv.innerHTML = `
+                <div class="row">
+                    <div class="col-md-4">
+                        ${p.HasImage 
+                            ? `<img src="${p.ImageUrl}" class="img-fluid rounded" alt="${p.Name}">`
+                            : '<div class="bg-light p-5 text-center rounded">Нет фото</div>'}
+                    </div>
+                    <div class="col-md-8">
+                        <h4>${p.Name}</h4>
+                        <p class="fs-3 text-success fw-bold">${p.Price}</p>
+                        <p class="text-muted">Единица: ${p.Unit}</p>
+                        
+                        <hr>
+                        
+                        <h5>Пищевая ценность (на 100г):</h5>
+                        <table class="table">
+                            <tr>
+                                <td>Калории:</td>
+                                <td><strong>${p.Calories || '—'} ккал</strong></td>
+                            </tr>
+                            <tr>
+                                <td>Белки:</td>
+                                <td><strong>${p.Protein || '—'} г</strong></td>
+                            </tr>
+                            <tr>
+                                <td>Жиры:</td>
+                                <td><strong>${p.Fat || '—'} г</strong></td>
+                            </tr>
+                            <tr>
+                                <td>Углеводы:</td>
+                                <td><strong>${p.Carbs || '—'} г</strong></td>
+                            </tr>
+                        </table>
+                        
+                        ${!p.Calories ? '<div class="alert alert-warning">⚠️ БЖУ не найдены на странице товара</div>' : ''}
+                    </div>
+                </div>
+            `;
+        } catch (error) {
+            contentDiv.innerHTML = `<div class="alert alert-danger">Ошибка: ${error.message}</div>`;
+        }
+    }
+
+    function openHtml() {
+        const category = getSelectedCategory();
+        window.open(`/ParserTest/InspectHtml?category=${category}`, '_blank');
+    }
+</script>
+}

@@ -149,10 +149,6 @@ hr {
     color: var(--text-muted);
 }
 
-.badge {
-    background: var(--primary-light) !important;
-}
-
 .form-control-lg, .form-select-lg {
     font-size: 1rem;
 }
