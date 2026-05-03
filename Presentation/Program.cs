@@ -25,7 +25,8 @@ builder.Services.AddDbContext<DatabaseContext>(options =>
     options.UseNpgsql(
         builder.Configuration.GetConnectionString("DefaultConnection")));
 
-builder.Services.AddAutoMapper(typeof(MappingProfile));
+builder.Services.AddAutoMapper(cfg => cfg.AddMaps(typeof(MappingProfile).Assembly));
+
 
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 
@@ -37,6 +38,7 @@ builder.Services.AddScoped<IMealTypeService, MealTypeService>();
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<IRecipeService, RecipeService>();
 builder.Services.AddScoped<IRecipeParserService, RecipeParserService>();
+builder.Services.AddScoped<IFavoriteService, FavoriteService>();
 
 // HttpClient для nutrition API
 builder.Services.AddHttpClient<INutritionApiService, NutritionApiService>(client =>
@@ -65,51 +67,42 @@ builder.Services.AddSession(options =>
     options.Cookie.SecurePolicy = CookieSecurePolicy.None; // HTTP localhost
 });
 
+builder.Services.AddDistributedMemoryCache();
+builder.Services.AddSession(options =>
+{
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+    options.Cookie.SameSite = SameSiteMode.Lax;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.None;
+});
+
 builder.Services.AddAuthentication(options =>
     {
-        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-        options.DefaultSignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-        options.DefaultChallengeScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+        options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+        options.DefaultChallengeScheme = GoogleDefaults.AuthenticationScheme;
     })
-    
-    .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
-    {
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(key),
-            ValidateIssuer = true,
-            ValidIssuer = builder.Configuration["Jwt:Issuer"] ?? "UserService",
-            ValidateAudience = true,
-            ValidAudience = builder.Configuration["Jwt:Audience"] ?? "WebApp",
-            ValidateLifetime = true,
-            ClockSkew = TimeSpan.Zero
-        };
-    })
-    .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme, options =>
+    .AddCookie(options =>
     {
         options.LoginPath = "/api/auth/google";
         options.Cookie.SameSite = SameSiteMode.Lax;
-        options.Cookie.SecurePolicy = CookieSecurePolicy.None; // ← HTTP
-        options.Cookie.HttpOnly = true;
-        options.ExpireTimeSpan = TimeSpan.FromMinutes(60);
+        options.Cookie.SecurePolicy = CookieSecurePolicy.None;
     })
-    .AddGoogle(GoogleDefaults.AuthenticationScheme, googleOptions =>
+    .AddGoogle(options =>
     {
-        googleOptions.ClientId = builder.Configuration["Google:ClientId"]!;
-        googleOptions.ClientSecret = builder.Configuration["Google:ClientSecret"]!;
-        googleOptions.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-        googleOptions.CallbackPath = "/api/auth/google/callback";
-    
-        googleOptions.CorrelationCookie.SameSite = SameSiteMode.Lax;
-        googleOptions.CorrelationCookie.SecurePolicy = CookieSecurePolicy.None; // ← HTTP
-        googleOptions.CorrelationCookie.HttpOnly = true;
-        googleOptions.CorrelationCookie.Name = ".AspNetCore.Correlation.Google."; // ← фиксированный префикс
-    
-        googleOptions.Scope.Add("email");
-        googleOptions.Scope.Add("profile");
-        googleOptions.SaveTokens = true;
+        options.ClientId = builder.Configuration["Google:ClientId"]!;
+        options.ClientSecret = builder.Configuration["Google:ClientSecret"]!;
+        options.CallbackPath = "/api/auth/google/callback";
+        options.CorrelationCookie.SameSite = SameSiteMode.Lax;
+        options.CorrelationCookie.SecurePolicy = CookieSecurePolicy.None;
+        options.Events.OnRemoteFailure = context =>
+        {
+            context.Response.Redirect("/account/authpage?error=google_failed");
+            context.HandleResponse();
+            return Task.CompletedTask;
+        };
     });
+
+builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
@@ -145,18 +138,18 @@ using (var scope = app.Services.CreateScope())
 
 // Middleware pipeline
 if (app.Environment.IsDevelopment())
-{
-    // Лучше так (современный подход)
-    app.UseExceptionHandler("/Home/Error");
-    // Или для подробной страницы ошибок разработчика:
-    // app.UseDeveloperExceptionPage();
-}
+    app.UseDeveloperExceptionPage();
 else
 {
     app.UseExceptionHandler("/Home/Error");
-    app.UseHttpsRedirection(); 
     app.UseHsts();
 }
+
+app.UseStaticFiles();
+app.UseRouting();
+app.UseSession();
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.UseStaticFiles();
 app.UseRouting();

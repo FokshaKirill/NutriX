@@ -69,5 +69,20 @@ namespace Presentation.Controllers
 
             return View(model);
         }
+        
+        public IActionResult Contact()
+        {
+            return View();
+        }
+        
+        public IActionResult Help()
+        {
+            return View();
+        }
+        
+        public IActionResult Privacy()
+        {
+            return View();
+        }
     }
 }

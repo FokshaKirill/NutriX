@@ -22,13 +22,11 @@ public class AccountController : Controller
     {
         ViewData["Title"] = "Страница аутентификации";
         
-        // Если уже авторизован — сразу на аккаунт
         if (User.Identity?.IsAuthenticated == true)
         {
             return RedirectToAction("Account");
         }
         
-        // Показать ошибку если пришла из Google OAuth
         var error = Request.Query["error"].ToString();
         if (!string.IsNullOrEmpty(error))
         {
@@ -47,17 +45,25 @@ public class AccountController : Controller
     [AllowAnonymous] // JWT проверяется на клиенте — страница доступна всем
     public IActionResult Account()
     {
-        ViewData["Title"] = "Аккаунт";
-        
-        // Токен может прийти из Google OAuth редиректа
-        var token = Request.Query["token"].ToString();
-        if (!string.IsNullOrEmpty(token))
+        if (User.Identity?.IsAuthenticated == true)
         {
-            HttpContext.Session.SetString("AuthToken", token);
-            // Редирект чтобы убрать токен из URL
-            return RedirectToAction("Account");
+            ViewData["Title"] = "Аккаунт";
+        
+            // Токен может прийти из Google OAuth редиректа
+            var token = Request.Query["token"].ToString();
+            if (!string.IsNullOrEmpty(token))
+            {
+                HttpContext.Session.SetString("AuthToken", token);
+                // Редирект чтобы убрать токен из URL
+                return RedirectToAction("Account");
+            }
+            return View();
         }
-
-        return View();
+        else
+        {
+            return RedirectToAction("AuthPage");
+        }
     }
 }
+
+// новый файл

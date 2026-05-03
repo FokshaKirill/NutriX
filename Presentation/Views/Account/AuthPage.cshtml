@@ -1,68 +1,451 @@
-﻿@model dynamic
-@{
-    ViewData["Title"] = "Страница аутентификации";
+﻿@{
+  Layout = null; 
 }
 
-<div class="welcome-container">
-    <h2>Аутентификация</h2>
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>NutriX</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    header,
+    .header,
+    nav.navbar,
+    .navbar,
+    .main-header,
+    header * {
+        display: none !important;
+    }
 
-    <!-- Форма регистрации -->
-    <div class="auth-section">
-        <h3>Регистрация</h3>
-        <form asp-action="Register" asp-controller="Auth" method="post">
-            <div class="form-group">
-                <label for="username">Имя пользователя</label>
-                <input type="text" id="username" name="Username" class="form-control" required />
-            </div>
-            <div class="form-group">
-                <label for="email">Email</label>
-                <input type="email" id="email" name="Email" class="form-control" required />
-            </div>
-            <div class="form-group">
-                <label for="password">Пароль</label>
-                <input type="password" id="password" name="Password" class="form-control" required />
-            </div>
-            <button type="submit" class="btn btn-primary">Зарегистрироваться</button>
-        </form>
-        @if (TempData["RegisterMessage"] != null)
-        {
-            <div class="alert alert-success">@TempData["RegisterMessage"]</div>
-        }
-    </div>
+    body > header:first-child,
+    body > nav:first-child {
+        display: none !important;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --sage: #86bf92;
+      --sage-dark: #5a9668;
+      --sage-light: #c8e6cc;
+      --cream: #faf8f4;
+      --ink: #1a1a18;
+      --ink-muted: #5c5c58;
+      --ink-faint: #9a9a94;
+      --surface: #ffffff;
+      --border: rgba(0,0,0,0.09);
+    }
+    html, body { height: 100%; }
+    body { font-family: 'DM Sans', sans-serif; min-height: 100vh; display: flex; }
 
-    <!-- Форма логина -->
-    <div class="auth-section">
-        <h3>Вход</h3>
-        <form asp-action="Login" asp-controller="Auth" method="post">
-            <div class="form-group">
-                <label for="loginEmail">Email</label>
-                <input type="email" id="loginEmail" name="Email" class="form-control" required />
-            </div>
-            <div class="form-group">
-                <label for="loginPassword">Пароль</label>
-                <input type="password" id="loginPassword" name="Password" class="form-control" required />
-            </div>
-            <button type="submit" class="btn btn-primary">Войти</button>
-        </form>
-        @if (TempData["LoginMessage"] != null)
-        {
-            <div class="alert alert-success">@TempData["LoginMessage"]</div>
-        }
-    </div>
+    .panel-form {
+      min-width: 420px; flex-shrink: 0;
+      background: var(--surface);
+      display: flex; flex-direction: column;
+      padding: 6rem 60px 40px;
+      position: relative; z-index: 2;
+      overflow-y: auto;
+    }
 
-    <!-- Кнопка Google Login -->
-    <div class="auth-section">
-        <a asp-action="GoogleLogin" asp-controller="Auth" class="btn btn-danger">Войти через Google</a>
-    </div>
+    .big-logo { margin-bottom: 48px; }
+    .big-logo-mark {
+      width: 64px; height: 64px;
+      background: var(--ink);
+      border-radius: 18px;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 14px;
+    }
+    .big-logo-name {
+      font-family: 'Playfair Display', serif;
+      font-size: 34px; font-weight: 700;
+      color: var(--sage); letter-spacing: -1px; line-height: 1;
+      text-decoration: none;
+    }
+    .big-logo-sub { font-size: 13px; color: var(--ink-faint); letter-spacing: 0.5px; margin-top: 5px; }
+
+    .form-head { margin-bottom: 28px; }
+    .form-head h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 26px; font-weight: 600;
+      color: var(--ink); letter-spacing: -0.4px; margin-bottom: 4px;
+    }
+    .form-head p { font-size: 13.5px; color: var(--ink-faint); }
+
+    .tabs { display: flex; border-bottom: 1.5px solid var(--border); margin-bottom: 28px; }
+    .tab-btn {
+      flex: 1; background: none; border: none;
+      font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500;
+      color: var(--ink-faint); padding: 0 0 13px;
+      cursor: pointer; position: relative; transition: color 0.2s;
+    }
+    .tab-btn::after {
+      content: ''; position: absolute; bottom: -1.5px; left: 0; right: 0;
+      height: 2px; background: var(--ink);
+      transform: scaleX(0); transition: transform 0.25s ease;
+    }
+    .tab-btn.active { color: var(--ink); }
+    .tab-btn.active::after { transform: scaleX(1); }
+
+    .form-panel { display: none; }
+    .form-panel.active { display: flex; flex-direction: column; gap: 14px; }
+
+    .field label {
+      display: block; font-size: 11px; font-weight: 500;
+      color: var(--ink-muted); letter-spacing: 0.4px; text-transform: uppercase; margin-bottom: 7px;
+    }
+    .field input {
+      width: 100%; height: 46px; border: 1.5px solid var(--border);
+      border-radius: 10px; padding: 0 16px;
+      font-family: 'DM Sans', sans-serif; font-size: 14px; color: var(--ink);
+      background: var(--cream); transition: border-color 0.2s, box-shadow 0.2s; outline: none;
+    }
+    .field input::placeholder { color: var(--ink-faint); }
+    .field input:focus {
+      border-color: var(--sage);
+      box-shadow: 0 0 0 3px rgba(134,191,146,0.15);
+      background: #fff;
+    }
+
+    .btn-primary {
+      width: 100%; height: 48px; background: var(--ink); color: #fff;
+      border: none; border-radius: 10px;
+      font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500;
+      cursor: pointer; transition: background 0.2s, transform 0.1s; margin-top: 2px;
+    }
+    .btn-primary:hover { background: #2e2e2b; }
+    .btn-primary:active { transform: scale(0.99); }
+
+    .divider {
+      display: flex; align-items: center; gap: 12px;
+      font-size: 12px; color: var(--ink-faint);
+    }
+    .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+    .btn-google {
+      width: 100%; height: 46px; background: var(--surface);
+      border: 1.5px solid var(--border); border-radius: 10px;
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500;
+      color: var(--ink); cursor: pointer; transition: border-color 0.2s, background 0.2s;
+    }
+    .btn-google:hover { background: var(--cream); border-color: rgba(0,0,0,0.15); }
+
+    .alert { display: none; font-size: 13px; padding: 10px 14px; border-radius: 8px; }
+    .alert-success { background: #eef7f0; color: #2e7d45; }
+    .alert-error   { background: #fef2f2; color: #b91c1c; }
+
+    .form-footer { margin-top: auto; padding-top: 36px; font-size: 11.5px; color: var(--ink-faint); line-height: 1.5; }
+
+    .panel-visual { flex: 1; position: relative; overflow: hidden; background: #070d07; }
+    canvas#rays { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+    .visual-overlay {
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column; justify-content: flex-end;
+      padding: 52px 56px;
+      background: linear-gradient(to top, rgba(4,9,4,0.85) 0%, transparent 50%);
+      pointer-events: none;
+    }
+    .visual-tag {
+      font-size: 10.5px; font-weight: 500; letter-spacing: 2px; text-transform: uppercase;
+      color: var(--sage-light); opacity: 0.6; margin-bottom: 14px;
+    }
+    .visual-headline {
+      font-family: 'Playfair Display', serif;
+      font-size: 46px; font-weight: 700; color: #fff;
+      line-height: 1.12; letter-spacing: -1.2px; max-width: 420px;
+    }
+    .visual-headline em { font-style: italic; color: var(--sage-light); }
+    .visual-desc { margin-top: 14px; font-size: 14.5px; color: rgba(255,255,255,0.42); line-height: 1.65; max-width: 340px; }
+    .main-content, body {
+      padding: 0;
+      margin: 0;
+      flex: 0;
+      display: flex;
+      min-height: 100vh;
+    }
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--cream);
+      display: flex;
+    }
+    .footer {
+      display: none;
+    }
+    .main-content, body {
+       padding: 0;
+       margin: 0;
+       flex: 0;
+       display: flex;
+       min-height: 100vh;
+     }
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--cream);
+      display: flex;
+    }
+    .main-content, body {
+      padding: 0;
+      margin: 0;
+      flex: 0;
+      display: flex;
+      min-height: 100vh;
+    }
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--cream);
+      display: flex;
+    }
+    #rays {
+      filter: blur(5px);
+    }
+    a, text, span, p {
+      text-decoration: 0;
+    }
+  </style>
+</head>
+<body>
+
+<div class="panel-form">
+  <div class="big-logo">
+    <a asp-action="Index" asp-controller="Home">
+      <div class="big-logo-name">NutriX</div>
+    </a>
+    <div class="big-logo-sub">Кулинарный помощник на основе ИИ</div>
+  </div>
+
+  <div class="form-head">
+    <h2 id="panel-title">С возвращением</h2>
+    <p id="panel-subtitle">Войдите в аккаунт, чтобы продолжить</p>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('login')">Вход</button>
+    <button class="tab-btn" onclick="switchTab('register')">Регистрация</button>
+  </div>
+
+  <div id="panel-login" class="form-panel active">
+    <div class="field"><label>Email</label><input type="email" id="login-email" placeholder="вы@example.com"/></div>
+    <div class="field"><label>Пароль</label><input type="password" id="login-pass" placeholder="••••••••"/></div>
+    <button class="btn-primary" id="btn-login">Войти</button>
+    <div class="divider">или</div>
+    <button class="btn-google" id="btn-google-login">
+      <svg width="17" height="17" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z"/></svg>
+      Войти через Google
+    </button>
+    <div id="login-msg" class="alert alert-success"></div>
+    <div id="login-err" class="alert alert-error"></div>
+  </div>
+
+  <div id="panel-register" class="form-panel">
+    <div class="field"><label>Имя пользователя</label><input type="text" id="reg-username" placeholder="chef_ivan"/></div>
+    <div class="field"><label>Email</label><input type="email" id="reg-email" placeholder="вы@example.com"/></div>
+    <div class="field"><label>Пароль</label><input type="password" id="reg-pass" placeholder="Минимум 6 символов"/></div>
+    <button class="btn-primary" id="btn-register">Создать аккаунт</button>
+    <div class="divider">или</div>
+    <button class="btn-google" id="btn-google-reg">
+      <svg width="17" height="17" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z"/></svg>
+      Зарегистрироваться через Google
+    </button>
+    <div id="reg-msg" class="alert alert-success"></div>
+    <div id="reg-err" class="alert alert-error"></div>
+  </div>
+
+  <div class="form-footer">Используя сервис, вы соглашаетесь с условиями использования и политикой конфиденциальности.</div>
 </div>
 
-<style>
-    .welcome-container { max-width: 500px; margin: 50px auto; padding: 20px; }
-    .auth-section { margin-bottom: 20px; }
-    .form-group { margin-bottom: 15px; }
-    .form-control { width: 100%; padding: 8px; }
-    .btn { padding: 10px 20px; }
-    .btn-primary { background-color: #007bff; color: white; }
-    .btn-danger { background-color: #dc3545; color: white; }
-    .alert { margin-top: 10px; }
-</style>
+<div class="panel-visual">
+  <canvas id="rays"></canvas>
+  <div class="visual-overlay">
+    <span class="visual-tag">Кулинарный ИИ-помощник</span>
+    <h2 class="visual-headline">Готовьте<br>с <em>вдохновением</em></h2>
+    <p class="visual-desc">Персональные рецепты, советы шеф-повара и умное планирование меню — всё в одном месте.</p>
+  </div>
+</div>
+
+<script>
+  (function () {
+    const canvas = document.getElementById('rays');
+    const ctx    = canvas.getContext('2d');
+    let W, H, t = 0;
+    let mx = 0.88, my = 0.08, tmx = 0.88, tmy = 0.08;
+
+    function resize() {
+      W = canvas.width  = canvas.offsetWidth;
+      H = canvas.height = canvas.offsetHeight;
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    canvas.parentElement.addEventListener('mousemove', e => {
+      const r = canvas.parentElement.getBoundingClientRect();
+      tmx = (e.clientX - r.left) / r.width;
+      tmy = (e.clientY - r.top)  / r.height;
+    });
+
+    function lerp(a, b, n) { return a + (b - a) * n; }
+
+    const RAYS = [
+      { baseAngle: 1.510, halfWidth: 0.155, bright: 0.10, freq: 0.000032 },
+      { baseAngle: 1.810, halfWidth: 0.255, bright: 0.20, freq: 0.000012 },
+      { baseAngle: 2.10, halfWidth: 0.155, bright: 0.30, freq: 0.000042 },
+      { baseAngle: 2.21, halfWidth: 0.030, bright: 0.18, freq: 0.000065 },
+      { baseAngle: 2.34, halfWidth: 0.072, bright: 0.38, freq: 0.000035 },
+      { baseAngle: 2.47, halfWidth: 0.025, bright: 0.14, freq: 0.000078 },
+      { baseAngle: 2.58, halfWidth: 0.085, bright: 0.45, freq: 0.000028 },
+      { baseAngle: 2.70, halfWidth: 0.020, bright: 0.12, freq: 0.000090 },
+      { baseAngle: 2.82, halfWidth: 0.060, bright: 0.32, freq: 0.000048 },
+      { baseAngle: 2.94, halfWidth: 0.018, bright: 0.10, freq: 0.000100 },
+      { baseAngle: 3.06, halfWidth: 0.048, bright: 0.26, freq: 0.000055 },
+      { baseAngle: 3.18, halfWidth: 0.035, bright: 0.20, freq: 0.000070 },
+      { baseAngle: 3.30, halfWidth: 0.065, bright: 0.35, freq: 0.000040 },
+      { baseAngle: 3.43, halfWidth: 0.022, bright: 0.13, freq: 0.000085 },
+      { baseAngle: 3.55, halfWidth: 0.050, bright: 0.28, freq: 0.000050 },
+    ];
+
+    function frame() {
+      t++;
+      mx = lerp(mx, tmx, 0.322);
+      my = lerp(my, tmy, 0.222);
+
+      const ox = W * (0.98 + mx * 0.05);
+      const oy = H * (my * 0.1);
+
+      ctx.clearRect(0, 0, W, H);
+      ctx.fillStyle = '#070d07';
+      ctx.fillRect(0, 0, W, H);
+
+      const bigGlow = ctx.createRadialGradient(ox, oy, 2, ox, oy, W * 6.7);
+      bigGlow.addColorStop(0,   'rgba(90,170,100,0.2)');
+      bigGlow.addColorStop(0.5, 'rgba(50,120,60,0.1)');
+      bigGlow.addColorStop(1,   'rgba(0,0,0,0)');
+      ctx.fillStyle = bigGlow;
+      ctx.fillRect(0, 0, W, H);
+
+      const len = Math.sqrt(W * W + H * H) * 1.5;
+
+      for (let i = 0; i < RAYS.length; i++) {
+        const r = RAYS[i];
+        const wobble  = Math.sin(t * r.freq * 1000 + i * 1.7) * 0.04;
+        const angle   = r.baseAngle + wobble;
+        const hw      = r.halfWidth + Math.sin(t * r.freq * 700 + i * 2.3) * 0.01;
+        const pulse   = 0.7 + 0.3 * Math.sin(t * r.freq * 500 + i * 1.1);
+        const alpha   = r.bright * pulse;
+
+        const a1 = angle - hw, a2 = angle + hw;
+        const ex1 = ox + Math.cos(a1) * len, ey1 = oy + Math.sin(a1) * len;
+        const ex2 = ox + Math.cos(a2) * len, ey2 = oy + Math.sin(a2) * len;
+        const midX = ox + Math.cos(angle) * len * 0.5;
+        const midY = oy + Math.sin(angle) * len * 0.5;
+
+        const grad = ctx.createLinearGradient(ox, oy, midX, midY);
+        grad.addColorStop(0,   `rgba(180,240,170,${alpha})`);
+        grad.addColorStop(0.15,`rgba(120,200,130,${alpha * 0.75})`);
+        grad.addColorStop(0.5, `rgba(70,160,80,${alpha * 0.35})`);
+        grad.addColorStop(1,   `rgba(30,100,40,0)`);
+
+        ctx.beginPath();
+        ctx.moveTo(ox, oy);
+        ctx.lineTo(ex1, ey1);
+        ctx.lineTo(ex2, ey2);
+        ctx.closePath();
+        ctx.fillStyle = grad;
+        ctx.fill();
+      }
+
+      const flare = ctx.createRadialGradient(ox, oy, 0, ox, oy, 100);
+      flare.addColorStop(0,   'rgba(230,255,220,0.65)');
+      flare.addColorStop(0.25,'rgba(160,230,160,0.25)');
+      flare.addColorStop(0.6, 'rgba(90,180,100,0.07)');
+      flare.addColorStop(1,   'rgba(0,0,0,0)');
+      ctx.fillStyle = flare;
+      ctx.beginPath(); ctx.arc(ox, oy, 100, 0, Math.PI * 2); ctx.fill();
+
+      const img = ctx.getImageData(0, 0, W, H);
+      const d   = img.data;
+      for (let k = 0; k < d.length; k += 20) {
+        const n = (Math.random() - 0.5) * 9;
+        d[k] += n; d[k+1] += n; d[k+2] += n;
+      }
+      ctx.putImageData(img, 0, 0);
+      requestAnimationFrame(frame);
+    }
+    frame();
+  })();
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const header = document.querySelector('header');
+    if (header) {
+      header.style.display = 'none';
+    }
+    
+    window.switchTab = function(tab) {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.form-panel').forEach(p => p.classList.remove('active'));
+      document.querySelector(`button[onclick="switchTab('${tab}')"]`).classList.add('active');
+      document.getElementById(`panel-${tab}`).classList.add('active');
+      const title = document.getElementById('panel-title');
+      const sub   = document.getElementById('panel-subtitle');
+      if (tab === 'login') { title.textContent = 'С возвращением'; sub.textContent = 'Войдите в аккаунт, чтобы продолжить'; }
+      else { title.textContent = 'Создайте аккаунт'; sub.textContent = 'Присоединяйтесь к сообществу кулинаров'; }
+    };
+
+    function showAlert(el, text) {
+      if (!el) return;
+      el.textContent = text; el.style.display = 'block';
+      setTimeout(() => { el.style.display = 'none'; }, 4000);
+    }
+
+    async function handleLogin() {
+      const email = document.getElementById('login-email').value.trim();
+      const password = document.getElementById('login-pass').value.trim();
+      const msgEl = document.getElementById('login-msg'), errEl = document.getElementById('login-err');
+      if (!email || !password) return showAlert(errEl, 'Введите email и пароль');
+      try {
+        const res = await fetch('/api/auth/login', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ email, password }) });
+        const data = await res.json();
+        if (res.ok) {
+          if (data.token) localStorage.setItem('authToken', data.token);
+          if (data.user)  localStorage.setItem('currentUser', JSON.stringify(data.user));
+          showAlert(msgEl, data.message || 'Вход выполнен!');
+          setTimeout(() => { window.location.href = '/account'; }, 1200);
+        } else showAlert(errEl, data.message || 'Ошибка входа');
+      } catch { showAlert(errEl, 'Нет соединения с сервером'); }
+    }
+
+    async function handleRegister() {
+      const username = document.getElementById('reg-username').value.trim();
+      const email    = document.getElementById('reg-email').value.trim();
+      const password = document.getElementById('reg-pass').value.trim();
+      const msgEl = document.getElementById('reg-msg'), errEl = document.getElementById('reg-err');
+      if (!username || !email || !password) return showAlert(errEl, 'Заполните все поля');
+      if (password.length < 6) return showAlert(errEl, 'Пароль — минимум 6 символов');
+      try {
+        const res = await fetch('/api/auth/register', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ username, email, password }) });
+        const data = await res.json();
+        if (res.ok) {
+          if (data.token) localStorage.setItem('authToken', data.token);
+          if (data.user)  localStorage.setItem('currentUser', JSON.stringify(data.user));
+          showAlert(msgEl, data.message || 'Аккаунт создан!');
+          setTimeout(() => switchTab('login'), 2000);
+        } else showAlert(errEl, data.message || 'Ошибка регистрации');
+      } catch { showAlert(errEl, 'Нет соединения с сервером'); }
+    }
+
+    const google = () => { window.location.href = '/api/auth/google'; };
+    document.getElementById('btn-login').addEventListener('click', handleLogin);
+    document.getElementById('btn-register').addEventListener('click', handleRegister);
+    document.getElementById('btn-google-login').addEventListener('click', google);
+    document.getElementById('btn-google-reg').addEventListener('click', google);
+
+    document.querySelectorAll('.field input').forEach(inp => {
+      inp.addEventListener('keypress', e => {
+        if (e.key !== 'Enter') return;
+        inp.closest('#panel-login') ? handleLogin() : inp.closest('#panel-register') ? handleRegister() : null;
+      });
+    });
+    console.log('%c🌿 Вкусняшки загружено', 'color:#86bf92;font-weight:600;');
+  });
+</script>
+</body>
+</html>

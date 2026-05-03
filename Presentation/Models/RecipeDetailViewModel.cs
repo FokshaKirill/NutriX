@@ -9,6 +9,9 @@ public class RecipeDetailViewModel
     public int DefaultServings { get; set; }
     public decimal TotalCost { get; set; } = 0;
     public decimal CostPerServing => TotalCost / DefaultServings;
+    
+    public bool IsFavorite { get; set; }
+    public bool IsOwner    { get; set; }
 
     public List<RecipeIngredientViewModel> Ingredients { get; set; } = [];
     public List<RecipeStepViewModel> Steps { get; set; } = [];

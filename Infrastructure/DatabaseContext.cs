@@ -16,8 +16,9 @@ namespace Infrastructure
         public DbSet<RecipeStep> RecipeSteps => Set<RecipeStep>();
         public DbSet<MealPlan> MealPlans => Set<MealPlan>();
         public DbSet<PlannedMeal> PlannedMeals => Set<PlannedMeal>();
+        public DbSet<FavoriteRecipe> FavoriteRecipes { get; set; }
         public DbSet<User> Users => Set<User>();
-
+        
         // Infrastructure/DatabaseContext.cs
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -95,6 +96,30 @@ namespace Infrastructure
             {
                 entity.Property(ri => ri.Amount).HasPrecision(10, 3);
             });
+            
+            
+            // ── FavoriteRecipe: составной PK ──
+            modelBuilder.Entity<FavoriteRecipe>()
+                .HasKey(f => new { f.UserId, f.RecipeId });
+ 
+            modelBuilder.Entity<FavoriteRecipe>()
+                .HasOne(f => f.User)
+                .WithMany(u => u.FavoriteRecipes)
+                .HasForeignKey(f => f.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+ 
+            modelBuilder.Entity<FavoriteRecipe>()
+                .HasOne(f => f.Recipe)
+                .WithMany(r => r.FavoritedBy)
+                .HasForeignKey(f => f.RecipeId)
+                .OnDelete(DeleteBehavior.Cascade);
+ 
+            // ── Recipe: автор ──
+            modelBuilder.Entity<Recipe>()
+                .HasOne(r => r.Author)
+                .WithMany(u => u.Recipes)
+                .HasForeignKey(r => r.AuthorId)
+                .OnDelete(DeleteBehavior.SetNull); // рецепт остаётся при удалении юзера
         }
     }
 }

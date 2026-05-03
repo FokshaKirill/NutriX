@@ -58,5 +58,16 @@ namespace Services.Services
                 await _recipes.SaveChangesAsync();
             }
         }
+        
+        public async Task<IEnumerable<Recipe>> GetByAuthorAsync(Guid authorId)
+        {
+            return await _recipes.Query()
+                .Include(r => r.Ingredients)
+                .ThenInclude(i => i.Product)
+                .Include(r => r.Steps)
+                .Where(r => r.AuthorId == authorId)
+                .OrderBy(r => r.Name)
+                .ToListAsync();
+        }
     }
 }

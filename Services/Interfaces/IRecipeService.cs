@@ -12,5 +12,6 @@ namespace Services.Interfaces
         Task<Recipe> CreateAsync(Recipe recipe);
         Task UpdateAsync(Recipe recipe);
         Task DeleteAsync(Guid id);
+        Task<IEnumerable<Recipe>> GetByAuthorAsync(Guid authorId);
     }
 }

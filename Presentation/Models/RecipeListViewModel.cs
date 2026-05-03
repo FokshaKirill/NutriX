@@ -11,7 +11,8 @@ public class RecipeListViewModel
     public decimal TotalCost { get; set; } = 0;
     public int IngredientsCount { get; set; }
     public int StepsCount { get; set; }
-        
+    public bool IsFavorite { get; set; }
+    
     // Пищевая ценность на порцию
     public decimal? CaloriesPerServing { get; set; }
     public decimal? ProteinPerServing { get; set; }

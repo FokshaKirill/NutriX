@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Repositories
 {
@@ -16,6 +17,9 @@ namespace Infrastructure.Repositories
 
         public async Task<T?> GetByIdAsync(Guid id)
             => await _db.Set<T>().FindAsync(id);
+        
+        public async Task<List<T>> GetAllAsync()
+            => await _db.Set<T>().ToListAsync();
 
         public IQueryable<T> Query()
             => _db.Set<T>();

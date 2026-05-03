@@ -17,13 +17,11 @@ public class AuthController : ControllerBase
 {
     private readonly IUserService _userService;
     private readonly IJwtService _jwtService;
-    private readonly IConfiguration _configuration;
 
-    public AuthController(IUserService userService, IJwtService jwtService, IConfiguration configuration)
+    public AuthController(IUserService userService, IJwtService jwtService)
     {
         _userService = userService;
         _jwtService = jwtService;
-        _configuration = configuration;
     }
 
     [HttpPost("register")]
@@ -34,22 +32,17 @@ public class AuthController : ControllerBase
             if (string.IsNullOrWhiteSpace(request.Username) || 
                 string.IsNullOrWhiteSpace(request.Email) || 
                 string.IsNullOrWhiteSpace(request.Password))
-            {
-                return BadRequest(new { message = "Все поля обязательны для заполнения" });
-            }
+                return BadRequest(new { message = "Все поля обязательны" });
 
             if (request.Password.Length < 6)
-            {
                 return BadRequest(new { message = "Пароль должен содержать минимум 6 символов" });
-            }
 
             var existingUser = await _userService.GetByEmailAsync(request.Email);
             if (existingUser != null)
-            {
                 return BadRequest(new { message = "Пользователь с таким email уже существует" });
-            }
 
             var hashedPassword = PasswordHasher.HashPassword(request.Password);
+
             var user = new User
             {
                 Username = request.Username,
@@ -62,48 +55,67 @@ public class AuthController : ControllerBase
                 CreatedAt = DateTime.UtcNow,
                 LastLoginAt = DateTime.UtcNow
             };
-
+            
             await _userService.CreateAsync(user);
+        
+            await SignInUserAsync(user); 
 
-            var token = _jwtService.GenerateJwtToken(user);
-            HttpContext.Session.SetString("AuthToken", token); // Сохранение токена в сессии
-
-            return RedirectToAction("AuthPage", "Account");
+            return Ok(new { 
+                message = "Регистрация прошла успешно",
+                user = new { id = user.Id, username = user.Username, email = user.Email }
+            });
         }
         catch (Exception ex)
         {
-            return StatusCode(500, new { message = "Ошибка сервера при регистрации" });
+            return StatusCode(500, new { message = "Ошибка при регистрации" });
         }
     }
-
+    
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
         try
         {
             if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Password))
-            {
                 return BadRequest(new { message = "Email и пароль обязательны" });
-            }
 
             var user = await _userService.GetByEmailAsync(request.Email);
             if (user == null || !PasswordHasher.VerifyPassword(request.Password, user.PasswordHash))
-            {
                 return BadRequest(new { message = "Неверный email или пароль" });
-            }
-
+            
             user.LastLoginAt = DateTime.UtcNow;
             await _userService.UpdateAsync(user);
 
-            var token = _jwtService.GenerateJwtToken(user);
-            HttpContext.Session.SetString("AuthToken", token); // Сохранение токена в сессии
+            await SignInUserAsync(user); 
 
-            return RedirectToAction("Account", "Account");
+            return Ok(new { 
+                message = "Вход выполнен успешно",
+                user = new { id = user.Id, username = user.Username, email = user.Email }
+            });
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            return StatusCode(500, new { message = "Ошибка сервера при входе" });
+            return StatusCode(500, new { message = "Ошибка при входе" });
         }
+    }
+    
+    private async Task SignInUserAsync(User user)
+    {
+        var claims = new List<Claim>
+        {
+            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+            new Claim(ClaimTypes.Name, user.Username),
+            new Claim(ClaimTypes.Email, user.Email),
+            new Claim(ClaimTypes.Role, user.Role.ToString())
+        };
+
+        var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+        var principal = new ClaimsPrincipal(identity);
+
+        await HttpContext.SignInAsync(
+            CookieAuthenticationDefaults.AuthenticationScheme,
+            principal,
+            new AuthenticationProperties { IsPersistent = true, ExpiresUtc = DateTime.UtcNow.AddDays(14) });
     }
     
     [HttpGet("google")]
@@ -166,6 +178,8 @@ public class AuthController : ControllerBase
                 }
                 await _userService.UpdateAsync(user);
             }
+            
+            await SignInUserAsync(user); 
 
             var token = _jwtService.GenerateJwtToken(user);
             return Redirect($"/account?token={token}");
@@ -217,11 +231,12 @@ public class AuthController : ControllerBase
         }
     }
 
-    [HttpGet("logout")]
+    [HttpPost("logout")]
     public async Task<IActionResult> Logout()
     {
         await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-        return Ok(new { message = "Выход выполнен успешно" });
+    
+        return Ok(new { message = "Выход выполнен" });
     }
 
     [HttpGet("check")]
@@ -288,3 +303,5 @@ public class AuthController : ControllerBase
         return Guid.Parse(userIdClaim.Value);
     }
 }
+
+// TODO: ПОсле регистрации Гугл не сохраняется пользотватель, а значит проблема может быть и в JWT сервисах хотя я их не трогал
