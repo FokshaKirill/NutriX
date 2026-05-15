@@ -168,74 +168,74 @@ namespace Services.Services
         /// <summary>
         /// Импорт продуктов из Пятёрочки (полный парсинг сайта)
         /// </summary>
-        public async Task ImportFromPyaterochkaAsync()
-        {
-            Console.WriteLine("🔄 Запуск импорта из Пятёрочки (полный парсинг)...");
-            
-            using var parser = new VkusvillParser(maxConcurrentCategories: 3, maxConcurrentDetailPages: 15);
-            var products = await parser.ParseAllProductsAsync(enrichDetails: true);
-
-
-            int added = 0;
-            int updated = 0;
-
-            foreach (var p in products)
-            {
-                try
-                {
-                    // Нормализуем название для поиска
-                    var normalizedName = NormalizeName(p.Name);
-                    
-                    var existing = await _products.Query()
-                        .FirstOrDefaultAsync(x => NormalizeName(x.Name) == normalizedName);
-                    
-                    if (existing == null)
-                    {
-                        await _products.AddAsync(p);
-                        added++;
-                    }
-                    else
-                    {
-                        // Обновляем все поля
-                        existing.PricePerUnit = p.PricePerUnit > 0 ? p.PricePerUnit : existing.PricePerUnit;
-                        existing.ImageUrl = !string.IsNullOrEmpty(p.ImageUrl) ? p.ImageUrl : existing.ImageUrl;
-                        existing.CaloriesPer100 = p.CaloriesPer100 ?? existing.CaloriesPer100;
-                        existing.ProteinPer100 = p.ProteinPer100 ?? existing.ProteinPer100;
-                        existing.FatPer100 = p.FatPer100 ?? existing.FatPer100;
-                        existing.CarbsPer100 = p.CarbsPer100 ?? existing.CarbsPer100;
-                        
-                        await _products.UpdateAsync(existing);
-                        updated++;
-                    }
-                    
-                    // Сохраняем периодически
-                    if ((added + updated) % 50 == 0)
-                    {
-                        await _products.SaveChangesAsync();
-                        Console.WriteLine($"   💾 Сохранено: {added + updated} продуктов");
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"⚠️ Ошибка при обработке {p.Name}: {ex.Message}");
-                }
-            }
-
-            await _products.SaveChangesAsync();
-            
-            Console.WriteLine($"✅ Импорт из Пятёрочки завершен:");
-            Console.WriteLine($"   • Добавлено: {added}");
-            Console.WriteLine($"   • Обновлено: {updated}");
-        }
+        // public async Task ImportFromPyaterochkaAsync()
+        // {
+        //     Console.WriteLine("🔄 Запуск импорта из Пятёрочки (полный парсинг)...");
+        //     
+        //     using var parser = new VkusvillParser(maxConcurrentCategories: 3, maxConcurrentDetailPages: 15);
+        //     var products = await parser.ParseAllProductsAsync(enrichDetails: true);
+        //
+        //
+        //     int added = 0;
+        //     int updated = 0;
+        //
+        //     foreach (var p in products)
+        //     {
+        //         try
+        //         {
+        //             // Нормализуем название для поиска
+        //             var normalizedName = NormalizeName(p.Name);
+        //             
+        //             var existing = await _products.Query()
+        //                 .FirstOrDefaultAsync(x => NormalizeName(x.Name) == normalizedName);
+        //             
+        //             if (existing == null)
+        //             {
+        //                 await _products.AddAsync(p);
+        //                 added++;
+        //             }
+        //             else
+        //             {
+        //                 // Обновляем все поля
+        //                 existing.PricePerUnit = p.PricePerUnit > 0 ? p.PricePerUnit : existing.PricePerUnit;
+        //                 existing.ImageUrl = !string.IsNullOrEmpty(p.ImageUrl) ? p.ImageUrl : existing.ImageUrl;
+        //                 existing.CaloriesPer100 = p.CaloriesPer100 ?? existing.CaloriesPer100;
+        //                 existing.ProteinPer100 = p.ProteinPer100 ?? existing.ProteinPer100;
+        //                 existing.FatPer100 = p.FatPer100 ?? existing.FatPer100;
+        //                 existing.CarbsPer100 = p.CarbsPer100 ?? existing.CarbsPer100;
+        //                 
+        //                 await _products.UpdateAsync(existing);
+        //                 updated++;
+        //             }
+        //             
+        //             // Сохраняем периодически
+        //             if ((added + updated) % 50 == 0)
+        //             {
+        //                 await _products.SaveChangesAsync();
+        //                 Console.WriteLine($"   💾 Сохранено: {added + updated} продуктов");
+        //             }
+        //         }
+        //         catch (Exception ex)
+        //         {
+        //             Console.WriteLine($"⚠️ Ошибка при обработке {p.Name}: {ex.Message}");
+        //         }
+        //     }
+        //
+        //     await _products.SaveChangesAsync();
+        //     
+        //     Console.WriteLine($"✅ Импорт из Пятёрочки завершен:");
+        //     Console.WriteLine($"   • Добавлено: {added}");
+        //     Console.WriteLine($"   • Обновлено: {updated}");
+        // }
 
         /// <summary>
         /// Комбинированный импорт - УДАЛЕНО, используем только Пятёрочку
         /// </summary>
-        public async Task ImportCombinedAsync()
-        {
-            // Теперь используем только Пятёрочку
-            await ImportFromPyaterochkaAsync();
-        }
+        // public async Task ImportCombinedAsync()
+        // {
+        //     // Теперь используем только Пятёрочку
+        //     await ImportFromPyaterochkaAsync();
+        // }
 
         /// <summary>
         /// Нормализация названия для сопоставления

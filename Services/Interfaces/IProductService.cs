@@ -55,6 +55,6 @@ namespace Services.Interfaces
         /// <summary>
         /// Полный импорт: БЖУ + Примерные цены (РЕКОМЕНДУЕТСЯ)
         /// </summary>
-        Task ImportCombinedAsync();
+        // Task ImportCombinedAsync();
     }
 }

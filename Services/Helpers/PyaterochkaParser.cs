@@ -1,313 +1,132 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
 using System.Net.Http;
+using System.Threading.Tasks;
+using System.Collections.Generic;
+using Domain.Entities;
 using System.Text.Json;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-using Domain.Entities; // предполагаю, что Product отсюда
+using System.Net;
 
 namespace Services.Helpers
 {
-    /// <summary>
-    /// Парсер продуктов Пятёрочки через публичное API[](https://5ka.ru/api/v2/)
-    /// Поддерживает получение магазина по координатам, категории, списки товаров, детали с БЖУ
-    /// </summary>
     public class PyaterochkaParser
     {
-        private readonly HttpClient _httpClient;
-        private const string BaseUrl = "https://5ka.ru/api/v2/";
-        private string _sapCodeStoreId;
+        private readonly HttpClient _http;
+        private const string PythonBase = "http://127.0.0.1:8765";
+
+        public string StoreId { get; private set; } = "";
 
         public PyaterochkaParser()
         {
-            _httpClient = new HttpClient(new HttpClientHandler { AutomaticDecompression = System.Net.DecompressionMethods.All });
-            _httpClient.DefaultRequestHeaders.UserAgent.ParseAdd(
-                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
-            _httpClient.DefaultRequestHeaders.Accept.ParseAdd("application/json");
-            _httpClient.DefaultRequestHeaders.AcceptLanguage.ParseAdd("ru-RU,ru;q=0.9");
-            _httpClient.Timeout = TimeSpan.FromSeconds(40);
+            _http = new HttpClient { Timeout = TimeSpan.FromSeconds(30) };
         }
 
-        /// <summary>
-        /// Получает sap_code магазина по координатам (автоматически выбирает ближайший)
-        /// Для Тирасполя: lat ≈ 46.84, lon ≈ 29.62
-        /// </summary>
-        public async Task<bool> InitializeStoreAsync(double latitude = 46.84, double longitude = 29.62, int radiusMeters = 100000)
+        public async Task<bool> InitializeStoreAsync(double lat = 0, double lon = 0)
         {
             try
             {
-                var query = $"?lat={latitude.ToString(CultureInfo.InvariantCulture)}" +
-                            $"&lon={longitude.ToString(CultureInfo.InvariantCulture)}" +
-                            $"&radius={radiusMeters}";
-
-                var response = await _httpClient.GetAsync($"{BaseUrl}stores/{query}");
-                if (!response.IsSuccessStatusCode)
-                {
-                    Console.WriteLine($"Ошибка получения магазинов: {response.StatusCode}");
-                    return false;
-                }
-
-                var json = await response.Content.ReadAsStringAsync();
-                var doc = JsonDocument.Parse(json);
-
-                if (doc.RootElement.TryGetProperty("results", out var results) && results.ValueKind == JsonValueKind.Array)
-                {
-                    var firstStore = results.EnumerateArray().FirstOrDefault();
-                    if (firstStore.TryGetProperty("sapCode", out var sapCodeElem))
-                    {
-                        _sapCodeStoreId = sapCodeElem.GetString();
-                        Console.WriteLine($"Успешно выбран магазин: sap_code = {_sapCodeStoreId}");
-                        return true;
-                    }
-                }
-
-                Console.WriteLine("Магазины не найдены по координатам");
-                return false;
+                var resp = await _http.GetAsync($"{PythonBase}/init");
+                resp.EnsureSuccessStatusCode();
+                var json = await resp.Content.ReadAsStringAsync();
+                using var doc = JsonDocument.Parse(json);
+                StoreId = doc.RootElement.GetProperty("storeId").GetString() ?? "2237";
+                Console.WriteLine($"[5ka] Магазин: {StoreId}");
+                return true;
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Исключение при инициализации магазина: {ex.Message}");
+                Console.WriteLine($"[5ka] Ошибка инициализации: {ex.Message}");
+                StoreId = "2237";
                 return false;
             }
         }
 
-        /// <summary>
-        /// Получает дерево категорий
-        /// </summary>
-        private async Task<List<CategoryNode>> GetCategoryTreeAsync()
+        public async Task<string> ProxyGetAsync(string relativeUrl)
         {
-            if (string.IsNullOrEmpty(_sapCodeStoreId))
-                throw new InvalidOperationException("Сначала вызовите InitializeStoreAsync или задайте _sapCodeStoreId вручную");
+            // Парсим category_id и page из relativeUrl для перенаправления к Python
+            var uri = new Uri("http://x/" + relativeUrl);
+            var qs  = System.Web.HttpUtility.ParseQueryString(uri.Query);
 
-            var query = $"?sap_code_store_id={_sapCodeStoreId}";
-            var response = await _httpClient.GetAsync($"{BaseUrl}catalog/tree{query}");
+            var categoryId = qs["category_id"] ?? "";
+            var page       = qs["page"] ?? "1";
 
-            if (!response.IsSuccessStatusCode) return new List<CategoryNode>();
+            var resp = await _http.GetAsync(
+                $"{PythonBase}/products?category_id={Uri.EscapeDataString(categoryId)}&page={page}");
 
-            var json = await response.Content.ReadAsStringAsync();
-            var doc = JsonDocument.Parse(json);
-
-            // Предполагаем структуру: массив объектов с id, name, children[...]
-            return ParseCategoryNodes(doc.RootElement);
-        }
-
-        private List<CategoryNode> ParseCategoryNodes(JsonElement element)
-        {
-            var nodes = new List<CategoryNode>();
-
-            if (element.ValueKind == JsonValueKind.Array)
+            if (!resp.IsSuccessStatusCode)
             {
-                foreach (var item in element.EnumerateArray())
-                {
-                    if (item.TryGetProperty("id", out var idElem) &&
-                        item.TryGetProperty("name", out var nameElem))
-                    {
-                        var node = new CategoryNode
-                        {
-                            Id = idElem.GetString(),
-                            Name = nameElem.GetString()
-                        };
-
-                        if (item.TryGetProperty("children", out var childrenElem) &&
-                            childrenElem.ValueKind == JsonValueKind.Array)
-                        {
-                            node.Children = ParseCategoryNodes(childrenElem);
-                        }
-
-                        nodes.Add(node);
-                    }
-                }
+                var body = await resp.Content.ReadAsStringAsync();
+                throw new HttpRequestException(
+                    $"Python сервис вернул {(int)resp.StatusCode}. Тело: {body[..Math.Min(body.Length, 300)]}");
             }
 
-            return nodes;
+            return await resp.Content.ReadAsStringAsync();
         }
 
-        /// <summary>
-        /// Парсит все доступные продукты (по всем категориям верхнего уровня)
-        /// </summary>
-        public async Task<List<Product>> ParseAllProductsAsync(int maxPagesPerCategory = 5)
+        public async Task<List<Product>> GetProductsAsync(string categorySlug, int maxPages = 3)
         {
-            if (string.IsNullOrEmpty(_sapCodeStoreId) && !await InitializeStoreAsync())
-            {
-                throw new Exception("Не удалось инициализировать магазин. Укажите sap_code вручную.");
-            }
-
-            var allProducts = new List<Product>();
-            var categories = await GetCategoryTreeAsync();
-
-            foreach (var topCategory in categories.Where(c => c.Children?.Any() == true || true)) // все, включая листья
-            {
-                Console.WriteLine($"Парсинг категории: {topCategory.Name} ({topCategory.Id})");
-
-                var products = await GetProductsFromCategoryAsync(topCategory.Id, maxPagesPerCategory);
-                allProducts.AddRange(products);
-
-                await Task.Delay(1500); // анти-бан
-            }
-
-            return allProducts;
-        }
-
-        /// <summary>
-        /// Получает продукты из одной категории (с пагинацией)
-        /// </summary>
-        public async Task<List<Product>> GetProductsFromCategoryAsync(string categoryId, int maxPages = 10)
-        {
+            if (string.IsNullOrEmpty(StoreId)) await InitializeStoreAsync();
             var products = new List<Product>();
 
             for (int page = 1; page <= maxPages; page++)
             {
-                var query = $"?category_id={categoryId}" +
-                            $"&sap_code_store_id={_sapCodeStoreId}" +
-                            $"&page={page}" +
-                            "&records_per_page=48"; // стандартный размер страницы
+                var json = await ProxyGetAsync(
+                    $"catalog/products_list/?category_id={categorySlug}&page={page}&records_per_page=48");
 
-                var response = await _httpClient.GetAsync($"{BaseUrl}catalog/products_list{query}");
-                if (!response.IsSuccessStatusCode) break;
+                using var doc = JsonDocument.Parse(json);
+                if (!doc.RootElement.TryGetProperty("products", out var arr)) break;
 
-                var json = await response.Content.ReadAsStringAsync();
-                var doc = JsonDocument.Parse(json);
-
-                if (!doc.RootElement.TryGetProperty("products", out var prodsElem) ||
-                    prodsElem.ValueKind != JsonValueKind.Array)
-                    break;
-
-                foreach (var prodElem in prodsElem.EnumerateArray())
+                foreach (var item in arr.EnumerateArray())
                 {
-                    var product = ParseProductFromJson(prodElem);
-                    if (product != null)
-                    {
-                        // Можно сразу обогатить БЖУ
-                        await EnrichProductDetailsAsync(product, prodElem.GetProperty("plu").GetString());
-                        products.Add(product);
-                    }
+                    var p = ParseProduct(item);
+                    if (p != null) products.Add(p);
                 }
-
-                if (prodsElem.GetArrayLength() < 48) break; // последняя страница
-
-                await Task.Delay(800);
+                if (arr.GetArrayLength() < 48) break;
+                await Task.Delay(400);
             }
-
             return products;
         }
 
-        private Product ParseProductFromJson(JsonElement elem)
+        private Product ParseProduct(JsonElement elem)
         {
             try
             {
-                string name = elem.TryGetProperty("name", out var n) ? n.GetString() : null;
+                var name = elem.GetProperty("name").GetString();
                 if (string.IsNullOrWhiteSpace(name)) return null;
 
                 decimal price = 0;
-                if (elem.TryGetProperty("regular_price", out var rp) && rp.ValueKind == JsonValueKind.Number)
-                    price = rp.GetDecimal();
-                else if (elem.TryGetProperty("current_prices", out var cp) && cp.ValueKind == JsonValueKind.Object)
-                {
-                    // иногда current_prices → price → value
-                    if (cp.TryGetProperty("price", out var inner) && inner.TryGetProperty("value", out var val))
-                        price = val.GetDecimal();
-                }
+                if (elem.TryGetProperty("prices", out var prices) &&
+                    prices.TryGetProperty("price_reg__min", out var reg) &&
+                    reg.ValueKind != JsonValueKind.Null)
+                    price = reg.GetDecimal();
 
-                string unit = elem.TryGetProperty("measure", out var m) ? m.GetString() : "шт";
-                string image = elem.TryGetProperty("image", out var img) ? img.GetString() : null;
-
+                string image = null;
+                if (elem.TryGetProperty("main_image", out var img) && img.ValueKind == JsonValueKind.String)
+                    image = img.GetString();
                 if (!string.IsNullOrEmpty(image) && !image.StartsWith("http"))
                     image = "https:" + image;
 
                 return new Product
                 {
-                    Id = Guid.NewGuid(),
-                    Name = CleanProductName(name),
+                    Name         = Regex.Replace(WebUtility.HtmlDecode(name), @"\s+", " ").Trim(),
                     PricePerUnit = price,
-                    Unit = NormalizeUnit(unit),
-                    ImageUrl = image,
-                    // БЖУ заполнится позже
+                    Unit         = GetUnit(elem),
+                    ImageUrl     = image,
+                    ExternalId   = elem.TryGetProperty("plu", out var plu) ? plu.GetString() : null
                 };
             }
-            catch
-            {
-                return null;
-            }
+            catch { return null; }
         }
 
-        /// <summary>
-        /// Обогащает продукт деталями (БЖУ, калории и т.д.)
-        /// </summary>
-        private async Task EnrichProductDetailsAsync(Product product, string pluId)
+        private static string GetUnit(JsonElement elem)
         {
-            if (string.IsNullOrEmpty(pluId)) return;
-
-            var query = $"?plu_id={pluId}&sap_code_store_id={_sapCodeStoreId}";
-            var response = await _httpClient.GetAsync($"{BaseUrl}catalog/product/info{query}");
-
-            if (!response.IsSuccessStatusCode) return;
-
-            var json = await response.Content.ReadAsStringAsync();
-            var doc = JsonDocument.Parse(json);
-
-            if (doc.RootElement.TryGetProperty("nutrition_facts", out var nf) ||
-                doc.RootElement.TryGetProperty("characteristics", out nf)) // структура может варьироваться
-            {
-                // Пример: ищем поля типа "energy_value", "proteins", "fats", "carbohydrates"
-                if (nf.TryGetProperty("energy_value", out var cal) && cal.ValueKind == JsonValueKind.Number)
-                    product.CaloriesPer100 = cal.GetDecimal();
-
-                if (nf.TryGetProperty("proteins", out var prot) && prot.ValueKind == JsonValueKind.Number)
-                    product.ProteinPer100 = prot.GetDecimal();
-
-                if (nf.TryGetProperty("fats", out var fat) && fat.ValueKind == JsonValueKind.Number)
-                    product.FatPer100 = fat.GetDecimal();
-
-                if (nf.TryGetProperty("carbohydrates", out var carb) && carb.ValueKind == JsonValueKind.Number)
-                    product.CarbsPer100 = carb.GetDecimal();
-            }
-        }
-
-        // ──────────────────────────────────────────────
-        // Твои вспомогательные методы (оставил почти без изменений)
-        // ──────────────────────────────────────────────
-
-        private string CleanProductName(string name)
-        {
-            if (string.IsNullOrEmpty(name)) return name;
-            name = Regex.Replace(name, @"\s+", " ");
-            return System.Net.WebUtility.HtmlDecode(name).Trim();
-        }
-
-        private string NormalizeUnit(string unit)
-        {
-            unit = unit?.ToLowerInvariant().Trim() ?? "шт";
-            if (unit.Contains("кг") || unit.Contains("кило")) return "кг";
-            if (unit.Contains("г") && !unit.Contains("кг")) return "г";
-            if (unit.Contains("л") && !unit.Contains("мл")) return "л";
-            if (unit.Contains("мл")) return "мл";
+            if (!elem.TryGetProperty("measure", out var m)) return "шт";
+            var u = m.GetString()?.ToLower() ?? "";
+            if (u.Contains("кг"))                       return "кг";
+            if (u.Contains("г") && !u.Contains("кг"))   return "г";
+            if (u.Contains("мл"))                        return "мл";
+            if (u.Contains("л") && !u.Contains("мл"))   return "л";
             return "шт";
-        }
-
-        // Если нужно парсить по старому URL (извлечь plu из https://5ka.ru/product/123456/)
-        public async Task<Product> ParseProductByUrlAsync(string url)
-        {
-            var match = Regex.Match(url, @"/product/(\d+)/?");
-            if (!match.Success) return null;
-
-            string plu = match.Groups[1].Value;
-
-            // Получаем детали напрямую
-            var product = new Product { Id = Guid.NewGuid() };
-            await EnrichProductDetailsAsync(product, plu);
-
-            // Можно дополнить name, price и т.д. из /product/info
-            return product;
-        }
-
-        // Вспомогательный класс для категорий
-        private class CategoryNode
-        {
-            public string Id { get; set; }
-            public string Name { get; set; }
-            public List<CategoryNode> Children { get; set; }
         }
     }
 }

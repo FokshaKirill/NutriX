@@ -1,4 +1,5 @@
-﻿using AutoMapper;
+﻿using System.Security.Claims;
+using AutoMapper;
 using Domain.Entities;
 using Microsoft.AspNetCore.Mvc;
 using Presentation.Models;
@@ -8,11 +9,11 @@ namespace Presentation.Controllers;
 
 public class RecipeController : Controller
 {
-    private readonly IRecipeService      _recipeService;
-    private readonly IProductService     _productService;
+    private readonly IRecipeService       _recipeService;
+    private readonly IProductService      _productService;
     private readonly IRecipeParserService _parserService;
-    private readonly IFavoriteService    _favoriteService;
-    private readonly IMapper             _mapper;
+    private readonly IFavoriteService     _favoriteService;
+    private readonly IMapper              _mapper;
 
     public RecipeController(
         IRecipeService recipeService,
@@ -28,15 +29,8 @@ public class RecipeController : Controller
         _mapper          = mapper;
     }
 
-    // Получить UserId из сессии (null если не авторизован)
-    private Guid? CurrentUserId
-    {
-        get
-        {
-            var raw = HttpContext.Session.GetString("UserId");
-            return raw != null ? Guid.Parse(raw) : null;
-        }
-    }
+    private Guid? CurrentUserId =>
+        Guid.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out var id) ? id : null;
 
     // GET: /Recipe
     public async Task<IActionResult> Index()
@@ -44,13 +38,10 @@ public class RecipeController : Controller
         var recipes = await _recipeService.GetAllRecipesAsync();
         var model   = _mapper.Map<List<RecipeListViewModel>>(recipes);
 
-        // Пометить избранные если пользователь авторизован
         if (CurrentUserId.HasValue)
         {
             var favIds = (await _favoriteService.GetFavoritesAsync(CurrentUserId.Value))
-                .Select(r => r.Id)
-                .ToHashSet();
-
+                .Select(r => r.Id).ToHashSet();
             foreach (var r in model)
                 r.IsFavorite = favIds.Contains(r.Id);
         }
@@ -76,26 +67,19 @@ public class RecipeController : Controller
     }
 
     // GET: /Recipe/Create
-    public IActionResult Create()
+    public async Task<IActionResult> Create()
     {
-        if (!CurrentUserId.HasValue)
-            return Redirect("/account/authpage");
+        if (!CurrentUserId.HasValue) return Redirect("/account/authpage");
 
-        ViewBag.Products = _productService.GetAllProductsAsync().Result.OrderBy(p => p.Name).ToList();
-        return View(new RecipeCreateViewModel
-        {
-            Ingredients = [new()],
-            Steps       = [new()]
-        });
+        ViewBag.Products = (await _productService.GetAllProductsAsync()).OrderBy(p => p.Name).ToList();
+        return View(new RecipeCreateViewModel { Ingredients = [new()], Steps = [new()] });
     }
 
     // POST: /Recipe/Create
-    [HttpPost]
-    [ValidateAntiForgeryToken]
+    [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(RecipeCreateViewModel model, IFormFile? mainImage)
     {
-        if (!CurrentUserId.HasValue)
-            return Redirect("/account/authpage");
+        if (!CurrentUserId.HasValue) return Redirect("/account/authpage");
 
         if (!ModelState.IsValid)
         {
@@ -104,40 +88,28 @@ public class RecipeController : Controller
         }
 
         if (mainImage?.Length > 0)
-        {
-            var fileName     = Guid.NewGuid() + Path.GetExtension(mainImage.FileName);
-            var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/images/recipes");
-            Directory.CreateDirectory(uploadsFolder);
-
-            await using var stream = new FileStream(Path.Combine(uploadsFolder, fileName), FileMode.Create);
-            await mainImage.CopyToAsync(stream);
-            model.ImageUrl = "/images/recipes/" + fileName;
-        }
+            model.ImageUrl = await SaveImageAsync(mainImage);
 
         var recipe = _mapper.Map<Recipe>(model);
-        recipe.Id       = Guid.NewGuid();
-        recipe.AuthorId = CurrentUserId.Value;   // ← привязываем к автору
+        recipe.Id        = Guid.NewGuid();
+        recipe.AuthorId  = CurrentUserId.Value;
         recipe.CreatedAt = DateTime.UtcNow;
 
         recipe.Ingredients = model.Ingredients
             .Where(i => i.ProductId != Guid.Empty && i.Amount > 0)
             .Select(i => new RecipeIngredient
             {
-                Id        = Guid.NewGuid(),
-                ProductId = i.ProductId,
-                Amount    = i.Amount,
-                Unit      = string.IsNullOrWhiteSpace(i.Unit) ? "г" : i.Unit.Trim(),
-                Comment   = i.Comment?.Trim()
+                Id = Guid.NewGuid(), ProductId = i.ProductId, Amount = i.Amount,
+                Unit = string.IsNullOrWhiteSpace(i.Unit) ? "г" : i.Unit.Trim(),
+                Comment = i.Comment?.Trim()
             }).ToList();
 
         recipe.Steps = model.Steps
             .Where(s => !string.IsNullOrWhiteSpace(s.Description))
             .Select((s, idx) => new RecipeStep
             {
-                Id          = Guid.NewGuid(),
-                Order       = idx + 1,
-                Description = s.Description.Trim(),
-                TimerSeconds = s.TimerSeconds
+                Id = Guid.NewGuid(), Order = idx + 1,
+                Description = s.Description.Trim(), TimerSeconds = s.TimerSeconds
             }).ToList();
 
         foreach (var ing in recipe.Ingredients)
@@ -149,42 +121,42 @@ public class RecipeController : Controller
         return RedirectToAction("Index");
     }
 
-    // POST: /Recipe/ToggleFavorite
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> ToggleFavorite(Guid id, string? returnUrl)
+    // POST: /Recipe/ToggleFavorite  — AJAX JSON endpoint
+    [HttpPost("Recipe/ToggleFavorite"), ValidateAntiForgeryToken]
+    public async Task<IActionResult> ToggleFavorite([FromForm] Guid id)
     {
         if (!CurrentUserId.HasValue)
-            return Redirect("/account/authpage");
+            return Json(new { error = "unauthorized" });
 
         await _favoriteService.ToggleAsync(CurrentUserId.Value, id);
+        var isFav = await _favoriteService.IsFavoriteAsync(CurrentUserId.Value, id);
 
-        return Redirect(returnUrl ?? Url.Action("Details", new { id })!);
+        return Json(new { isFavorite = isFav });
     }
 
     // GET: /Recipe/Favorites
     public async Task<IActionResult> Favorites()
     {
-        if (!CurrentUserId.HasValue)
-            return Redirect("/account/authpage");
+        if (!CurrentUserId.HasValue) return Redirect("/account/authpage");
 
         var recipes = await _favoriteService.GetFavoritesAsync(CurrentUserId.Value);
         var model   = _mapper.Map<List<RecipeListViewModel>>(recipes);
         foreach (var r in model) r.IsFavorite = true;
 
-        return View(model);
+        ViewData["Title"] = "Избранные рецепты";
+        return View("Index", model);
     }
 
-    // GET: /Recipe/Mine — рецепты текущего пользователя
+    // GET: /Recipe/Mine
     public async Task<IActionResult> Mine()
     {
-        if (!CurrentUserId.HasValue)
-            return Redirect("/account/authpage");
+        if (!CurrentUserId.HasValue) return Redirect("/account/authpage");
 
         var recipes = await _recipeService.GetByAuthorAsync(CurrentUserId.Value);
         var model   = _mapper.Map<List<RecipeListViewModel>>(recipes);
 
-        return View("Index", model); // переиспользуем вью Index
+        ViewData["Title"] = "Мои рецепты";
+        return View("Index", model);
     }
 
     // GET: /Recipe/Edit/{id}
@@ -192,18 +164,14 @@ public class RecipeController : Controller
     {
         var recipe = await _recipeService.GetByIdAsync(id);
         if (recipe == null) return NotFound();
-
-        // Только автор может редактировать
-        if (recipe.AuthorId != CurrentUserId)
-            return Forbid();
+        if (recipe.AuthorId != CurrentUserId) return Forbid();
 
         ViewBag.Products = (await _productService.GetAllProductsAsync()).OrderBy(p => p.Name).ToList();
         return View(_mapper.Map<RecipeCreateViewModel>(recipe));
     }
 
     // POST: /Recipe/Edit/{id}
-    [HttpPost]
-    [ValidateAntiForgeryToken]
+    [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(Guid id, RecipeCreateViewModel model, IFormFile? mainImage)
     {
         var recipe = await _recipeService.GetByIdAsync(id);
@@ -217,42 +185,28 @@ public class RecipeController : Controller
         }
 
         if (mainImage?.Length > 0)
-        {
-            var fileName      = Guid.NewGuid() + Path.GetExtension(mainImage.FileName);
-            var uploadsFolder  = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/images/recipes");
-            Directory.CreateDirectory(uploadsFolder);
+            model.ImageUrl = await SaveImageAsync(mainImage);
 
-            await using var stream = new FileStream(Path.Combine(uploadsFolder, fileName), FileMode.Create);
-            await mainImage.CopyToAsync(stream);
-            model.ImageUrl = "/images/recipes/" + fileName;
-        }
-
-        recipe.Name           = model.Name;
-        recipe.Description    = model.Description;
+        recipe.Name            = model.Name;
+        recipe.Description     = model.Description;
         recipe.DefaultServings = model.DefaultServings;
-        recipe.ImageUrl       = model.ImageUrl ?? recipe.ImageUrl;
+        recipe.ImageUrl        = model.ImageUrl ?? recipe.ImageUrl;
 
         recipe.Ingredients = model.Ingredients
             .Where(i => i.ProductId != Guid.Empty && i.Amount > 0)
             .Select(i => new RecipeIngredient
             {
-                Id        = Guid.NewGuid(),
-                RecipeId  = recipe.Id,
-                ProductId = i.ProductId,
-                Amount    = i.Amount,
-                Unit      = string.IsNullOrWhiteSpace(i.Unit) ? "г" : i.Unit.Trim(),
-                Comment   = i.Comment?.Trim()
+                Id = Guid.NewGuid(), RecipeId = recipe.Id, ProductId = i.ProductId,
+                Amount = i.Amount, Unit = string.IsNullOrWhiteSpace(i.Unit) ? "г" : i.Unit.Trim(),
+                Comment = i.Comment?.Trim()
             }).ToList();
 
         recipe.Steps = model.Steps
             .Where(s => !string.IsNullOrWhiteSpace(s.Description))
             .Select((s, idx) => new RecipeStep
             {
-                Id          = Guid.NewGuid(),
-                RecipeId    = recipe.Id,
-                Order       = idx + 1,
-                Description = s.Description.Trim(),
-                TimerSeconds = s.TimerSeconds
+                Id = Guid.NewGuid(), RecipeId = recipe.Id, Order = idx + 1,
+                Description = s.Description.Trim(), TimerSeconds = s.TimerSeconds
             }).ToList();
 
         foreach (var ing in recipe.Ingredients)
@@ -265,8 +219,7 @@ public class RecipeController : Controller
     }
 
     // POST: /Recipe/Delete/{id}
-    [HttpPost]
-    [ValidateAntiForgeryToken]
+    [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> Delete(Guid id)
     {
         var recipe = await _recipeService.GetByIdAsync(id);
@@ -276,10 +229,15 @@ public class RecipeController : Controller
         await _recipeService.DeleteAsync(id);
         return RedirectToAction("Index");
     }
+
+    private async Task<string> SaveImageAsync(IFormFile file)
+    {
+        var fileName      = Guid.NewGuid() + Path.GetExtension(file.FileName);
+        var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/images/recipes");
+        Directory.CreateDirectory(uploadsFolder);
+
+        await using var stream = new FileStream(Path.Combine(uploadsFolder, fileName), FileMode.Create);
+        await file.CopyToAsync(stream);
+        return "/images/recipes/" + fileName;
+    }
 }
-
-// Добавить в RecipeListViewModel:
-
-// Добавить в RecipeDetailViewModel:
-
-// Добавить в IRecipeService:

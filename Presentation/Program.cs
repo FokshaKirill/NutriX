@@ -10,6 +10,7 @@ using Microsoft.IdentityModel.Tokens;
 using Presentation.Helpers;
 using PuppeteerSharp;
 using Services;
+using Services.Helpers;
 using Services.Interfaces;
 using Services.Services;
 using Services.UserService.Services.Implementations;
@@ -39,6 +40,7 @@ builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<IRecipeService, RecipeService>();
 builder.Services.AddScoped<IRecipeParserService, RecipeParserService>();
 builder.Services.AddScoped<IFavoriteService, FavoriteService>();
+builder.Services.AddSingleton<PriceRuParser>();
 
 // HttpClient для nutrition API
 builder.Services.AddHttpClient<INutritionApiService, NutritionApiService>(client =>
@@ -145,15 +147,18 @@ else
     app.UseHsts();
 }
 
-app.UseStaticFiles();
+app.UseStaticFiles(new StaticFileOptions
+{
+    OnPrepareResponse = ctx =>
+    {
+        ctx.Context.Response.Headers.Append("Cache-Control", "no-cache, no-store, must-revalidate");
+        ctx.Context.Response.Headers.Append("Pragma", "no-cache");
+        ctx.Context.Response.Headers.Append("Expires", "0");
+    }
+});
+
 app.UseRouting();
 app.UseSession();
-app.UseAuthentication();
-app.UseAuthorization();
-
-app.UseStaticFiles();
-app.UseRouting();
-app.UseSession();          // ← до Authentication
 app.UseAuthentication();
 app.UseAuthorization();
 

@@ -1,276 +1,324 @@
 ﻿@{
-    ViewData["Title"] = "Тестирование парсера";
+ViewData["Title"] = "Парсер Пятёрочки";
 }
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Парсер Пятёрочки</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;700&family=Golos+Text:wght@400;500;600&display=swap" rel="stylesheet">
+    
+</head>
+<body>
 
-<div class="container py-5">
-    <h2 class="mb-5" style="color: var(--primary);">
-        <i class="fas fa-bug me-2"></i>
-        Тестирование парсера Пятёрочки
-    </h2>
+<header class="header">
+    <div class="logo-mark"><span>5</span></div>
+    <div class="header-title">ПЯТЁРОЧКА</div>
+    <div id="storeBadge" class="store-badge">Инициализация...</div>
+    <div class="header-sub">Парсер</div>
+</header>
 
-    <!-- Тест 1: Анализ селекторов -->
-    <div class="card mb-4">
-        <div class="card-header" style="background: var(--primary-light);">
-            <h5 class="mb-0" style="color: var(--primary);">
-                🔍 Шаг 1: Найти правильные селекторы
-            </h5>
-        </div>
-        <div class="card-body">
-            <p class="text-muted">Анализ HTML страницы для поиска карточек товаров</p>
-            
-            <div class="input-group mb-3">
-                <span class="input-group-text">Категория:</span>
-                <select class="form-select" id="categorySelect">
-                    <option value="moloko-syr-yajca">Молоко, сыр, яйца</option>
-                    <option value="myaso-ptitsa-kolbasa">Мясо, птица, колбаса</option>
-                    <option value="ovoshchi-frukty-yagody">Овощи, фрукты, ягоды</option>
-                    <option value="bakaleya">Бакалея</option>
-                </select>
-                <button class="btn btn-primary" onclick="findSelectors()">
-                    <i class="fas fa-search me-1"></i> Анализировать
-                </button>
-            </div>
-
-            <div id="selectorsResult" class="alert alert-secondary d-none">
-                <pre class="mb-0" style="white-space: pre-wrap;"></pre>
-            </div>
-        </div>
-    </div>
-
-    <!-- Тест 2: Парсинг категории -->
-    <div class="card mb-4">
-        <div class="card-header" style="background: var(--primary-light);">
-            <h5 class="mb-0" style="color: var(--primary);">
-                📦 Шаг 2: Тест парсинга категории
-            </h5>
-        </div>
-        <div class="card-body">
-            <p class="text-muted">Парсинг первых 5 товаров из выбранной категории</p>
-            
-            <button class="btn btn-success mb-3" onclick="testCategory()">
-                <i class="fas fa-play me-1"></i> Запустить тест
-            </button>
-
-            <div id="categoryResult" class="d-none">
-                <h6>Результаты:</h6>
-                <div id="categoryResultContent"></div>
+<div class="layout">
+    <aside class="sidebar">
+        <div>
+            <div class="section-label">Категория</div>
+            <div class="cat-list">
+                <button class="cat-btn active" data-slug="moloko-syr-yajca"      onclick="selectCat(this)"><span class="cat-icon">🥛</span>Молоко, сыр, яйца</button>
+                <button class="cat-btn" data-slug="myaso-ptitsa-kolbasa"         onclick="selectCat(this)"><span class="cat-icon">🥩</span>Мясо, птица, колбаса</button>
+                <button class="cat-btn" data-slug="ovoshchi-frukty-yagody"       onclick="selectCat(this)"><span class="cat-icon">🍎</span>Овощи, фрукты, ягоды</button>
+                <button class="cat-btn" data-slug="bakaleya"                     onclick="selectCat(this)"><span class="cat-icon">🌾</span>Бакалея</button>
+                <button class="cat-btn" data-slug="konditerskie-izdeliya"        onclick="selectCat(this)"><span class="cat-icon">🍫</span>Кондитерские изделия</button>
+                <button class="cat-btn" data-slug="napitki"                      onclick="selectCat(this)"><span class="cat-icon">🧃</span>Напитки</button>
+                <button class="cat-btn" data-slug="zamorozhennye-produkty"       onclick="selectCat(this)"><span class="cat-icon">🧊</span>Замороженные продукты</button>
+                <button class="cat-btn" data-slug="sneki"                        onclick="selectCat(this)"><span class="cat-icon">🍿</span>Снеки</button>
+                <button class="cat-btn" data-slug="hleb-vypechka"                onclick="selectCat(this)"><span class="cat-icon">🍞</span>Хлеб и выпечка</button>
             </div>
         </div>
-    </div>
 
-    <!-- Тест 3: Парсинг одного продукта -->
-    <div class="card mb-4">
-        <div class="card-header" style="background: var(--primary-light);">
-            <h5 class="mb-0" style="color: var(--primary);">
-                🎯 Шаг 3: Тест парсинга одного продукта
-            </h5>
-        </div>
-        <div class="card-body">
-            <p class="text-muted">Детальный парсинг страницы товара (название, цена, БЖУ, фото)</p>
-            
-            <div class="input-group mb-3">
-                <span class="input-group-text">URL продукта:</span>
-                <input type="text" class="form-control" id="productUrl" 
-                       placeholder="https://5ka.ru/product/...">
-                <button class="btn btn-success" onclick="testProduct()">
-                    <i class="fas fa-play me-1"></i> Тест
-                </button>
+        <div class="slider-wrap">
+            <div class="section-label">Страниц (по 48 товаров)</div>
+            <div class="slider-header">
+                <span class="slider-val" id="pagesVal">1</span>
+                <span class="slider-hint" id="pagesHint">до 48 товаров</span>
             </div>
+            <input type="range" min="1" max="5" value="1" step="1" id="pagesSlider"
+                   oninput="updatePages(this.value)">
+        </div>
 
-            <div id="productResult" class="d-none">
-                <div class="card">
-                    <div class="card-body" id="productResultContent"></div>
-                </div>
+        <button class="btn-load" id="loadBtn" onclick="loadProducts()" disabled>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="23 4 23 10 17 10"></polyline>
+                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+            </svg>
+            ЗАГРУЗИТЬ ТОВАРЫ
+        </button>
+    </aside>
+
+    <main class="main">
+        <div class="stats-row" id="statsRow" style="display:none">
+            <div class="stat-card"><div class="stat-card-val red" id="s-count">0</div><div class="stat-card-label">Товаров</div></div>
+            <div class="stat-card"><div class="stat-card-val" id="s-sale">0</div><div class="stat-card-label">Со скидкой</div></div>
+            <div class="stat-card"><div class="stat-card-val" id="s-min">—</div><div class="stat-card-label">Мин. цена ₽</div></div>
+            <div class="stat-card"><div class="stat-card-val" id="s-max">—</div><div class="stat-card-label">Макс. цена ₽</div></div>
+        </div>
+
+        <div class="filter-bar" id="filterBar" style="display:none">
+            <div class="search-wrap">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+                <input type="text" class="search-input" id="filterInput" placeholder="Поиск по названию..." oninput="applyFilter()">
+            </div>
+            <select class="sort-select" id="sortSelect" onchange="applyFilter()">
+                <option value="default">По умолчанию</option>
+                <option value="price_asc">Цена ↑</option>
+                <option value="price_desc">Цена ↓</option>
+                <option value="name">По названию</option>
+                <option value="sale">Сначала скидки</option>
+            </select>
+        </div>
+
+        <div class="status-area" id="statusArea"></div>
+
+        <div class="products-grid" id="grid">
+            <div class="empty-state">
+                <div class="empty-icon">🛒</div>
+                <div class="empty-text">Выберите категорию и нажмите «Загрузить»</div>
             </div>
         </div>
-    </div>
-
-    <!-- Тест 4: Просмотр HTML -->
-    <div class="card">
-        <div class="card-header" style="background: var(--primary-light);">
-            <h5 class="mb-0" style="color: var(--primary);">
-                📄 Шаг 4: Просмотр исходного HTML
-            </h5>
-        </div>
-        <div class="card-body">
-            <p class="text-muted">Открыть HTML страницы в новой вкладке для ручного анализа</p>
-            
-            <button class="btn btn-outline-primary" onclick="openHtml()">
-                <i class="fas fa-external-link-alt me-1"></i> Открыть HTML
-            </button>
-        </div>
-    </div>
+    </main>
 </div>
 
-@section Scripts {
 <script>
-    function getSelectedCategory() {
-        return document.getElementById('categorySelect').value;
-    }
+    let allProducts = [];
+    let activeCat   = 'moloko-syr-yajca';
+    let initialized = false;
 
-    async function findSelectors() {
-        const category = getSelectedCategory();
-        const resultDiv = document.getElementById('selectorsResult');
-        const resultPre = resultDiv.querySelector('pre');
-        
-        resultDiv.classList.remove('d-none');
-        resultPre.textContent = 'Загрузка...';
-        
+    // ── При загрузке страницы сразу инициализируем сессию на сервере ──────
+    window.addEventListener('DOMContentLoaded', () => initSession());
+
+    async function initSession() {
+        const badge  = document.getElementById('storeBadge');
+        const btn    = document.getElementById('loadBtn');
+
+        badge.textContent = '⏳ Подключение...';
+
         try {
-            const response = await fetch(`/ParserTest/FindSelectors?category=${category}`);
-            const data = await response.json();
-            
-            resultPre.textContent = JSON.stringify(data, null, 2);
-            
-            if (data.possibleProductCardSelectors) {
-                const total = Object.values(data.possibleProductCardSelectors)
-                    .reduce((sum, count) => sum + count, 0);
-                    
-                if (total === 0) {
-                    resultDiv.classList.add('alert-warning');
-                    resultDiv.classList.remove('alert-success');
-                    alert('⚠️ Карточки товаров не найдены! Возможно структура сайта изменилась.');
-                } else {
-                    resultDiv.classList.add('alert-success');
-                    resultDiv.classList.remove('alert-warning');
-                }
+            const r = await fetch('/ParserTest/Api/init', { method: 'POST' });
+            const d = await r.json();
+
+            if (d.success) {
+                badge.textContent = `Магазин: ${d.storeId}`;
+                badge.classList.add('ready');
+                btn.disabled  = false;
+                initialized   = true;
+            } else {
+                badge.textContent = '⚠️ Ошибка';
+                setStatus('Не удалось подключиться к API: ' + (d.error || ''), 'err');
             }
-        } catch (error) {
-            resultPre.textContent = 'Ошибка: ' + error.message;
-            resultDiv.classList.add('alert-danger');
+        } catch (e) {
+            badge.textContent = '⚠️ Ошибка';
+            setStatus('Ошибка инициализации: ' + e.message, 'err');
         }
     }
 
-    async function testCategory() {
-        const category = getSelectedCategory();
-        const resultDiv = document.getElementById('categoryResult');
-        const contentDiv = document.getElementById('categoryResultContent');
-        
-        resultDiv.classList.remove('d-none');
-        contentDiv.innerHTML = '<div class="spinner-border"></div> Загрузка...';
-        
-        try {
-            const response = await fetch(`/ParserTest/TestCategory?category=${category}`);
-            const data = await response.json();
-            
-            if (!data.success) {
-                contentDiv.innerHTML = `
-                    <div class="alert alert-danger">
-                        <strong>Ошибка:</strong> ${data.error || 'Неизвестная ошибка'}
-                        ${data.hint ? `<br><em>${data.hint}</em>` : ''}
-                    </div>
-                `;
-                return;
-            }
-            
-            let html = `
-                <div class="alert alert-success">
-                    <strong>Успешно!</strong> Найдено карточек: ${data.totalCards}
+    // ── UI helpers ──────────────────────────────────────────────────────────
+    function selectCat(btn) {
+        document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        activeCat = btn.dataset.slug;
+    }
+
+    function updatePages(val) {
+        document.getElementById('pagesVal').textContent  = val;
+        document.getElementById('pagesHint').textContent = `до ${val * 48} товаров`;
+    }
+
+    function setStatus(msg, type = '') {
+        const el = document.getElementById('statusArea');
+        el.className = 'status-area ' + type;
+        if (type === 'loading') {
+            el.innerHTML = `<div class="spinner"></div>${msg}<div class="progress-wrap"><div class="progress-bar" id="pBar" style="width:0%"></div></div>`;
+        } else {
+            el.textContent = msg;
+        }
+    }
+
+    function setProgress(pct) {
+        const b = document.getElementById('pBar');
+        if (b) b.style.width = pct + '%';
+    }
+
+    function renderSkeletons(n) {
+        document.getElementById('grid').innerHTML = Array.from({ length: n }, (_, i) => `
+            <div class="skel-card" style="animation-delay:${i * 0.03}s">
+                <div class="skel-img skeleton"></div>
+                <div class="skel-body">
+                    <div class="skel-line skeleton w100"></div>
+                    <div class="skel-line skeleton w75"></div>
+                    <div class="skel-line skeleton w50"></div>
                 </div>
-                <h6>Примеры (первые 5):</h6>
-            `;
-            
-            data.parsedSamples.forEach((item, index) => {
-                html += `
-                    <div class="card mb-2">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div>
-                                    <strong>${index + 1}. ${item.name || item.error || 'Ошибка'}</strong>
-                                    ${item.price ? `<br><span class="text-muted">${item.price}</span>` : ''}
-                                </div>
-                                <div>
-                                    ${item.hasImage 
-                                        ? '<span class="badge bg-success">📷 Есть фото</span>' 
-                                        : '<span class="badge bg-secondary">❌ Нет фото</span>'}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            });
-            
-            contentDiv.innerHTML = html;
-        } catch (error) {
-            contentDiv.innerHTML = `<div class="alert alert-danger">Ошибка: ${error.message}</div>`;
-        }
+            </div>`).join('');
     }
 
-    async function testProduct() {
-        const url = document.getElementById('productUrl').value;
-        
-        if (!url) {
-            alert('Введите URL продукта!');
+    // ── Load ────────────────────────────────────────────────────────────────
+    async function loadProducts() {
+        if (!initialized) { await initSession(); if (!initialized) return; }
+
+        const btn      = document.getElementById('loadBtn');
+        const maxPages = parseInt(document.getElementById('pagesSlider').value);
+
+        btn.disabled = true;
+        allProducts  = [];
+        document.getElementById('statsRow').style.display  = 'none';
+        document.getElementById('filterBar').style.display = 'none';
+        renderSkeletons(maxPages * 8);
+
+        try {
+            const products = [];
+            for (let page = 1; page <= maxPages; page++) {
+                setStatus(`Загрузка страницы ${page} / ${maxPages}...`, 'loading');
+                setProgress((page - 1) / maxPages * 100);
+
+                const r = await fetch('/ParserTest/Api/products', {
+                    method:  'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body:    JSON.stringify({ categoryId: activeCat, page })
+                });
+
+                if (!r.ok) {
+                    const txt = await r.text();
+                    throw new Error(`Сервер вернул ${r.status}: ${txt.slice(0, 200)}`);
+                }
+
+                const data  = await r.json();
+                const items = data.products || data.results || [];
+                if (!items.length) break;
+
+                for (const item of items) {
+                    const p = parseProduct(item);
+                    if (p) products.push(p);
+                }
+
+                if (items.length < 48) break;
+                if (page < maxPages) await new Promise(res => setTimeout(res, 350));
+            }
+
+            setProgress(100);
+
+            if (!products.length) throw new Error('Товары не найдены — возможно, категория пуста.');
+
+            allProducts = products;
+            renderGrid(products);
+            updateStats(products);
+            document.getElementById('statsRow').style.display  = 'grid';
+            document.getElementById('filterBar').style.display = 'flex';
+            document.getElementById('filterInput').value       = '';
+            document.getElementById('sortSelect').value        = 'default';
+
+            const catName = document.querySelector('.cat-btn.active').textContent.trim();
+            setStatus(`Загружено ${products.length} товаров · ${catName}`, 'ok');
+
+        } catch (e) {
+            setStatus(e.message, 'err');
+            initialized = false; // пересоздать сессию при следующей попытке
+            document.getElementById('grid').innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-icon">⚠️</div>
+                    <div class="empty-text">${e.message}</div>
+                </div>`;
+        }
+
+        btn.disabled = false;
+    }
+
+    // ── Parse ────────────────────────────────────────────────────────────────
+    function parseProduct(item) {
+        const name = (item.name || item.title || '').replace(/\s+/g, ' ').trim();
+        if (!name) return null;
+
+        let price = 0;
+        if      (item.prices?.price_reg__min != null) price = parseFloat(item.prices.price_reg__min);
+        else if (item.regular_price           != null) price = parseFloat(item.regular_price);
+
+        let salePrice = null;
+        if (item.prices?.price_promo__min != null)
+            salePrice = parseFloat(item.prices.price_promo__min);
+
+        let img = item.main_image || item.image || (item.images || [])[0] || null;
+        if (img && !img.startsWith('http')) img = 'https:' + img;
+
+        return { name, price, salePrice, img, unit: getUnit(item) };
+    }
+
+    function getUnit(item) {
+        const m = (item.measure || item.unit_of_measure || '').toLowerCase();
+        if (m.includes('кг'))                         return 'кг';
+        if (m.includes('г') && !m.includes('кг'))     return 'г';
+        if (m.includes('мл'))                         return 'мл';
+        if (m.includes('л') && !m.includes('мл'))     return 'л';
+        return 'шт';
+    }
+
+    // ── Render ────────────────────────────────────────────────────────────────
+    function renderGrid(products) {
+        if (!products.length) {
+            document.getElementById('grid').innerHTML = `<div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-text">Ничего не найдено</div></div>`;
             return;
         }
-        
-        const resultDiv = document.getElementById('productResult');
-        const contentDiv = document.getElementById('productResultContent');
-        
-        resultDiv.classList.remove('d-none');
-        contentDiv.innerHTML = '<div class="spinner-border"></div> Парсим...';
-        
-        try {
-            const response = await fetch(`/ParserTest/TestSingleProduct?url=${encodeURIComponent(url)}`);
-            const data = await response.json();
-            
-            if (!data.success) {
-                contentDiv.innerHTML = `
-                    <div class="alert alert-danger">
-                        <strong>Ошибка:</strong> ${data.error}
+
+        document.getElementById('grid').innerHTML = products.map((p, i) => {
+            const display  = p.salePrice ?? p.price;
+            const hasSale  = p.salePrice != null && p.salePrice < p.price;
+            const discount = hasSale ? Math.round((1 - p.salePrice / p.price) * 100) : 0;
+
+            const imgHtml = p.img
+                ? `<img src="${p.img}" alt="" loading="lazy" onerror="this.parentElement.innerHTML='<div class=card-no-img>нет фото</div>'">`
+                : `<div class="card-no-img">нет фото</div>`;
+
+            return `
+                <div class="product-card" style="animation-delay:${Math.min(i,20)*0.03}s">
+                    <div class="card-img-wrap">
+                        ${imgHtml}
+                        ${hasSale ? `<div class="card-sale-badge">-${discount}%</div>` : ''}
                     </div>
-                `;
-                return;
-            }
-            
-            const p = data.product;
-            
-            contentDiv.innerHTML = `
-                <div class="row">
-                    <div class="col-md-4">
-                        ${p.HasImage 
-                            ? `<img src="${p.ImageUrl}" class="img-fluid rounded" alt="${p.Name}">`
-                            : '<div class="bg-light p-5 text-center rounded">Нет фото</div>'}
+                    <div class="card-body">
+                        <div class="card-name">${p.name}</div>
+                        <div class="card-bottom">
+                            <div>
+                                ${hasSale ? `<div class="card-price-old">${p.price.toFixed(2)} ₽</div>` : ''}
+                                <div class="card-price ${hasSale ? '' : 'regular'}">${display ? display.toFixed(2) + ' ₽' : '—'}</div>
+                            </div>
+                            <div class="card-unit-badge">${p.unit}</div>
+                        </div>
                     </div>
-                    <div class="col-md-8">
-                        <h4>${p.Name}</h4>
-                        <p class="fs-3 text-success fw-bold">${p.Price}</p>
-                        <p class="text-muted">Единица: ${p.Unit}</p>
-                        
-                        <hr>
-                        
-                        <h5>Пищевая ценность (на 100г):</h5>
-                        <table class="table">
-                            <tr>
-                                <td>Калории:</td>
-                                <td><strong>${p.Calories || '—'} ккал</strong></td>
-                            </tr>
-                            <tr>
-                                <td>Белки:</td>
-                                <td><strong>${p.Protein || '—'} г</strong></td>
-                            </tr>
-                            <tr>
-                                <td>Жиры:</td>
-                                <td><strong>${p.Fat || '—'} г</strong></td>
-                            </tr>
-                            <tr>
-                                <td>Углеводы:</td>
-                                <td><strong>${p.Carbs || '—'} г</strong></td>
-                            </tr>
-                        </table>
-                        
-                        ${!p.Calories ? '<div class="alert alert-warning">⚠️ БЖУ не найдены на странице товара</div>' : ''}
-                    </div>
-                </div>
-            `;
-        } catch (error) {
-            contentDiv.innerHTML = `<div class="alert alert-danger">Ошибка: ${error.message}</div>`;
-        }
+                </div>`;
+        }).join('');
     }
 
-    function openHtml() {
-        const category = getSelectedCategory();
-        window.open(`/ParserTest/InspectHtml?category=${category}`, '_blank');
+    function updateStats(products) {
+        const prices = products.map(p => p.salePrice ?? p.price).filter(Boolean);
+        document.getElementById('s-count').textContent = products.length;
+        document.getElementById('s-sale').textContent  = products.filter(p => p.salePrice != null).length;
+        document.getElementById('s-min').textContent   = prices.length ? Math.min(...prices).toFixed(0) : '—';
+        document.getElementById('s-max').textContent   = prices.length ? Math.max(...prices).toFixed(0) : '—';
+    }
+
+    function applyFilter() {
+        const q    = document.getElementById('filterInput').value.toLowerCase();
+        const sort = document.getElementById('sortSelect').value;
+        let result = q ? allProducts.filter(p => p.name.toLowerCase().includes(q)) : [...allProducts];
+
+        if      (sort === 'price_asc')  result.sort((a, b) => (a.salePrice ?? a.price) - (b.salePrice ?? b.price));
+        else if (sort === 'price_desc') result.sort((a, b) => (b.salePrice ?? b.price) - (a.salePrice ?? a.price));
+        else if (sort === 'name')       result.sort((a, b) => a.name.localeCompare(b.name, 'ru'));
+        else if (sort === 'sale')       result.sort((a, b) => (b.salePrice != null ? 1 : 0) - (a.salePrice != null ? 1 : 0));
+
+        renderGrid(result);
+        updateStats(result);
     }
 </script>
-}
+</body>
+</html>

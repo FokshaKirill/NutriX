@@ -13,6 +13,7 @@
     var createdAt = user?.CreatedAt.ToString("dd MMM yyyy") ?? "";
     var lastLogin = user?.LastLoginAt?.ToString("dd MMM yyyy HH:mm") ?? "сегодня";
 }
+@Html.AntiForgeryToken()
 
 <div class="acc-wrap">
 
@@ -141,7 +142,7 @@
             <div class="fav-empty">
                 <div class="fav-empty-icon">♡</div>
                 <p>Вы ещё не добавили рецепты в избранное</p>
-                <a href="/recipes" class="btn-explore">Найти рецепты</a>
+                <a href="/Recipe" class="btn-explore">Найти рецепты</a>
             </div>
         }
         else
@@ -164,8 +165,8 @@
                             <div class="recipe-top-row">
                                 <span class="recipe-name">@recipe.Name</span>
                                 <form asp-action="ToggleFavorite" asp-controller="Favorites" method="post" style="display:inline">
-                                    @Html.AntiForgeryToken()
                                     <input type="hidden" name="recipeId" value="@recipe.Id" />
+                                    <input type="hidden" name="returnUrl" value="/account" />
                                     <button type="submit" class="heart-btn" title="Убрать из избранного">♥</button>
                                 </form>
                             </div>
@@ -193,7 +194,6 @@
             </div>
         }
     </div>
-
 </div>
 
-<script src="./js/script.js" asp-append-version="true"></script>
+<script src="~/js/auth.js" asp-append-version="true"></script>

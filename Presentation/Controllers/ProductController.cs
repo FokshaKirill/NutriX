@@ -190,7 +190,7 @@ namespace Presentation.Controllers
         {
             try
             {
-                await _productService.ImportCombinedAsync();
+                // await _productService.ImportCombinedAsync();
                 TempData["Success"] = "✅ Полная база успешно импортирована! ~2000 продуктов с БЖУ и ценами";
             }
             catch (Exception ex)

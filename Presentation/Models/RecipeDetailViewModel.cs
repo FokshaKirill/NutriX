@@ -18,5 +18,7 @@ public class RecipeDetailViewModel
 
     public decimal CaloriesPerServing => TotalCalories / DefaultServings;
     public decimal TotalCalories => DefaultServings > 0 ? Ingredients.Sum(i => i.Calories ?? 0) : 0;
-    // Аналогично Protein, Fat, Carbs
+    public decimal ProteinPerServing { get; set; } = 0;
+    public decimal FatPerServing { get; set; } = 0;
+    public decimal CarbsPerServing { get; set; } = 0;
 }

@@ -1,0 +1,298 @@
+﻿@{
+    ViewData["Title"] = "Парсер Price.ru";
+}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Парсер Price.ru — Продукты</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="~/css/priceru.css" rel="stylesheet" asp-append-version="true">
+    <style>
+        
+    </style>
+</head>
+<body>
+
+<header class="header">
+    <div class="header-logo"><span>P</span> price.ru</div>
+    <div class="header-sub">Парсер продуктов</div>
+    <div class="header-badge" id="statusBadge">—</div>
+</header>
+
+<div class="layout">
+    <aside class="sidebar">
+        <div class="sidebar-card">
+            <div class="section-label">Поиск товара</div>
+            <div class="search-box" style="margin-bottom:8px">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                </svg>
+                <input type="text" id="searchInput" placeholder="Например: молоко Простоквашино" onkeydown="if(event.key==='Enter')doSearch()">
+            </div>
+            <button class="btn-search" onclick="doSearch()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                </svg>
+                НАЙТИ НА PRICE.RU
+            </button>
+        </div>
+
+        <div class="sidebar-card">
+            <div class="section-label">Категория</div>
+            <div class="cat-list" id="catList">
+                <div class="spinner" style="margin:10px auto"></div>
+            </div>
+        </div>
+
+        <div class="sidebar-card">
+            <div class="section-label">Страниц (≈30 товаров/стр.)</div>
+            <div class="slider-header">
+                <span class="slider-val" id="pagesVal">1</span>
+                <span class="slider-hint" id="pagesHint">до 30 товаров</span>
+            </div>
+            <input type="range" min="1" max="5" value="1" id="pagesSlider"
+                   oninput="updatePages(this.value)">
+        </div>
+
+        <button class="btn-primary" id="loadBtn" onclick="loadProducts()" disabled>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="23 4 23 10 17 10"/>
+                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+            </svg>
+            ЗАГРУЗИТЬ ТОВАРЫ
+        </button>
+    </aside>
+
+    <main class="main">
+        <div class="stats-row" id="statsRow" style="display:none">
+            <div class="stat-card"><div class="stat-card-val" id="s-count">0</div><div class="stat-card-label">Товаров</div></div>
+            <div class="stat-card"><div class="stat-card-val" id="s-min">—</div><div class="stat-card-label">Мин. цена ₽</div></div>
+            <div class="stat-card"><div class="stat-card-val" id="s-max">—</div><div class="stat-card-label">Макс. цена ₽</div></div>
+            <div class="stat-card"><div class="stat-card-val" id="s-pages">0</div><div class="stat-card-label">Страниц загружено</div></div>
+        </div>
+
+        <div class="filter-bar" id="filterBar" style="display:none">
+            <div class="filter-wrap">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                </svg>
+                <input type="text" id="filterInput" placeholder="Фильтр по названию..." oninput="applyFilter()">
+            </div>
+            <select class="sort-select" id="sortSelect" onchange="applyFilter()">
+                <option value="default">По умолчанию</option>
+                <option value="price_asc">Цена ↑</option>
+                <option value="price_desc">Цена ↓</option>
+                <option value="name">По названию</option>
+            </select>
+        </div>
+
+        <div class="status-area" id="statusArea"></div>
+
+        <div class="products-grid" id="grid">
+            <div class="empty-state">
+                <div class="empty-icon">🛒</div>
+                <div class="empty-text">Выберите категорию и нажмите «Загрузить»<br>или введите товар в поиске</div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script>
+    let allProducts = [];
+    let activeSlug = '';
+
+    // Загружаем категории при старте
+    window.addEventListener('DOMContentLoaded', loadCategories);
+
+    async function loadCategories() {
+        try {
+            const r = await fetch('/PriceRu/Api/categories');
+            const cats = await r.json();
+            const list = document.getElementById('catList');
+            list.innerHTML = cats.map(c => `
+                <button class="cat-btn" data-slug="${c.slug}" onclick="selectCat(this)">
+                    <span class="cat-icon">${c.name.split(' ')[0]}</span>
+                    ${c.name.split(' ').slice(1).join(' ')}
+                </button>`).join('');
+            // Активируем первую
+            const first = list.querySelector('.cat-btn');
+            if (first) { first.classList.add('active'); activeSlug = first.dataset.slug; }
+            document.getElementById('loadBtn').disabled = false;
+            document.getElementById('statusBadge').textContent = `${cats.length} категорий`;
+        } catch(e) {
+            document.getElementById('catList').innerHTML = '<div style="color:#b91c1c;font-size:13px">Ошибка загрузки категорий</div>';
+        }
+    }
+
+    function selectCat(btn) {
+        document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        activeSlug = btn.dataset.slug;
+    }
+
+    function updatePages(val) {
+        document.getElementById('pagesVal').textContent = val;
+        document.getElementById('pagesHint').textContent = `до ${val * 30} товаров`;
+    }
+
+    function setStatus(msg, type = '') {
+        const el = document.getElementById('statusArea');
+        el.className = 'status-area ' + type;
+        if (type === 'loading') {
+            el.innerHTML = `<div class="spinner"></div>${msg}<div class="progress-wrap" style="width:100%;margin-top:8px"><div class="progress-bar" id="pBar" style="width:0%"></div></div>`;
+        } else {
+            el.textContent = msg;
+        }
+    }
+    function setProgress(pct) { const b=document.getElementById('pBar'); if(b) b.style.width=pct+'%'; }
+
+    function renderSkeletons(n) {
+        document.getElementById('grid').innerHTML = Array.from({length:n},(_,i)=>`
+            <div class="skel-card" style="animation-delay:${i*.03}s">
+                <div class="skel-img skeleton"></div>
+                <div class="skel-body">
+                    <div class="skel-line skeleton w100"></div>
+                    <div class="skel-line skeleton w75"></div>
+                    <div class="skel-line skeleton w50"></div>
+                </div>
+            </div>`).join('');
+    }
+
+    async function loadProducts() {
+        if (!activeSlug) return;
+        const btn = document.getElementById('loadBtn');
+        const maxPages = parseInt(document.getElementById('pagesSlider').value);
+        btn.disabled = true;
+        allProducts = [];
+        document.getElementById('statsRow').style.display = 'none';
+        document.getElementById('filterBar').style.display = 'none';
+        renderSkeletons(maxPages * 6);
+
+        try {
+            const products = [];
+            let loadedPages = 0;
+
+            for (let page = 1; page <= maxPages; page++) {
+                setStatus(`Загрузка страницы ${page} / ${maxPages}...`, 'loading');
+                setProgress((page - 1) / maxPages * 100);
+
+                const r = await fetch('/PriceRu/Api/products', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ slug: activeSlug, page })
+                });
+                if (!r.ok) throw new Error(`Сервер вернул ${r.status}: ${(await r.text()).slice(0,150)}`);
+
+                const data = await r.json();
+                const items = data.products || [];
+                products.push(...items);
+                loadedPages = page;
+
+                if (!data.has_next) break;
+                if (page < maxPages) await new Promise(res => setTimeout(res, 400));
+            }
+
+            setProgress(100);
+            if (!products.length) throw new Error('Товары не найдены.');
+
+            allProducts = products;
+            renderGrid(products);
+            updateStats(products, loadedPages);
+            document.getElementById('statsRow').style.display = 'grid';
+            document.getElementById('filterBar').style.display = 'flex';
+            document.getElementById('filterInput').value = '';
+            document.getElementById('sortSelect').value = 'default';
+
+            const catName = document.querySelector('.cat-btn.active')?.textContent.trim() || activeSlug;
+            setStatus(`Загружено ${products.length} товаров · ${catName}`, 'ok');
+        } catch(e) {
+            setStatus(e.message, 'err');
+            document.getElementById('grid').innerHTML = `<div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-text">${e.message}</div></div>`;
+        }
+        btn.disabled = false;
+    }
+
+    async function doSearch() {
+        const q = document.getElementById('searchInput').value.trim();
+        if (!q) return;
+        const btn = document.getElementById('loadBtn');
+        btn.disabled = true;
+        allProducts = [];
+        document.getElementById('statsRow').style.display = 'none';
+        document.getElementById('filterBar').style.display = 'none';
+        renderSkeletons(6);
+        setStatus(`Поиск: «${q}»...`, 'loading');
+
+        try {
+            const r = await fetch('/PriceRu/Api/search', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ query: q, page: 1 })
+            });
+            if (!r.ok) throw new Error(`Сервер вернул ${r.status}`);
+            const data = await r.json();
+            const products = data.products || [];
+            if (!products.length) throw new Error(`По запросу «${q}» ничего не найдено.`);
+
+            allProducts = products;
+            renderGrid(products);
+            updateStats(products, 1);
+            document.getElementById('statsRow').style.display = 'grid';
+            document.getElementById('filterBar').style.display = 'flex';
+            setStatus(`Найдено ${products.length} товаров по запросу «${q}»`, 'ok');
+        } catch(e) {
+            setStatus(e.message, 'err');
+            document.getElementById('grid').innerHTML = `<div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-text">${e.message}</div></div>`;
+        }
+        btn.disabled = false;
+    }
+
+    function renderGrid(products) {
+        if (!products.length) {
+            document.getElementById('grid').innerHTML = `<div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-text">Ничего не найдено</div></div>`;
+            return;
+        }
+        document.getElementById('grid').innerHTML = products.map((p, i) => `
+            <div class="product-card" style="animation-delay:${Math.min(i,20)*.03}s">
+                <div class="card-img-wrap">
+                    ${p.img
+                        ? `<img src="${p.img}" alt="" loading="lazy" onerror="this.parentElement.innerHTML='<div class=card-no-img>нет фото</div>'">`
+                        : `<div class="card-no-img">нет фото</div>`}
+                    ${p.offers ? `<div class="card-offers-badge">${p.offers} маг.</div>` : ''}
+                </div>
+                <div class="card-body">
+                    <div class="card-name" title="${p.name}">${p.name}</div>
+                    <div class="card-bottom">
+                        <div class="${p.price ? 'card-price' : 'card-price no-price'}">
+                            ${p.price ? `от ${p.price.toLocaleString('ru')} ₽` : 'цена не указана'}
+                        </div>
+                        ${p.link ? `<a href="${p.link}" target="_blank" class="card-link">→ price.ru</a>` : ''}
+                    </div>
+                </div>
+            </div>`).join('');
+    }
+
+    function updateStats(products, pages) {
+        const prices = products.map(p => p.price).filter(Boolean);
+        document.getElementById('s-count').textContent = products.length;
+        document.getElementById('s-min').textContent = prices.length ? Math.min(...prices).toLocaleString('ru') : '—';
+        document.getElementById('s-max').textContent = prices.length ? Math.max(...prices).toLocaleString('ru') : '—';
+        document.getElementById('s-pages').textContent = pages || 1;
+    }
+
+    function applyFilter() {
+        const q = document.getElementById('filterInput').value.toLowerCase();
+        const sort = document.getElementById('sortSelect').value;
+        let result = q ? allProducts.filter(p => p.name.toLowerCase().includes(q)) : [...allProducts];
+        if      (sort === 'price_asc')  result.sort((a,b) => (a.price||9999999)-(b.price||9999999));
+        else if (sort === 'price_desc') result.sort((a,b) => (b.price||0)-(a.price||0));
+        else if (sort === 'name')       result.sort((a,b) => a.name.localeCompare(b.name,'ru'));
+        renderGrid(result);
+        updateStats(result, null);
+    }
+</script>
+</body>
+</html>

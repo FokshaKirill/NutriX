@@ -1,91 +1,670 @@
 ﻿@model Presentation.Models.RecipeDetailViewModel
+@{
+    ViewData["Title"] = Model.Name;
+}
 
-<div class="container py-5">
-    <div class="card" style="border-radius: 1.8rem; overflow: hidden;">
-        <div class="text-center position-relative">
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+
+<style>
+:root {
+    --sage:      #7aab84;
+    --sage-d:    #4e7d58;
+    --sage-pale: #f0f7f2;
+    --bark:      #2d2417;
+    --muted:     #7a7168;
+    --border:    #e4ede6;
+    --heart:     #e05c5c;
+}
+
+* { box-sizing: border-box; }
+
+.rd-page {
+    margin: 0 auto;
+    padding: 2.5rem 1.5rem 6rem;
+    font-family: 'DM Sans', sans-serif;
+}
+
+.rd-header {
+    flex-direction: row;
+    display: flex;
+    gap: 1.5rem;
+    justify-content: space-between;
+}
+
+/* ── Hero ── */
+.rd-hero {
+    position: relative;
+    overflow: hidden;
+    height: 420px;
+    margin-bottom: 2rem;
+    background: linear-gradient(135deg, #d6eadb, #b5d9bc);
+    width: -webkit-fill-available;
+}
+
+.rd-hero img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.rd-hero-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 5rem;
+}
+
+.rd-hero-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(20,12,5,.72) 0%, transparent 55%);
+}
+
+.rd-hero-content {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 2rem 2.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 1rem;
+}
+
+.rd-title {
+    font-family: 'Lora', serif;
+    font-size: clamp(1.6rem, 3.5vw, 2.4rem);
+    color: #fff;
+    margin: 0 0 .4rem;
+    line-height: 1.2;
+    text-shadow: 0 2px 12px rgba(0,0,0,.3);
+}
+
+.rd-desc {
+    color: rgba(255,255,255,.75);
+    font-size: .95rem;
+    margin: 0;
+    max-width: 520px;
+    line-height: 1.5;
+}
+
+/* избранное на hero */
+.fav-hero-btn {
+    flex-shrink: 0;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255,255,255,.18);
+    backdrop-filter: blur(8px);
+    color: #fff;
+    font-size: 1.3rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background .2s, transform .2s;
+}
+.fav-hero-btn:hover { background: rgba(255,255,255,.32); transform: scale(1.1); }
+.fav-hero-btn.is-fav { color: var(--heart); }
+
+/* pop анимация */
+@@keyframes favPop {
+    0%  { transform: scale(1); }
+    40% { transform: scale(1.45); }
+    70% { transform: scale(.88); }
+    100%{ transform: scale(1); }
+}
+.fav-pop { animation: favPop .35s cubic-bezier(.36,.07,.19,.97); }
+
+/* ── Пилюли-статы под hero ── */
+.rd-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .75rem;
+    margin-bottom: 2.5rem;
+}
+
+.rd-stat {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    background: var(--sage-pale);
+    border: 1px solid var(--border);
+    padding: .45rem 1rem;
+    font-size: .85rem;
+    font-weight: 500;
+    color: var(--bark);
+}
+
+.rd-stat .stat-ico { font-size: 1rem; }
+
+/* ── Основной грид ── */
+.rd-body {
+    display: grid;
+    gap: 2rem;
+    align-items: start;
+}
+
+/* ── Сайдбар ── */
+.rd-sidebar {}
+
+.rd-card {
+    background: #fff;
+    border: 1px solid var(--border);
+    padding: 1.5rem;
+    margin-bottom: 1.25rem;
+}
+
+.rd-card-title {
+    font-size: .72rem;
+    font-weight: 600;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0 0 1rem;
+}
+
+/* макронутриенты */
+.macro-list { display: flex; flex-direction: column; gap: .55rem; }
+
+.macro-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: .875rem;
+}
+
+.macro-label { color: var(--muted); }
+
+.macro-val { font-weight: 600; color: var(--bark); }
+
+.macro-bar-wrap {
+    height: 5px;
+    background: #edf0eb;
+    border-radius: 999px;
+    overflow: hidden;
+    margin-top: .25rem;
+}
+
+.macro-bar { height: 100%; border-radius: 999px; }
+.bar-kcal  { background: var(--sage); }
+.bar-p     { background: #5b9bd5; }
+.bar-f     { background: #e07a5f; }
+.bar-c     { background: #f4a32a; }
+
+/* стоимость */
+.cost-big {
+    font-family: 'Lora', serif;
+    font-size: 2rem;
+    font-weight: 600;
+    color: var(--sage-d);
+    text-align: center;
+    line-height: 1;
+}
+
+.cost-sub {
+    text-align: center;
+    font-size: .8rem;
+    color: var(--muted);
+    margin-top: .3rem;
+}
+
+/* ── Контент ── */
+.rd-content {}
+
+/* Секция */
+.rd-section { margin-bottom: 2.5rem; }
+
+.rd-section-title {
+    font-family: 'Lora', serif;
+    font-size: 1.3rem;
+    color: var(--bark);
+    margin: 0 0 1.1rem;
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+}
+
+.rd-section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+}
+
+/* Ингредиенты */
+.ing-list {
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.ing-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: .7rem .9rem;
+    border-radius: 10px;
+    background: var(--sage-pale);
+    font-size: .9rem;
+    transition: background .2s;
+}
+
+.ing-item:hover { background: #e4f0e7; }
+
+.ing-name { font-weight: 500; color: var(--bark); }
+
+.ing-comment { font-size: .78rem; color: var(--muted); margin-left: .3rem; }
+
+.ing-amount {
+    font-size: .82rem;
+    color: var(--muted);
+    white-space: nowrap;
+    margin-left: 1rem;
+    text-align: right;
+}
+
+/* Шаги */
+.steps-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.step-item {
+    display: flex;
+    gap: 1.1rem;
+    align-items: flex-start;
+}
+
+.step-num {
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--sage);
+    color: #fff;
+    font-family: 'Lora', serif;
+    font-weight: 600;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(122,171,132,.35);
+    margin-top: .1rem;
+}
+
+.step-body { flex: 1; }
+
+.step-text {
+    font-size: .95rem;
+    line-height: 1.7;
+    color: var(--bark);
+    margin: 0 0 .5rem;
+}
+
+.step-img {
+    width: 100%;
+    max-height: 300px;
+    object-fit: cover;
+    border-radius: 12px;
+    margin-top: .6rem;
+}
+
+.step-timer {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    font-size: .78rem;
+    color: var(--sage-d);
+    background: var(--sage-pale);
+    border-radius: 999px;
+    padding: .2rem .75rem;
+}
+
+/* ── Кнопки внизу ── */
+.rd-footer-actions {
+    display: flex;
+    gap: .75rem;
+    flex-wrap: wrap;
+    margin-top: 2.5rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--border);
+}
+
+.btn-soft {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    padding: .65rem 1.3rem;
+    border-radius: 10px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: .875rem;
+    font-weight: 500;
+    text-decoration: none;
+    border: 1.5px solid var(--border);
+    color: var(--muted);
+    background: #fff;
+    cursor: pointer;
+    transition: all .2s;
+}
+.btn-soft:hover { border-color: var(--sage); color: var(--sage-d); background: var(--sage-pale); }
+.btn-soft.primary { background: var(--sage); color: #fff; border-color: var(--sage); }
+.btn-soft.primary:hover { background: var(--sage-d); }
+.btn-soft.danger:hover { border-color: var(--heart); color: var(--heart); background: #fdf0f0; }
+
+/* ── Mobile ── */
+@@media (max-width: 700px) {
+    .rd-hero { height: 280px; }
+    .rd-hero-content { padding: 1.2rem 1.5rem; }
+    .rd-body { grid-template-columns: 1fr; }
+    .rd-sidebar { order: 2; }
+    .rd-content { order: 1; }
+}
+</style>
+
+<div class="rd-page">
+
+    <!-- ── Header ── -->
+    <div class="rd-header">
+        <!-- ── Hero ── -->
+        <div class="rd-hero">
             @if (!string.IsNullOrEmpty(Model.ImageUrl))
             {
-                <img src="@Model.ImageUrl" alt="@Model.Name" class="w-100" style="max-height: 500px; object-fit: cover;">
+            <img src="@Model.ImageUrl" alt="@Model.Name" />
             }
             else
             {
-                <div class="bg-light d-flex align-items-center justify-content-center" style="height: 500px;">
-                    <i class="fas fa-image fs-1 text-muted"></i>
-                </div>
+            <div class="rd-hero-placeholder">🥘</div>
             }
+            <div class="rd-hero-overlay"></div>
 
-            <div class="position-absolute bottom-0 start-0 end-0 p-5" style="background: linear-gradient(transparent, rgba(0,0,0,0.7));">
-                <h1 class="text-white mb-0">@(Model.Name.Substring(0, 1).ToUpper()+Model.Name.Substring(1))</h1>
-                @if (!string.IsNullOrEmpty(Model.Description))
+            <div class="rd-hero-content">
+                <div>
+                    <h1 class="rd-title">
+                        @(Model.Name[..1].ToUpper() + Model.Name[1..])
+                    </h1>
+                    @if (!string.IsNullOrEmpty(Model.Description))
+                    {
+                    <p class="rd-desc">@Model.Description</p>
+                    }
+                </div>
+
+                @if (User.Identity?.IsAuthenticated == true)
                 {
-                    <p class="text-white-50 fs-4 mt-2">@Model.Description</p>
+                <button class="fav-hero-btn fav-btn @(Model.IsFavorite ? "is-fav" : "")"
+                        data-id="@Model.Id"
+                        data-loading="false"
+                        title="@(Model.IsFavorite ? "Убрать из избранного" : "В избранное")">
+                    <i class="@(Model.IsFavorite ? "fas" : "far") fa-heart"></i>
+                </button>
                 }
             </div>
         </div>
 
-        <div class="card-body p-5">
-            <div class="row g-5">
-                <div class="col-lg-4">
-                    <div class="p-4 rounded-4 text-center" style="background: var(--primary-light);">
-                        <div class="fs-2 fw-bold" style="color: var(--primary);">
-                            @Math.Round(Model.CaloriesPerServing, 2) ккал
+        <!-- Сайдбар -->
+        <aside class="rd-sidebar">
+
+            @if (Model.CaloriesPerServing > 0 || Model.ProteinPerServing > 0)
+            {
+            <div class="rd-card">
+                <p class="rd-card-title">Питательность на порцию</p>
+                <div class="macro-list">
+                    @if (Model.CaloriesPerServing > 0)
+                    {
+                    <div>
+                        <div class="macro-row">
+                            <span class="macro-label">Калории</span>
+                            <span class="macro-val">@Math.Round(Model.CaloriesPerServing, 0) ккал</span>
                         </div>
-                        <div class="fs-2 fw-bold" style="color: var(--primary);">
-                            @Math.Round(Model.CostPerServing,2 ) руб
+                        <div class="macro-bar-wrap">
+                            <div class="macro-bar bar-kcal" style="width:100%"></div>
                         </div>
-                        <small class="text-muted">на порцию (@Model.DefaultServings порц.)</small>
                     </div>
+                    }
+                    @if (Model.ProteinPerServing > 0)
+                    {
+                    <div>
+                        <div class="macro-row">
+                            <span class="macro-label">Белки</span>
+                            <span class="macro-val">@Math.Round(Model.ProteinPerServing, 1) г</span>
+                        </div>
+                        <div class="macro-bar-wrap">
+                            <div class="macro-bar bar-p" style="width:@Math.Min(100, (double)Model.ProteinPerServing * 100 / 50)%"></div>
+                        </div>
+                    </div>
+                    }
+                    @if (Model.FatPerServing > 0)
+                    {
+                    <div>
+                        <div class="macro-row">
+                            <span class="macro-label">Жиры</span>
+                            <span class="macro-val">@Math.Round(Model.FatPerServing, 1) г</span>
+                        </div>
+                        <div class="macro-bar-wrap">
+                            <div class="macro-bar bar-f" style="width:@Math.Min(100, (double)Model.FatPerServing * 100 / 35)%"></div>
+                        </div>
+                    </div>
+                    }
+                    @if (Model.CarbsPerServing > 0)
+                    {
+                    <div>
+                        <div class="macro-row">
+                            <span class="macro-label">Углеводы</span>
+                            <span class="macro-val">@Math.Round(Model.CarbsPerServing, 1) г</span>
+                        </div>
+                        <div class="macro-bar-wrap">
+                            <div class="macro-bar bar-c" style="width:@Math.Min(100, (double)Model.CarbsPerServing * 100 / 80)%"></div>
+                        </div>
+                    </div>
+                    }
                 </div>
-                <div class="col-lg-8">
-                    <h3 class="mb-4" style="color: var(--primary);">Ингредиенты</h3>
-                    <ul class="list-group">
+            </div>
+            }
+
+            @if (Model.CostPerServing > 0)
+            {
+            <div class="rd-card">
+                <p class="rd-card-title">Стоимость</p>
+                <div class="cost-big">@Math.Round(Model.CostPerServing, 0) ₽</div>
+                <div class="cost-sub">за порцию · всего @Math.Round(Model.TotalCost, 0) ₽</div>
+            </div>
+            }
+
+        </aside>
+    </div>
+    
+    <!-- ── Пилюли-статы ── -->
+    <div class="rd-stats">
+        <div class="rd-stat">
+            <span class="stat-ico">🍽</span>
+            @Model.DefaultServings порц.
+        </div>
+        @if (Model.CaloriesPerServing > 0)
+        {
+            <div class="rd-stat">
+                <span class="stat-ico">🔥</span>
+                @Math.Round(Model.CaloriesPerServing, 0) ккал / порц.
+            </div>
+        }
+        @if (Model.ProteinPerServing > 0)
+        {
+            <div class="rd-stat">
+                <span class="stat-ico" style="color:#5b9bd5">Б</span>
+                @Math.Round(Model.ProteinPerServing, 1) г
+            </div>
+        }
+        @if (Model.FatPerServing > 0)
+        {
+            <div class="rd-stat">
+                <span class="stat-ico" style="color:#e07a5f">Ж</span>
+                @Math.Round(Model.FatPerServing, 1) г
+            </div>
+        }
+        @if (Model.CarbsPerServing > 0)
+        {
+            <div class="rd-stat">
+                <span class="stat-ico" style="color:#f4a32a">У</span>
+                @Math.Round(Model.CarbsPerServing, 1) г
+            </div>
+        }
+        @if (Model.Ingredients?.Count > 0)
+        {
+            <div class="rd-stat">
+                <span class="stat-ico">🛒</span>
+                @Model.Ingredients.Count ингр.
+            </div>
+        }
+    </div>
+
+    <!-- ── Тело ── -->
+    <div class="rd-body">
+
+        <!-- Контент -->
+        <div class="rd-content">
+
+            <!-- Ингредиенты -->
+            @if (Model.Ingredients?.Any() == true)
+            {
+                <div class="rd-section">
+                    <h2 class="rd-section-title">Ингредиенты</h2>
+                    <ul class="ing-list">
                         @foreach (var ing in Model.Ingredients)
                         {
-                            <li class="list-group-item d-flex justify-content-between align-items-center py-3">
-                                <div>
-                                    <strong>@ing.ProductName</strong>
+                            <li class="ing-item">
+                                <span>
+                                    <span class="ing-name">@ing.ProductName</span>
                                     @if (!string.IsNullOrEmpty(ing.Comment))
                                     {
-                                        <small class="text-muted">(@ing.Comment)</small>
+                                        <span class="ing-comment">(@ing.Comment)</span>
                                     }
-                                </div>
-                                <small class="text-muted">@Math.Round(ing.Amount, 2) @ing.Unit / @(ing.Calories?.ToString("F0") ?? "—") ккал</small>
+                                </span>
+                                <span class="ing-amount">
+                                    @Math.Round(ing.Amount, 1) @ing.Unit
+                                    @if (ing.Calories > 0)
+                                    {
+                                        <span> · @ing.Calories?.ToString("F0") ккал</span>
+                                    }
+                                </span>
                             </li>
                         }
                     </ul>
                 </div>
-            </div>
+            }
 
-            <h3 class="mt-5 mb-4" style="color: var(--primary);">Приготовление</h3>
-            <div class="row g-4">
-                @foreach (var step in Model.Steps.OrderBy(s => s.Order))
-                {
-                    <div class="col-12">
-                        <div class="d-flex">
-                            <div class="flex-shrink-0 me-4">
-                                <div class="rounded-circle d-flex align-items-center justify-content-center fs-3 fw-bold" style="width: 60px; height: 60px; background: var(--primary); color: white;">
-                                    @step.Order
+            <!-- Шаги приготовления -->
+            @if (Model.Steps?.Any() == true)
+            {
+                <div class="rd-section">
+                    <h2 class="rd-section-title">Приготовление</h2>
+                    <div class="steps-list">
+                        @foreach (var step in Model.Steps.OrderBy(s => s.Order))
+                        {
+                            <div class="step-item">
+                                <div class="step-num">@step.Order</div>
+                                <div class="step-body">
+                                    <p class="step-text">@step.Description</p>
+                                    @if (!string.IsNullOrEmpty(step.ImageUrl))
+                                    {
+                                        <img src="@step.ImageUrl" alt="Шаг @step.Order" class="step-img" />
+                                    }
+                                    @if (step.TimerSeconds.HasValue && step.TimerSeconds > 0)
+                                    {
+                                        <span class="step-timer">
+                                            <i class="fas fa-clock"></i>
+                                            @(step.TimerSeconds / 60) мин
+                                        </span>
+                                    }
                                 </div>
                             </div>
-                            <div class="flex-grow-1">
-                                <p class="mb-3 fs-normal">@step.Description</p>
-                                @if (!string.IsNullOrEmpty(step.ImageUrl))
-                                {
-                                    <img src="@step.ImageUrl" alt="Шаг @step.Order" class="rounded-4 w-100" style="max-height: 400px; object-fit: cover;">
-                                }
-                                @if (step.TimerSeconds.HasValue)
-                                {
-                                    <small class="text-muted"><i class="fas fa-clock me-1"></i> Таймер: @(step.TimerSeconds / 60) мин</small>
-                                }
-                            </div>
-                        </div>
+                        }
                     </div>
+                </div>
+            }
+
+            <!-- Действия -->
+            <div class="rd-footer-actions">
+                <a asp-action="Index" class="btn-soft">
+                    <i class="fas fa-arrow-left"></i> Все рецепты
+                </a>
+
+                @if (Model.IsOwner)
+                {
+                    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn-soft primary">
+                        <i class="fas fa-pen"></i> Редактировать
+                    </a>
+                    <button onclick="openDeleteModal('@Model.Id', '@Html.Raw(Model.Name.Replace("'", "\\'"))')"
+                            class="btn-soft danger">
+                        <i class="fas fa-trash"></i> Удалить
+                    </button>
                 }
             </div>
 
-            <div class="text-center mt-5">
-                <a asp-action="Index" class="btn btn-outline-primary btn-lg">← Все рецепты</a>
-            </div>
         </div>
     </div>
 </div>
+
+<!-- Модалка удаления -->
+<div class="del-modal-backdrop" id="delBackdrop" onclick="closeDeleteModal(event)">
+    <div class="del-modal" onclick="event.stopPropagation()" style="
+        background:#fff; border-radius:18px; padding:2rem;
+        max-width:380px; width:90%;
+        box-shadow:0 24px 64px rgba(0,0,0,.18);
+        animation: modalIn .25s ease;">
+        <h4 style="font-family:'Lora',serif;font-size:1.25rem;margin:0 0 .6rem;color:#2d2417">Удалить рецепт?</h4>
+        <p style="color:#7a7168;font-size:.9rem;margin:0 0 1.5rem">
+            «<span id="delRecipeName"></span>» будет удалён навсегда.
+        </p>
+        <div style="display:flex;gap:.75rem">
+            <button onclick="closeDeleteModal()" class="btn-soft" style="flex:1">Отмена</button>
+            <form id="delForm" method="post" style="flex:1">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" id="delRecipeId" />
+                <button type="submit" class="btn-soft danger"
+                        style="width:100%;justify-content:center;background:#fdf0f0;border-color:var(--heart);color:var(--heart)">
+                    <i class="fas fa-trash"></i> Удалить
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+.del-modal-backdrop {
+    display:none; position:fixed; inset:0;
+    background:rgba(0,0,0,.45); z-index:1000;
+    align-items:center; justify-content:center;
+}
+.del-modal-backdrop.open { display:flex; }
+@@keyframes modalIn {
+    from { opacity:0; transform:translateY(14px) scale(.97); }
+    to   { opacity:1; transform:translateY(0) scale(1); }
+}
+</style>
+
+@section Scripts {
+<script src="~/js/favorites.js" asp-append-version="true"></script>
+<script>
+    function openDeleteModal(id, name) {
+        document.getElementById("delRecipeId").value = id;
+        document.getElementById("delRecipeName").textContent = name;
+        document.getElementById("delForm").action = "/Recipe/Delete";
+        document.getElementById("delBackdrop").classList.add("open");
+    }
+    function closeDeleteModal(e) {
+        if (!e || e.target === document.getElementById("delBackdrop"))
+            document.getElementById("delBackdrop").classList.remove("open");
+    }
+    document.addEventListener("keydown", e => {
+        if (e.key === "Escape") document.getElementById("delBackdrop").classList.remove("open");
+    });
+</script>
+}
