@@ -43,6 +43,12 @@ namespace Infrastructure.Repositories
 
         public async Task SaveChangesAsync()
             => await _db.SaveChangesAsync();
+        
+        public async Task AddRangeAsync(IEnumerable<T> entities)
+            => await _db.Set<T>().AddRangeAsync(entities);
+        
+        public void RemoveRange(IEnumerable<T> entities)
+            => _db.Set<T>().RemoveRange(entities);
     }
 
 }

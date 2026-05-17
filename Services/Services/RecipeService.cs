@@ -7,13 +7,20 @@ namespace Services.Services
 {
     public class RecipeService : IRecipeService
     {
-        private readonly IRepository<Recipe> _recipes;
+        private readonly IRepository<Recipe>           _recipes;
+        private readonly IRepository<RecipeIngredient> _ingredients;
+        private readonly IRepository<RecipeStep>       _steps;
 
-        public RecipeService(IRepository<Recipe> recipes)
+        public RecipeService(
+            IRepository<Recipe> recipes,
+            IRepository<RecipeIngredient> ingredients,
+            IRepository<RecipeStep> steps)
         {
-            _recipes = recipes;
+            _recipes     = recipes;
+            _ingredients = ingredients;
+            _steps       = steps;
         }
-
+        
         public async Task<List<Recipe>> GetAllRecipesAsync()
         {
             return await _recipes.Query()
@@ -24,7 +31,7 @@ namespace Services.Services
                 .ToListAsync();
         }
 
-        public async Task<Recipe?> GetByIdAsync(Guid id)
+        public async Task<Recipe?> GetByIdAsync(Guid id, bool includeIngredients = false, bool includeSteps = false)
         {
             return await _recipes.Query()
                 .Include(r => r.Ingredients)
@@ -42,10 +49,34 @@ namespace Services.Services
             await _recipes.SaveChangesAsync();
             return recipe;
         }
-
+        
         public async Task UpdateAsync(Recipe recipe)
         {
+            // 1. Сохраняем новые коллекции до очистки
+            var newIngredients = recipe.Ingredients.ToList();
+            var newSteps       = recipe.Steps.ToList();
+
+            // 2. Удаляем старые из БД
+            var oldIngredients = await _ingredients.Query()
+                .Where(i => i.RecipeId == recipe.Id).ToListAsync();
+            _ingredients.RemoveRange(oldIngredients);
+
+            var oldSteps = await _steps.Query()
+                .Where(s => s.RecipeId == recipe.Id).ToListAsync();
+            _steps.RemoveRange(oldSteps);
+
+            // 3. Очищаем коллекции на объекте, чтобы Update не трогал их
+            recipe.Ingredients.Clear();
+            recipe.Steps.Clear();
+
+            // 4. Обновляем скалярные поля рецепта
             await _recipes.UpdateAsync(recipe);
+
+            // 5. Добавляем новые дочерние записи
+            await _ingredients.AddRangeAsync(newIngredients);
+            await _steps.AddRangeAsync(newSteps);
+
+            // 6. Один SaveChanges на всё
             await _recipes.SaveChangesAsync();
         }
 

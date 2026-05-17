@@ -466,6 +466,18 @@
                         </div>
                     </div>
                     }
+                    @if (Model.TotalCost > 0)
+                    {
+                    <div>
+                        <div class="macro-row">
+                            <span class="macro-label">Углеводы</span>
+                            <span class="macro-val">@Math.Round(Model.TotalCost, 1) г</span>
+                        </div>
+                        <div class="macro-bar-wrap">
+                            <div class="macro-bar bar-c" style="width:@Math.Min(100, (double)Model.TotalCost * 100 / 80)%"></div>
+                        </div>
+                    </div>
+                    }
                 </div>
             </div>
             }

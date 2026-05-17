@@ -8,7 +8,7 @@ namespace Services.Interfaces
     public interface IRecipeService
     {
         Task<List<Recipe>> GetAllRecipesAsync();
-        Task<Recipe?> GetByIdAsync(Guid id);
+        Task<Recipe?> GetByIdAsync(Guid id, bool includeIngredients = false, bool includeSteps = false);
         Task<Recipe> CreateAsync(Recipe recipe);
         Task UpdateAsync(Recipe recipe);
         Task DeleteAsync(Guid id);

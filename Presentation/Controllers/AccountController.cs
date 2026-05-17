@@ -28,7 +28,7 @@ public class AccountController : Controller
         {
             var raw = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrWhiteSpace(raw)) return null;
-            return Guid.TryParse(raw, out var id) ? id : null; // ← TryParse вместо Parse
+            return Guid.TryParse(raw, out var id) ? id : null;
         }
     }
 

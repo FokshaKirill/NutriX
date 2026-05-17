@@ -13,5 +13,7 @@ namespace Infrastructure.Interfaces
         Task UpdateAsync(T entity);
         Task DeleteAsync(T entity);
         Task SaveChangesAsync();
+        Task AddRangeAsync(IEnumerable<T> entities);
+        void RemoveRange(IEnumerable<T> entities); 
     }
 }

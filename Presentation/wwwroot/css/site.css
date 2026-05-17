@@ -810,3 +810,8 @@ body {
 .favorite-btn.liked i {
     transform: scale(1.4);
 }
+
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+@keyframes sp{to{transform:rotate(360deg)}}

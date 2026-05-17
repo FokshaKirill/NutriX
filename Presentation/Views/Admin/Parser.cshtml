@@ -1,0 +1,147 @@
+﻿@{
+var quick = (Dictionary<string,string>)ViewBag.QuickImports;
+}
+@Html.AntiForgeryToken()
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <title>Импорт продуктов</title>
+    <style>
+        *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+        body{font-family:system-ui,sans-serif;background:#f4f6f5;color:#1a1a1a;padding:2rem}
+        h1{font-size:1.4rem;margin-bottom:.25rem}
+        .sub{color:#666;font-size:.82rem;margin-bottom:1.75rem}
+        .sub a{color:#4e7d58}
+        .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1.2rem;margin-bottom:1.2rem}
+        .card{background:#fff;border-radius:14px;padding:1.4rem;border:1px solid #e0e0e0;box-shadow:0 2px 8px rgba(0,0,0,.05)}
+        h2{font-size:.95rem;font-weight:600;margin-bottom:1rem;color:#333}
+        label{font-size:.78rem;color:#777;display:block;margin-bottom:.3rem}
+        input[type=text],input[type=number]{width:100%;padding:.55rem .8rem;border:1.5px solid #ddd;border-radius:8px;font-size:.875rem;margin-bottom:.8rem;transition:border-color .2s}
+        input:focus{outline:none;border-color:#7aab84}
+        .btn{display:inline-flex;align-items:center;gap:.4rem;padding:.6rem 1.2rem;border-radius:8px;border:none;font-size:.85rem;font-weight:500;cursor:pointer;transition:all .2s;white-space:nowrap}
+        .btn:active{transform:scale(.97)}
+        .g{background:#7aab84;color:#fff}.g:hover{background:#4e7d58}
+        .o{background:#f09c3a;color:#fff}.o:hover{background:#c97b1e}
+        .r{background:#e05c5c;color:#fff}.r:hover{background:#b83535}
+        .result{margin-top:.85rem;padding:.85rem;border-radius:8px;background:#f0f7f2;border:1px solid #c8e6cc;font-size:.78rem;display:none;white-space:pre-wrap;max-height:220px;overflow-y:auto;font-family:monospace;line-height:1.5}
+        .result.open{display:block}.result.err{background:#fdf0f0;border-color:#f5c0c0}
+        .spin{display:none;width:13px;height:13px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:sp .7s linear infinite}
+        .spin.on{display:inline-block}
+        .quick-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:.5rem;margin-bottom:.85rem}
+        .qbtn{padding:.5rem .6rem;border-radius:8px;border:1.5px solid #ddd;background:#fff;cursor:pointer;font-size:.8rem;transition:all .2s;text-align:center}
+        .qbtn:hover{border-color:#7aab84;background:#f0f7f2;color:#2d6a3f}
+        .status{padding:.45rem 1rem;border-radius:8px;background:#fff8e1;border:1px solid #ffc107;font-size:.8rem;margin-bottom:1rem;display:none}
+        .status.on{display:block}
+        .info{background:#e8f4fd;border:1px solid #90caf9;border-radius:10px;padding:.85rem 1rem;font-size:.8rem;color:#1565c0;margin-bottom:1.5rem}
+        .info b{display:block;margin-bottom:.3rem}
+    </style>
+</head>
+<body>
+
+<h1>🥗 Импорт продуктов</h1>
+<p class="sub">Источник: <a href="https://fdc.nal.usda.gov" target="_blank">USDA FoodData Central</a> — база Министерства сельского хозяйства США, 1 млн+ продуктов с КБЖУ</p>
+
+<div class="info">
+    <b>⚡ Бесплатный API-ключ (30 сек):</b>
+    1. Открой <a href="https://fdc.nal.usda.gov/api-guide.html" target="_blank">fdc.nal.usda.gov/api-guide.html</a>
+    → нажми <b>Sign Up / Get an API Key</b> → введи email → ключ сразу на экране<br/>
+    2. Добавь в <b>appsettings.json</b>: <code>"Usda": { "ApiKey": "ВАШ_КЛЮЧ" }</code><br/>
+    Без ключа работает DEMO_KEY (30 запросов/час — хватит для тестирования)
+</div>
+
+<div id="status" class="status"></div>
+
+<div class="grid">
+
+    <!-- Поиск -->
+    <div class="card">
+        <h2>🔍 Поиск по названию</h2>
+        <label>Название на английском</label>
+        <input type="text" id="q" placeholder="chicken breast, milk, buckwheat…"/>
+        <label>Количество результатов</label>
+        <input type="number" id="ql" value="50" min="1" max="200"/>
+        <button class="btn g" onclick="doSearch()">
+            <span class="spin" id="qs"></span> Найти и сохранить
+        </button>
+        <div class="result" id="qr"></div>
+    </div>
+
+    <!-- Быстрый импорт -->
+    <div class="card">
+        <h2>⚡ Быстрый импорт по группам</h2>
+        <div class="quick-grid">
+            @foreach (var kv in quick)
+            {
+            <button class="qbtn"
+                    onclick="doQuick('@kv.Key', '@kv.Value')">@kv.Key</button>
+            }
+        </div>
+        <label>Продуктов на группу</label>
+        <input type="number" id="qql" value="40" min="1" max="100"/>
+        <div class="result" id="qqr"></div>
+    </div>
+
+</div>
+
+<!-- Всё сразу -->
+<div class="card" style="max-width:420px">
+    <h2>🚀 Загрузить все группы сразу</h2>
+    <p style="font-size:.8rem;color:#666;margin-bottom:1rem">
+        Импортирует все @quick.Count групп (~@(quick.Count * 40) продуктов). Займёт 2-4 минуты.
+    </p>
+    <label>Продуктов на группу</label>
+    <input type="number" id="al" value="40" min="1" max="100"/>
+    <button class="btn r" onclick="doAll()">
+        <span class="spin" id="as"></span> Загрузить всё
+    </button>
+    <div class="result" id="ar"></div>
+</div>
+
+<script>
+    const tok = document.querySelector('input[name="__RequestVerificationToken"]')?.value ?? '';
+
+    function setStatus(msg){ const s=document.getElementById('status'); s.textContent=msg; s.classList.add('on'); }
+    function clearStatus(){ document.getElementById('status').classList.remove('on'); }
+
+    async function post(url, data, spinId, resId){
+        const spin=document.getElementById(spinId), res=document.getElementById(resId);
+        spin.classList.add('on'); res.className='result';
+        try{
+            const body=new URLSearchParams({...data,__RequestVerificationToken:tok});
+            const r=await fetch(url,{method:'POST',body});
+            const j=await r.json();
+            res.textContent=JSON.stringify(j,null,2);
+            res.classList.add('open');
+            if(j.error) res.classList.add('err');
+            return j;
+        }catch(e){
+            res.textContent='Ошибка: '+e.message;
+            res.classList.add('open','err');
+        }finally{
+            spin.classList.remove('on'); clearStatus();
+        }
+    }
+
+    async function doSearch(){
+        const q=document.getElementById('q').value.trim();
+        if(!q){alert('Введите запрос');return;}
+        setStatus(`Ищем "${q}" в USDA…`);
+        await post('/Admin/ParseSearch',{query:q,limit:document.getElementById('ql').value},'qs','qr');
+    }
+
+    async function doQuick(label, queries){
+        setStatus(`Загружаем группу "${label}"…`);
+        await post('/Admin/ParseQuick',
+            {label,queries,limit:document.getElementById('qql').value},
+            'qs','qqr');
+    }
+
+    async function doAll(){
+        if(!confirm('Загрузка всех групп займёт несколько минут. Продолжить?')) return;
+        setStatus('Загружаем все группы… Не закрывайте страницу.');
+        await post('/Admin/ParseAll',{limitPerGroup:document.getElementById('al').value},'as','ar');
+    }
+</script>
+</body>
+</html>

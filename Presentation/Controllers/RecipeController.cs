@@ -171,52 +171,68 @@ public class RecipeController : Controller
     }
 
     // POST: /Recipe/Edit/{id}
-    [HttpPost, ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(Guid id, RecipeCreateViewModel model, IFormFile? mainImage)
+[HttpPost, ValidateAntiForgeryToken]
+public async Task<IActionResult> Edit(Guid id, RecipeCreateViewModel model, IFormFile? mainImage)
+{
+    var recipe = await _recipeService.GetByIdAsync(id, includeIngredients: true, includeSteps: true);
+    if (recipe == null) return NotFound();
+    if (recipe.AuthorId != CurrentUserId) return Forbid();
+
+    if (!ModelState.IsValid)
     {
-        var recipe = await _recipeService.GetByIdAsync(id);
-        if (recipe == null) return NotFound();
-        if (recipe.AuthorId != CurrentUserId) return Forbid();
-
-        if (!ModelState.IsValid)
-        {
-            ViewBag.Products = (await _productService.GetAllProductsAsync()).OrderBy(p => p.Name).ToList();
-            return View(model);
-        }
-
-        if (mainImage?.Length > 0)
-            model.ImageUrl = await SaveImageAsync(mainImage);
-
-        recipe.Name            = model.Name;
-        recipe.Description     = model.Description;
-        recipe.DefaultServings = model.DefaultServings;
-        recipe.ImageUrl        = model.ImageUrl ?? recipe.ImageUrl;
-
-        recipe.Ingredients = model.Ingredients
-            .Where(i => i.ProductId != Guid.Empty && i.Amount > 0)
-            .Select(i => new RecipeIngredient
-            {
-                Id = Guid.NewGuid(), RecipeId = recipe.Id, ProductId = i.ProductId,
-                Amount = i.Amount, Unit = string.IsNullOrWhiteSpace(i.Unit) ? "г" : i.Unit.Trim(),
-                Comment = i.Comment?.Trim()
-            }).ToList();
-
-        recipe.Steps = model.Steps
-            .Where(s => !string.IsNullOrWhiteSpace(s.Description))
-            .Select((s, idx) => new RecipeStep
-            {
-                Id = Guid.NewGuid(), RecipeId = recipe.Id, Order = idx + 1,
-                Description = s.Description.Trim(), TimerSeconds = s.TimerSeconds
-            }).ToList();
-
-        foreach (var ing in recipe.Ingredients)
-            ing.Product = await _productService.GetByIdAsync(ing.ProductId);
-
-        recipe.TotalCost = recipe.Ingredients.Sum(i => (i.Product?.PricePerUnit ?? 0) * i.Amount) / 100;
-
-        await _recipeService.UpdateAsync(recipe);
-        return RedirectToAction("Details", new { id = recipe.Id });
+        ViewBag.Products = (await _productService.GetAllProductsAsync()).OrderBy(p => p.Name).ToList();
+        return View(model);
     }
+
+    // Обновляем основные поля
+    recipe.Name            = model.Name;
+    recipe.Description     = model.Description;
+    recipe.DefaultServings = model.DefaultServings;
+
+    if (mainImage?.Length > 0)
+        recipe.ImageUrl = await SaveImageAsync(mainImage);
+
+    // === Пересоздаём ингредиенты ===
+    recipe.Ingredients.Clear(); // Важно!
+
+    foreach (var ingVm in model.Ingredients.Where(i => i.ProductId != Guid.Empty && i.Amount > 0))
+    {
+        recipe.Ingredients.Add(new RecipeIngredient
+        {
+            Id          = Guid.NewGuid(),
+            RecipeId    = recipe.Id,
+            ProductId   = ingVm.ProductId,
+            Amount      = ingVm.Amount,
+            Unit        = string.IsNullOrWhiteSpace(ingVm.Unit) ? "г" : ingVm.Unit.Trim(),
+            Comment     = ingVm.Comment?.Trim()
+        });
+    }
+
+    // === Пересоздаём шаги ===
+    recipe.Steps.Clear(); // Важно!
+
+    foreach (var (stepVm, index) in model.Steps.Where(s => !string.IsNullOrWhiteSpace(s.Description)).Select((s, i) => (s, i)))
+    {
+        recipe.Steps.Add(new RecipeStep
+        {
+            Id            = Guid.NewGuid(),
+            RecipeId      = recipe.Id,
+            Order         = index + 1,
+            Description   = stepVm.Description.Trim(),
+            TimerSeconds  = stepVm.TimerSeconds
+        });
+    }
+
+    // Пересчитываем стоимость
+    foreach (var ing in recipe.Ingredients)
+        ing.Product = await _productService.GetByIdAsync(ing.ProductId);
+
+    recipe.TotalCost = recipe.Ingredients.Sum(i => (i.Product?.PricePerUnit ?? 0) * (i.Amount / 100m));
+
+    await _recipeService.UpdateAsync(recipe);
+
+    return RedirectToAction("Details", new { id = recipe.Id });
+}
 
     // POST: /Recipe/Delete/{id}
     [HttpPost, ValidateAntiForgeryToken]

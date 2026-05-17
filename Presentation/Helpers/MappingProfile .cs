@@ -191,6 +191,29 @@ namespace Presentation.Helpers
                         })
                         .ToList();
                 });
+            
+            CreateMap<Recipe, RecipeListViewModel>();
+            CreateMap<Recipe, RecipeDetailViewModel>();
+
+            // ←←← Добавь эти два маппинга:
+            CreateMap<Recipe, RecipeCreateViewModel>()
+                .ForMember(dest => dest.Ingredients, opt => opt.MapFrom(src => src.Ingredients))
+                .ForMember(dest => dest.Steps, opt => opt.MapFrom(src => src.Steps));
+
+            CreateMap<RecipeCreateViewModel, Recipe>()
+                .ForMember(dest => dest.Ingredients, opt => opt.Ignore())
+                .ForMember(dest => dest.Steps, opt => opt.Ignore())
+                .ForMember(dest => dest.Author, opt => opt.Ignore())
+                .ForMember(dest => dest.AuthorId, opt => opt.Ignore());
+
+            // Маппинги для вложенных объектов
+            CreateMap<RecipeIngredient, RecipeIngredientViewModel>();
+            CreateMap<RecipeStep, RecipeStepViewModel>();
+
+            CreateMap<RecipeIngredientViewModel, RecipeIngredient>()
+                .ForMember(dest => dest.Product, opt => opt.Ignore());
+
+            CreateMap<RecipeStepViewModel, RecipeStep>();
         }
     }
 }

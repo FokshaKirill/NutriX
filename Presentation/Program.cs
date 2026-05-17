@@ -41,6 +41,7 @@ builder.Services.AddScoped<IRecipeService, RecipeService>();
 builder.Services.AddScoped<IRecipeParserService, RecipeParserService>();
 builder.Services.AddScoped<IFavoriteService, FavoriteService>();
 builder.Services.AddSingleton<PriceRuParser>();
+builder.Services.AddHttpClient<IUsdaFoodService, UsdaFoodService>();
 
 // HttpClient для nutrition API
 builder.Services.AddHttpClient<INutritionApiService, NutritionApiService>(client =>
