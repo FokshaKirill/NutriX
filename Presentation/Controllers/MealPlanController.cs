@@ -3,7 +3,9 @@ using AutoMapper;
 using Domain.Entities;
 using Microsoft.AspNetCore.Mvc;
 using Presentation.Models;
+using Services.DTO;
 using Services.Interfaces;
+using Services.UserService.Services.Interfaces;
 
 namespace Presentation.Controllers
 {
@@ -11,31 +13,38 @@ namespace Presentation.Controllers
     {
         private readonly IMealPlanService _mealPlanService;
         private readonly IMealTypeService _mealTypeService;
-        private readonly IRecipeService _recipeService;
-        private readonly IMapper _mapper;
+        private readonly IRecipeService   _recipeService;
+        private readonly IUserService     _userService;      
+        private readonly IMapper          _mapper;
+        private readonly IMealPlanGeneratorService _generator;
 
         public MealPlanController(
-            IMealPlanService mealPlanService,
-            IMealTypeService mealTypeService,
-            IRecipeService recipeService,
-            IMapper mapper)
+            IMealPlanService          mealPlanService,
+            IMealTypeService          mealTypeService,
+            IRecipeService            recipeService,
+            IUserService              userService,
+            IMealPlanGeneratorService generator, 
+            IMapper                   mapper)
         {
             _mealPlanService = mealPlanService;
             _mealTypeService = mealTypeService;
-            _recipeService = recipeService;
-            _mapper = mapper;
+            _recipeService   = recipeService;
+            _userService     = userService;
+            _generator       = generator;
+            _mapper          = mapper;
         }
-        
+
         private Guid? CurrentUserId =>
             Guid.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out var id) ? id : null;
 
-        // GET: /MealPlan/Week — детальная неделя
+        // ══════════════════════════════════════════════════════════════════════
+        // GET /MealPlan/Week
+        // ══════════════════════════════════════════════════════════════════════
         public async Task<IActionResult> Week()
         {
             if (!CurrentUserId.HasValue) return RedirectToAction("AuthPage", "Account");
 
             var plan = await _mealPlanService.GetCurrentWeekPlanAsync(CurrentUserId.Value);
-
             if (plan == null) return View("EmptyWeek");
 
             var model = new WeekPlanViewModel
@@ -47,7 +56,6 @@ namespace Presentation.Controllers
 
             for (int offset = 0; offset < 7; offset++)
             {
-                var date     = plan.StartDate.AddDays(offset);
                 var dayMeals = plan.Meals
                     .Where(m => m.DayOffset == offset)
                     .OrderBy(m => m.MealType.Order)
@@ -55,12 +63,11 @@ namespace Presentation.Controllers
 
                 model.Days.Add(new DayPlanViewModel
                 {
-                    Date  = date,
+                    Date  = plan.StartDate.AddDays(offset),
                     Meals = _mapper.Map<List<PlannedMealViewModel>>(dayMeals)
                 });
             }
 
-            // Список покупок прямо здесь
             var rawIngredients = await _mealPlanService.GenerateShoppingListAsync(plan.Id);
             if (rawIngredients?.Any() == true)
             {
@@ -73,9 +80,8 @@ namespace Presentation.Controllers
                         Unit     = g.Key.Unit,
                         Comment  = string.Join("; ", g
                             .Where(x => !string.IsNullOrWhiteSpace(x.Comment))
-                            .Select(x => x.Comment)
-                            .Distinct()),
-                        Category = g.First().Product?.Category.ToString() // или отдельный маппинг
+                            .Select(x => x.Comment).Distinct()),
+                        Category = g.First().Product?.Category.ToString()
                     })
                     .OrderBy(i => i.Category)
                     .ThenBy(i => i.Product?.Name)
@@ -84,218 +90,328 @@ namespace Presentation.Controllers
 
             return View(model);
         }
-        
-        // GET: /MealPlan/GenerateWeek — форма генерации
-        public IActionResult GenerateWeek()
+
+        // ══════════════════════════════════════════════════════════════════════
+        // GET /MealPlan/GenerateWeek
+        // Pre-fill формы из профиля пользователя если цели уже заданы
+        // ══════════════════════════════════════════════════════════════════════
+        public async Task<IActionResult> GenerateWeek()
         {
-            return View();
+            var vm = new GenerateWeekViewModel();
+
+            if (CurrentUserId.HasValue)
+            {
+                var user = await _userService.GetByIdAsync(CurrentUserId.Value);
+                if (user != null)
+                {
+                    // Pre-fill полей из сохранённого профиля
+                    if (user.DailyCalorieGoal.HasValue)
+                        vm.DailyCalories = user.DailyCalorieGoal.Value;
+
+                    if (user.DailyProteinGoal.HasValue)
+                        vm.ProteinGoal = (int)user.DailyProteinGoal.Value;
+
+                    if (user.DailyFatGoal.HasValue)
+                        vm.FatGoal = (int)user.DailyFatGoal.Value;
+
+                    if (user.DailyCarbsGoal.HasValue)
+                        vm.CarbsGoal = (int)user.DailyCarbsGoal.Value;
+                }
+            }
+
+            return View(vm);
         }
 
-        // POST: /MealPlan/GenerateWeek
+        // ══════════════════════════════════════════════════════════════════════
+        // POST /MealPlan/GenerateWeek
+        // После генерации — сохраняем цели питания в профиль User
+        // ══════════════════════════════════════════════════════════════════════
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> GenerateWeek(GenerateWeekViewModel model)
+public async Task<IActionResult> GenerateWeek(GenerateWeekViewModel model)
+{
+    if (!CurrentUserId.HasValue) return RedirectToAction("AuthPage", "Account");
+    if (!ModelState.IsValid)     return View(model);
+
+    var allRecipes = await _recipeService.GetAllRecipesAsync();
+    var mealTypes  = await _mealTypeService.GetAllMealTypesAsync();
+
+    var breakfast = RequireMealType(mealTypes, "Завтрак");
+    var lunch     = RequireMealType(mealTypes, "Обед");
+    var dinner    = RequireMealType(mealTypes, "Ужин");
+    var snack     = mealTypes.FirstOrDefault(mt => mt.Name is "Перекус" or "Снэк");
+
+    var request = new GenerateWeekRequest
+    {
+        UserId               = CurrentUserId.Value,
+        DailyCalories        = model.DailyCalories,
+        Goal                 = model.Goal,
+        ConsiderBudget       = model.ConsiderBudget,
+        WeeklyBudget         = model.WeeklyBudget,
+        Vegetarian           = model.Vegetarian,
+        Vegan                = model.Vegan,
+        GlutenFree           = model.GlutenFree,
+        LowCarb              = model.LowCarb,
+        HighProtein          = model.HighProtein,
+        LowFat               = model.LowFat,
+        ExcludedProducts     = model.GetExcludedSet(),
+        MealsPerDay          = model.MealsPerDay,
+        IncludeSnacks        = model.IncludeSnacks,
+        MinDaysBetweenRepeats = 2,
+        AllRecipes           = allRecipes.ToList(),
+        BreakfastType        = breakfast,
+        LunchType            = lunch,
+        DinnerType           = dinner,
+        SnackType            = snack,
+    };
+
+    var newPlan = _generator.Generate(request);
+
+    if (newPlan == null)
+    {
+        ModelState.AddModelError("", "Нет подходящих рецептов. Попробуйте смягчить ограничения.");
+        return View(model);
+    }
+
+    // Удаляем старый план
+    var existing = await _mealPlanService.GetCurrentWeekPlanAsync(CurrentUserId.Value);
+    if (existing != null)
+        await _mealPlanService.DeleteAsync(existing.Id);
+
+    await _mealPlanService.CreateAsync(newPlan);
+
+    // Сохраняем цели в профиль
+    try
+    {
+        var user = await _userService.GetByIdAsync(CurrentUserId.Value);
+        if (user != null)
         {
-            if (!CurrentUserId.HasValue) return RedirectToAction("AuthPage", "Account");
-
-            if (!ModelState.IsValid)
-            {
-                return View(model);
-            }
-
-            var allRecipes = await _recipeService.GetAllRecipesAsync();
-
-            // Фильтрация по исключённым продуктам
-            var excluded = model.ExcludedProducts?
-                .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-                .Select(e => e.ToLowerInvariant())
-                .ToHashSet() ?? new HashSet<string>();
-
-            var suitableRecipes = allRecipes
-                .Where(r => !r.Ingredients.Any(i => excluded.Contains(i.Product.Name.ToLowerInvariant())))
-                .ToList();
-
-            if (model.Vegetarian || model.Vegan)
-            {
-                suitableRecipes = suitableRecipes
-                    .Where(r => !r.Ingredients.Any(i => 
-                        i.Product.Name.ToLowerInvariant().Contains("курица") ||
-                        i.Product.Name.ToLowerInvariant().Contains("говядина") ||
-                        i.Product.Name.ToLowerInvariant().Contains("свинина") ||
-                        i.Product.Name.ToLowerInvariant().Contains("рыба")))
-                    .ToList();
-            }
-
-            if (model.Vegan)
-            {
-                suitableRecipes = suitableRecipes
-                    .Where(r => !r.Ingredients.Any(i => 
-                        i.Product.Name.ToLowerInvariant().Contains("яйцо") ||
-                        i.Product.Name.ToLowerInvariant().Contains("молоко") ||
-                        i.Product.Name.ToLowerInvariant().Contains("сыр") ||
-                        i.Product.Name.ToLowerInvariant().Contains("мёд")))
-                    .ToList();
-            }
-
-            if (!suitableRecipes.Any())
-            {
-                ModelState.AddModelError("", "Нет подходящих рецептов под ваши предпочтения.");
-                return View(model);
-            }
-
-            // Целевые калории
-            int targetDaily = model.DailyCalories;
-            if (model.Goal == "lose") targetDaily -= 400;
-            if (model.Goal == "gain") targetDaily += 400;
-
-            int breakfastTarget = (int)(targetDaily * 0.25);
-            int lunchTarget = (int)(targetDaily * 0.35);
-            int dinnerTarget = (int)(targetDaily * 0.35);
-            int snackTarget = (int)(targetDaily * 0.05);
-
-            // Получаем типы приёма пищи из БД
-            var mealTypes = await _mealTypeService.GetAllMealTypesAsync();
-            var breakfastType = mealTypes.FirstOrDefault(mt => mt.Name == "Завтрак") 
-                ?? throw new Exception("Тип 'Завтрак' не найден в БД");
-            var lunchType = mealTypes.FirstOrDefault(mt => mt.Name == "Обед") 
-                ?? throw new Exception("Тип 'Обед' не найден в БД");
-            var dinnerType = mealTypes.FirstOrDefault(mt => mt.Name == "Ужин") 
-                ?? throw new Exception("Тип 'Ужин' не найден в БД");
-            var snackType = mealTypes.FirstOrDefault(mt => mt.Name == "Перекус");
-
-            // Текущая неделя
-            var today = DateTime.Today;
-            var monday = today.AddDays(-(int)today.DayOfWeek + (int)DayOfWeek.Monday);
-
-            // Удаляем старый план, если был
-            var existingPlan = await _mealPlanService.GetCurrentWeekPlanAsync(CurrentUserId.Value);
-            if (existingPlan != null)
-                await _mealPlanService.DeleteAsync(existingPlan.Id);
-
-            var planName = $"Меню на неделю с {monday:dd MMMM yyyy}";
-
-            var newPlan = new MealPlan
-            {
-                Id        = Guid.NewGuid(),
-                Name      = planName,
-                StartDate = monday,
-                UserId    = CurrentUserId.Value, 
-                Meals     = new List<PlannedMeal>()
-            };
-
-            var usedRecipes = new HashSet<Guid>();
-
-            for (int dayOffset = 0; dayOffset < 7; dayOffset++)
-            {
-                // Завтрак
-                var breakfastRecipe = PickRecipe(suitableRecipes, breakfastTarget, usedRecipes);
-                if (breakfastRecipe != null)
-                {
-                    AddMeal(newPlan, dayOffset, breakfastType, breakfastRecipe, 1);
-                    usedRecipes.Add(breakfastRecipe.Id);
-                }
-
-                // Обед
-                var lunchRecipe = PickRecipe(suitableRecipes, lunchTarget, usedRecipes);
-                if (lunchRecipe != null)
-                {
-                    AddMeal(newPlan, dayOffset, lunchType, lunchRecipe, 1);
-                    usedRecipes.Add(lunchRecipe.Id);
-                }
-
-                // Ужин
-                var dinnerRecipe = PickRecipe(suitableRecipes, dinnerTarget, usedRecipes);
-                if (dinnerRecipe != null)
-                {
-                    AddMeal(newPlan, dayOffset, dinnerType, dinnerRecipe, 1);
-                    usedRecipes.Add(dinnerRecipe.Id);
-                }
-
-                // Перекус (если калорий достаточно)
-                if (targetDaily > 1800 && snackType != null)
-                {
-                    var snackRecipe = PickRecipe(suitableRecipes, snackTarget, usedRecipes);
-                    if (snackRecipe != null)
-                    {
-                        AddMeal(newPlan, dayOffset, snackType, snackRecipe, 1);
-                        usedRecipes.Add(snackRecipe.Id);
-                    }
-                }
-            }
-
-            await _mealPlanService.CreateAsync(newPlan);
-
-            return RedirectToAction("Week");
+            int adjKcal = request.AdjustedDailyCalories;
+            user.DailyCalorieGoal = adjKcal;
+            user.DailyProteinGoal = model.ProteinGoal.HasValue
+                ? (decimal)model.ProteinGoal.Value
+                : Math.Round((decimal)(adjKcal * 0.30 / 4), 0);
+            user.DailyFatGoal = model.FatGoal.HasValue
+                ? (decimal)model.FatGoal.Value
+                : Math.Round((decimal)(adjKcal * 0.30 / 9), 0);
+            user.DailyCarbsGoal = model.CarbsGoal.HasValue
+                ? (decimal)model.CarbsGoal.Value
+                : Math.Round((decimal)(adjKcal * 0.40 / 4), 0);
+            await _userService.UpdateAsync(user);
         }
+    }
+    catch { /* план уже создан, не прерываем */ }
 
-        // Вспомогательные методы
-        private Recipe? PickRecipe(List<Recipe> recipes, int targetCalories, HashSet<Guid> used)
-        {
-            return recipes
-                .Where(r => !used.Contains(r.Id))
-                .OrderBy(r => Math.Abs(r.CaloriesPerServing - targetCalories))
-                .ThenBy(_ => Guid.NewGuid())
-                .FirstOrDefault();
-        }
+    TempData["GenerateSuccess"] = "true";
+    return RedirectToAction("Week");
+}
 
-        private void AddMeal(MealPlan plan, int dayOffset, MealType mealType, Recipe recipe, int servings)
-        {
-            plan.Meals.Add(new PlannedMeal
-            {
-                Id = Guid.NewGuid(),
-                MealPlanId = plan.Id,
-                MealTypeId = mealType.Id,
-                MealType = mealType,
-                RecipeId = recipe.Id,
-                Recipe = recipe,
-                DayOffset = dayOffset,
-                Servings = servings
-            });
-        }
-        
+        // ══════════════════════════════════════════════════════════════════════
         // POST /MealPlan/ReplaceMeal
+        // ══════════════════════════════════════════════════════════════════════
         [HttpPost]
-        public async Task<IActionResult> ReplaceMeal(Guid plannedMealId)
+        public async Task<IActionResult> ReplaceMeal(
+            Guid    plannedMealId,
+            bool    considerBudget = false,
+            decimal weeklyBudget   = 0)
         {
             if (!CurrentUserId.HasValue) return Unauthorized();
 
             var meal = await _mealPlanService.GetPlannedMealByIdAsync(plannedMealId);
             if (meal == null) return NotFound();
 
-            var allRecipes = await _recipeService.GetAllRecipesAsync();
             var currentKcal = meal.Recipe?.CaloriesPerServing ?? 0;
-            var currentId = meal.RecipeId;
+            var currentCost = meal.Recipe?.TotalCost         ?? 0;
 
-            // Получаем текущий план недели
-            var plan = await _mealPlanService.GetCurrentWeekPlanAsync(CurrentUserId.Value);
+            var allRecipes = await _recipeService.GetAllRecipesAsync();
 
-            var usedIds = plan?.Meals
-                              .Select(m => m.RecipeId)
-                              .OfType<Guid>()
-                              .ToHashSet() 
+            var plan    = await _mealPlanService.GetCurrentWeekPlanAsync(CurrentUserId.Value);
+            var usedIds = plan?.Meals.Select(m => m.RecipeId).OfType<Guid>().ToHashSet()
                           ?? new HashSet<Guid>();
 
-            var replacement = allRecipes
-                .Where(r => r.Id != currentId && !usedIds.Contains(r.Id))
-                .OrderBy(r => Math.Abs(r.CaloriesPerServing - currentKcal))
-                .ThenBy(_ => Guid.NewGuid())
-                .FirstOrDefault();
+            var candidates = allRecipes
+                .Where(r => r.Ingredients.Any())
+                .Where(r => r.Id != meal.RecipeId && !usedIds.Contains(r.Id))
+                .ToList();
+
+            if (!candidates.Any())
+                return Json(new { error = "Нет подходящего рецепта для замены" });
+
+            var stats = ComputeStats(candidates);
+
+            var budgetLimit = considerBudget && currentCost > 0
+                ? currentCost * 1.3m
+                : decimal.MaxValue;
+
+            var fakeModel = new GenerateWeekViewModel
+            {
+                ConsiderBudget = considerBudget,
+                WeeklyBudget   = weeklyBudget > 0 ? weeklyBudget : 3500m,
+                AvoidRepeats   = true
+            };
+
+            var replacement = PickBest(
+                candidates, stats, (int)currentKcal,
+                fakeModel, usedIds, budgetLimit, new Random(),
+                preferCostNear: currentCost);
 
             if (replacement == null)
                 return Json(new { error = "Нет подходящего рецепта для замены" });
 
             await _mealPlanService.ReplaceMealRecipeAsync(plannedMealId, replacement.Id);
 
-            return Json(new {
-                success   = true,
-                recipeId  = replacement.Id,
-                name      = replacement.Name,
-                imageUrl  = replacement.ImageUrl ?? "",
-                calories  = (int)Math.Round(replacement.CaloriesPerServing),
-                protein   = (int)Math.Round(replacement.ProteinPerServing),
-                fat       = (int)Math.Round(replacement.FatPerServing),
-                carbs     = (int)Math.Round(replacement.CarbsPerServing)
+            return Json(new
+            {
+                success  = true,
+                recipeId = replacement.Id,
+                name     = replacement.Name,
+                imageUrl = replacement.ImageUrl ?? "",
+                calories = (int)Math.Round(replacement.CaloriesPerServing),
+                protein  = (int)Math.Round(replacement.ProteinPerServing),
+                fat      = (int)Math.Round(replacement.FatPerServing),
+                carbs    = (int)Math.Round(replacement.CarbsPerServing),
+                cost     = Math.Round(replacement.TotalCost, 2)
             });
         }
+
+        // ══════════════════════════════════════════════════════════════════════
+        // АЛГОРИТМ  (комментарии оставлены для диплома)
+        // ══════════════════════════════════════════════════════════════════════
+
+        /// <summary>
+        /// Вычисляет диапазоны калорий и стоимости по коллекции рецептов.
+        /// Выполняется один раз перед циклом генерации для стабильной нормализации.
+        /// </summary>
+        private static RecipeStats ComputeStats(List<Recipe> recipes)
+        {
+            if (!recipes.Any()) return new RecipeStats(0, 1, 0, 0.01);
+
+            double kcalMin = double.MaxValue, kcalMax = double.MinValue;
+            double costMin = double.MaxValue, costMax = double.MinValue;
+
+            foreach (var r in recipes)
+            {
+                double k = (double)r.CaloriesPerServing;
+                double c = (double)r.TotalCost;
+                if (k < kcalMin) kcalMin = k;
+                if (k > kcalMax) kcalMax = k;
+                if (c < costMin) costMin = c;
+                if (c > costMax) costMax = c;
+            }
+
+            return new RecipeStats(
+                KcalMin:   kcalMin,
+                KcalRange: Math.Max(kcalMax - kcalMin, 1.0),
+                CostMin:   costMin,
+                CostRange: Math.Max(costMax - costMin, 0.01)
+            );
+        }
+
+        /// <summary>
+        /// Двухкритериальный выбор рецепта: калорийность + стоимость.
+        ///
+        /// score = w_kcal × kcal_score + w_cost × cost_score + noise
+        ///
+        /// kcal_score = 1 − |kcal − target| / kcal_range          ∈ [0, 1]
+        /// cost_score = 1 − (cost − cost_min) / cost_range         ∈ [0, 1]  (генерация)
+        ///            = 1 − |cost − preferCost| / cost_range        ∈ [0, 1]  (замена)
+        ///
+        /// Веса при considerBudget=false: w_kcal=1.00, w_cost=0.00
+        /// Веса при considerBudget=true:  w_kcal=0.55, w_cost=0.45
+        /// </summary>
+        private static Recipe? PickBest(
+            List<Recipe>          recipes,
+            RecipeStats           stats,
+            int                   targetKcal,
+            GenerateWeekViewModel model,
+            HashSet<Guid>         used,
+            decimal               budgetLimit,
+            Random                rand,
+            decimal               preferCostNear = -1)
+        {
+            double wKcal = model.ConsiderBudget ? 0.55 : 1.0;
+            double wCost = model.ConsiderBudget ? 0.45 : 0.0;
+
+            Recipe? best      = null;
+            double  bestScore = double.MinValue;
+
+            foreach (var r in recipes)
+            {
+                if (model.AvoidRepeats && used.Contains(r.Id))        continue;
+                if (model.ConsiderBudget && r.TotalCost > budgetLimit) continue;
+
+                double kcalDiff  = Math.Abs((double)r.CaloriesPerServing - targetKcal);
+                double kcalScore = 1.0 - Math.Min(kcalDiff / stats.KcalRange, 1.0);
+
+                double costScore;
+                if (preferCostNear >= 0)
+                {
+                    double costDiff = Math.Abs((double)(r.TotalCost - preferCostNear));
+                    costScore = 1.0 - Math.Min(costDiff / stats.CostRange, 1.0);
+                }
+                else
+                {
+                    costScore = 1.0 - Math.Min(
+                        ((double)r.TotalCost - stats.CostMin) / stats.CostRange, 1.0);
+                }
+
+                double score = wKcal * kcalScore
+                             + wCost * costScore
+                             + rand.NextDouble() * 0.04;
+
+                if (score > bestScore) { bestScore = score; best = r; }
+            }
+
+            return best;
+        }
+
+        private static bool HasExcludedIngredients(Recipe r, HashSet<string> excluded)
+        {
+            if (!excluded.Any()) return false;
+            return r.Ingredients.Any(i =>
+                excluded.Any(ex => i.Product.Name.ToLowerInvariant().Contains(ex)));
+        }
+
+        private static bool MatchesDiet(Recipe r, GenerateWeekViewModel req)
+        {
+            var names = r.Ingredients.Select(i => i.Product.Name.ToLowerInvariant()).ToList();
+            if (req.Vegetarian || req.Vegan)
+            {
+                var meat = new[] { "курица", "говядина", "свинина", "баранина", "индейка", "рыба", "тунец", "лосось", "фарш" };
+                if (names.Any(n => meat.Any(k => n.Contains(k)))) return false;
+            }
+            if (req.Vegan)
+            {
+                var animal = new[] { "яйцо", "молоко", "сливки", "сыр", "творог", "масло сливочное", "мёд", "кефир" };
+                if (names.Any(n => animal.Any(k => n.Contains(k)))) return false;
+            }
+            if (req.GlutenFree)
+            {
+                var gluten = new[] { "мука", "хлеб", "макароны", "пшеница", "манка" };
+                if (names.Any(n => gluten.Any(k => n.Contains(k)))) return false;
+            }
+            return true;
+        }
+
+        private static void AddMeal(MealPlan plan, int dayOffset, MealType mealType, Recipe recipe)
+        {
+            plan.Meals.Add(new PlannedMeal
+            {
+                Id         = Guid.NewGuid(),
+                MealPlanId = plan.Id,
+                MealTypeId = mealType.Id,
+                MealType   = mealType,
+                RecipeId   = recipe.Id,
+                Recipe     = recipe,
+                DayOffset  = dayOffset,
+                Servings   = 1
+            });
+        }
+
+        private static MealType RequireMealType(IEnumerable<MealType> types, string name) =>
+            types.FirstOrDefault(mt => mt.Name == name)
+            ?? throw new InvalidOperationException($"Тип приёма пищи '{name}' не найден в БД.");
+
+        private record RecipeStats(double KcalMin, double KcalRange, double CostMin, double CostRange);
     }
 }

@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Services.UserService.DTO;
+using Services.DTO;
 using Services.UserService.Services;
 using Services.UserService.Services.Interfaces;
 

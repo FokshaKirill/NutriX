@@ -1,58 +1,842 @@
-﻿@model Presentation.Models.GenerateWeekViewModel
+@model Presentation.Models.GenerateWeekViewModel
 
-<div class="container py-5">
-    <div class="card" style="border-radius: 1.8rem;">
-        <div class="card-header text-center py-5" style="background: var(--primary-light);">
-            <h2 style="color: var(--primary);">Сгенерировать меню на неделю</h2>
-            <p class="fs-4 text-muted mt-3">Мы подберём вкусные и сбалансированные блюда под ваши цели</p>
+@{
+    ViewData["Title"] = "Генерация меню";
+}
+
+<style>
+    @@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+    :root {
+        --sage:       #7a9e7e;
+        --sage-light: #e8f0e9;
+        --sage-mid:   #b4cbb6;
+        --cream:      #faf8f3;
+        --brown:      #5c4a3a;
+        --brown-lt:   #8b6f5e;
+        --accent:     #c97d4e;
+        --accent-lt:  #f5e3d3;
+        --text:       #2d2a26;
+        --muted:      #8a8278;
+        --border:     #e0dbd3;
+        --shadow:     0 2px 20px rgba(92,74,58,.08);
+        --shadow-lg:  0 8px 40px rgba(92,74,58,.14);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+        font-family: 'DM Sans', sans-serif;
+        background: var(--cream);
+        color: var(--text);
+    }
+
+    /* ── Page shell ─────────────────────────────────────────── */
+    .gw-page {
+        min-height: 100vh;
+        padding: 2rem 1rem 5rem;
+    }
+    .gw-inner { max-width: 860px; margin: 0 auto; }
+
+    /* ── Hero header ─────────────────────────────────────────── */
+    .gw-hero {
+        text-align: center;
+        margin-bottom: 2.8rem;
+    }
+    .gw-hero-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: .45rem;
+        background: var(--sage-light);
+        color: var(--sage);
+        font-size: .78rem;
+        font-weight: 600;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        padding: .3rem .9rem;
+        border-radius: 20px;
+        margin-bottom: 1rem;
+    }
+    .gw-hero h1 {
+        font-family: 'Playfair Display', serif;
+        font-size: clamp(2rem, 5vw, 3rem);
+        color: var(--brown);
+        margin: 0 0 .6rem;
+        line-height: 1.15;
+    }
+    .gw-hero p {
+        color: var(--muted);
+        font-size: 1.05rem;
+        margin: 0;
+    }
+
+    /* ── Cards ───────────────────────────────────────────────── */
+    .gw-card {
+        background: #fff;
+        border-radius: 20px;
+        box-shadow: var(--shadow);
+        margin-bottom: 1.4rem;
+        overflow: hidden;
+        transition: box-shadow .2s;
+    }
+    .gw-card:hover { box-shadow: var(--shadow-lg); }
+
+    .gw-card-head {
+        display: flex;
+        align-items: center;
+        gap: .8rem;
+        padding: 1.2rem 1.6rem 1rem;
+        border-bottom: 1px solid var(--border);
+    }
+    .gw-card-icon {
+        width: 38px; height: 38px;
+        border-radius: 10px;
+        display: grid; place-items: center;
+        font-size: 1.1rem;
+        flex-shrink: 0;
+    }
+    .icon-green  { background: var(--sage-light);  color: var(--sage);   }
+    .icon-brown  { background: var(--accent-lt);   color: var(--accent); }
+    .icon-blue   { background: #e3eef9;            color: #3a7cc8;       }
+    .icon-purple { background: #ede8f5;            color: #7c5cbf;       }
+    .icon-red    { background: #fde8e8;            color: #c85c5c;       }
+    .icon-teal   { background: #e1f4f1;            color: #3aad97;       }
+
+    .gw-card-head h3 {
+        font-size: 1rem;
+        font-weight: 600;
+        margin: 0;
+        color: var(--brown);
+    }
+    .gw-card-head p {
+        font-size: .82rem;
+        color: var(--muted);
+        margin: .1rem 0 0;
+    }
+
+    .gw-card-body { padding: 1.4rem 1.6rem 1.6rem; }
+
+    /* ── Form elements ───────────────────────────────────────── */
+    .gw-label {
+        display: block;
+        font-size: .83rem;
+        font-weight: 600;
+        color: var(--brown-lt);
+        margin-bottom: .45rem;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+    }
+    .gw-input, .gw-select {
+        width: 100%;
+        padding: .7rem 1rem;
+        border: 1.5px solid var(--border);
+        border-radius: 10px;
+        font-family: 'DM Sans', sans-serif;
+        font-size: .95rem;
+        color: var(--text);
+        background: #fefefe;
+        transition: border-color .2s, box-shadow .2s;
+        appearance: none;
+    }
+    .gw-input:focus, .gw-select:focus {
+        outline: none;
+        border-color: var(--sage);
+        box-shadow: 0 0 0 3px rgba(122,158,126,.15);
+    }
+    .gw-select-wrap { position: relative; }
+    .gw-select-wrap::after {
+        content: '▾';
+        position: absolute;
+        right: 1rem; top: 50%;
+        transform: translateY(-50%);
+        color: var(--muted);
+        pointer-events: none;
+        font-size: .85rem;
+    }
+
+    /* ── Goal pills ──────────────────────────────────────────── */
+    .gw-goal-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: .7rem;
+    }
+    .gw-goal-option { display: none; }
+    .gw-goal-label {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: .35rem;
+        padding: .85rem .6rem;
+        border: 2px solid var(--border);
+        border-radius: 14px;
+        cursor: pointer;
+        text-align: center;
+        transition: all .18s;
+        background: #fefefe;
+    }
+    .gw-goal-label .gl-icon { font-size: 1.5rem; }
+    .gw-goal-label .gl-name { font-size: .82rem; font-weight: 600; color: var(--brown); }
+    .gw-goal-label .gl-sub  { font-size: .72rem; color: var(--muted); }
+    .gw-goal-option:checked + .gw-goal-label {
+        border-color: var(--sage);
+        background: var(--sage-light);
+        box-shadow: 0 0 0 3px rgba(122,158,126,.15);
+    }
+    .gw-goal-option:checked + .gw-goal-label .gl-name { color: var(--sage); }
+
+    /* ── Calorie slider ──────────────────────────────────────── */
+    .kcal-display {
+        text-align: center;
+        margin-bottom: .8rem;
+    }
+    .kcal-value {
+        font-family: 'Playfair Display', serif;
+        font-size: 2.6rem;
+        color: var(--brown);
+        line-height: 1;
+    }
+    .kcal-unit {
+        font-size: .85rem;
+        color: var(--muted);
+        font-weight: 500;
+    }
+    .kcal-adjusted {
+        font-size: .82rem;
+        color: var(--accent);
+        margin-top: .2rem;
+        min-height: 1.1em;
+        font-weight: 500;
+    }
+    input[type=range].gw-slider {
+        width: 100%;
+        appearance: none;
+        height: 6px;
+        border-radius: 3px;
+        background: linear-gradient(to right, var(--sage) 0%, var(--sage) var(--pct, 37%), var(--border) var(--pct, 37%), var(--border) 100%);
+        outline: none;
+    }
+    input[type=range].gw-slider::-webkit-slider-thumb {
+        appearance: none;
+        width: 20px; height: 20px;
+        border-radius: 50%;
+        background: #fff;
+        border: 2px solid var(--sage);
+        box-shadow: 0 2px 8px rgba(122,158,126,.3);
+        cursor: pointer;
+    }
+    .kcal-marks {
+        display: flex;
+        justify-content: space-between;
+        font-size: .72rem;
+        color: var(--muted);
+        margin-top: .3rem;
+    }
+
+    /* ── Diet toggles ────────────────────────────────────────── */
+    .gw-diet-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+        gap: .6rem;
+    }
+    .gw-diet-chk { display: none; }
+    .gw-diet-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: .4rem;
+        padding: .55rem .7rem;
+        border: 1.5px solid var(--border);
+        border-radius: 10px;
+        cursor: pointer;
+        font-size: .85rem;
+        font-weight: 500;
+        color: var(--brown-lt);
+        transition: all .16s;
+        background: #fefefe;
+        text-align: center;
+    }
+    .gw-diet-chk:checked + .gw-diet-btn {
+        border-color: var(--sage);
+        background: var(--sage-light);
+        color: var(--sage);
+        font-weight: 600;
+    }
+
+    /* ── Macro row ───────────────────────────────────────────── */
+    .gw-macro-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: .8rem;
+    }
+    .gw-macro-input-wrap { position: relative; }
+    .gw-macro-unit {
+        position: absolute;
+        right: .9rem; top: 50%;
+        transform: translateY(-50%);
+        font-size: .78rem;
+        color: var(--muted);
+        pointer-events: none;
+    }
+    .gw-macro-color {
+        display: block;
+        width: 100%; height: 3px;
+        border-radius: 2px;
+        margin-top: .4rem;
+    }
+
+    /* ── Budget toggle ───────────────────────────────────────── */
+    .gw-budget-toggle {
+        display: flex;
+        align-items: center;
+        gap: .7rem;
+        margin-bottom: 1rem;
+    }
+    .gw-switch {
+        position: relative;
+        width: 42px; height: 24px;
+    }
+    .gw-switch input { display: none; }
+    .gw-switch-slider {
+        position: absolute; inset: 0;
+        background: var(--border);
+        border-radius: 12px;
+        cursor: pointer;
+        transition: background .2s;
+    }
+    .gw-switch-slider::before {
+        content: '';
+        position: absolute;
+        left: 3px; top: 3px;
+        width: 18px; height: 18px;
+        border-radius: 50%;
+        background: #fff;
+        transition: transform .2s;
+        box-shadow: 0 1px 4px rgba(0,0,0,.15);
+    }
+    .gw-switch input:checked ~ .gw-switch-slider { background: var(--sage); }
+    .gw-switch input:checked ~ .gw-switch-slider::before { transform: translateX(18px); }
+    #budgetDetails { transition: opacity .3s; }
+    #budgetDetails.hidden { opacity: 0; pointer-events: none; height: 0; overflow: hidden; margin: 0; }
+
+    /* ── Exclusions tag input ────────────────────────────────── */
+    .tag-field-wrap {
+        border: 1.5px solid var(--border);
+        border-radius: 10px;
+        padding: .5rem .7rem;
+        display: flex;
+        flex-wrap: wrap;
+        gap: .4rem;
+        cursor: text;
+        background: #fefefe;
+        min-height: 48px;
+        transition: border-color .2s, box-shadow .2s;
+    }
+    .tag-field-wrap:focus-within {
+        border-color: var(--sage);
+        box-shadow: 0 0 0 3px rgba(122,158,126,.15);
+    }
+    .tag-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: .3rem;
+        background: var(--accent-lt);
+        color: var(--accent);
+        border-radius: 6px;
+        padding: .2rem .55rem;
+        font-size: .82rem;
+        font-weight: 500;
+    }
+    .tag-pill button {
+        background: none; border: none;
+        color: var(--accent); cursor: pointer;
+        padding: 0; line-height: 1; font-size: .9rem;
+    }
+    #tagInput {
+        border: none; outline: none;
+        font-family: 'DM Sans', sans-serif;
+        font-size: .92rem;
+        color: var(--text);
+        background: transparent;
+        min-width: 120px;
+        flex: 1;
+    }
+
+    /* ── Meals-per-day stepper ───────────────────────────────── */
+    .gw-stepper {
+        display: inline-flex;
+        align-items: center;
+        gap: 0;
+        border: 1.5px solid var(--border);
+        border-radius: 10px;
+        overflow: hidden;
+    }
+    .gw-stepper button {
+        width: 38px; height: 38px;
+        background: #f7f4ef;
+        border: none;
+        cursor: pointer;
+        font-size: 1.1rem;
+        color: var(--brown);
+        transition: background .15s;
+    }
+    .gw-stepper button:hover { background: var(--sage-light); }
+    .gw-stepper input {
+        width: 50px;
+        border: none; outline: none;
+        text-align: center;
+        font-family: 'DM Sans', sans-serif;
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--brown);
+        background: #fff;
+    }
+
+    /* ── Submit ──────────────────────────────────────────────── */
+    .gw-submit-wrap {
+        text-align: center;
+        padding: 1.4rem 1.6rem 2rem;
+    }
+    .gw-btn-generate {
+        display: inline-flex;
+        align-items: center;
+        gap: .6rem;
+        background: var(--sage);
+        color: #fff;
+        border: none;
+        border-radius: 14px;
+        padding: 1rem 2.4rem;
+        font-family: 'DM Sans', sans-serif;
+        font-size: 1.05rem;
+        font-weight: 600;
+        cursor: pointer;
+        box-shadow: 0 4px 20px rgba(122,158,126,.35);
+        transition: transform .15s, box-shadow .15s, background .15s;
+    }
+    .gw-btn-generate:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 28px rgba(122,158,126,.45);
+        background: #6a8e6e;
+    }
+    .gw-btn-generate:active { transform: translateY(0); }
+    .gw-btn-generate .btn-spinner { display: none; }
+    .gw-btn-generate.loading .btn-icon   { display: none; }
+    .gw-btn-generate.loading .btn-spinner { display: inline-block; }
+
+    /* ── Preview summary ─────────────────────────────────────── */
+    .gw-preview {
+        background: var(--sage-light);
+        border-radius: 12px;
+        padding: 1rem 1.2rem;
+        display: flex;
+        gap: 1.2rem;
+        flex-wrap: wrap;
+        margin-top: .2rem;
+    }
+    .gw-preview-item { font-size: .84rem; color: var(--brown-lt); }
+    .gw-preview-item strong { color: var(--brown); }
+
+    /* ── Validation ──────────────────────────────────────────── */
+    .text-danger { color: #c85c5c; font-size: .8rem; margin-top: .25rem; }
+    .field-validation-error { color: #c85c5c; font-size: .8rem; }
+
+    /* ── Responsive ──────────────────────────────────────────── */
+    @@media (max-width: 600px) {
+        .gw-macro-grid { grid-template-columns: 1fr; }
+        .gw-goal-grid  { grid-template-columns: repeat(2, 1fr); }
+    }
+</style>
+
+<div class="gw-page">
+    <div class="gw-inner">
+
+        <!-- Hero -->
+        <div class="gw-hero">
+            <div class="gw-hero-badge">
+                <span>✦</span> Умная генерация
+            </div>
+            <h1>Меню на неделю</h1>
+            <p>Сбалансированный план питания под ваши цели, вкусы и бюджет</p>
         </div>
 
-        <div class="card-body p-5">
-            <form asp-action="GenerateWeek" method="post">
-                <div class="row g-4">
-                    <div class="col-md-6">
-                        <label class="form-label fw-medium">Калорий в день</label>
-                        <input asp-for="DailyCalories" type="number" class="form-control form-control-lg" min="1000" max="5000" />
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label fw-medium">Цель</label>
-                        <select asp-for="Goal" class="form-select form-select-lg">
-                            <option value="maintain">Поддержание веса</option>
-                            <option value="lose">Похудение</option>
-                            <option value="gain">Набор массы</option>
-                        </select>
-                    </div>
+        <form asp-action="GenerateWeek" method="post" id="generateForm">
+            @Html.AntiForgeryToken()
 
-                    <div class="col-12">
-                        <label class="form-label fw-medium">Предпочтения</label>
-                        <div class="row g-3">
-                            <div class="col-md-4">
-                                <div class="form-check form-switch">
-                                    <input asp-for="Vegetarian" class="form-check-input" type="checkbox" />
-                                    <label class="form-check-label">Вегетарианское</label>
-                                </div>
+            <!-- ── 1. Цель ── -->
+            <div class="gw-card">
+                <div class="gw-card-head">
+                    <div class="gw-card-icon icon-green">🎯</div>
+                    <div>
+                        <h3>Цель питания</h3>
+                        <p>Под какую задачу строить рацион?</p>
+                    </div>
+                </div>
+                <div class="gw-card-body">
+                    <div class="gw-goal-grid">
+                        @foreach (var (val, icon, name, sub) in new[]
+                        {
+                            ("maintain", "⚖️",  "Поддержание",  "Стабильный вес"),
+                            ("lose",     "📉",  "Похудение",    "−400 ккал/день"),
+                            ("lose_fast","🔥",  "Быстрое похудение", "−700 ккал"),
+                            ("gain",     "💪",  "Набор массы",  "+400 ккал/день"),
+                            ("gain_lean","🌿",  "Сухая масса",  "+200 ккал")
+                        })
+                        {
+                            <div>
+                                <input type="radio" asp-for="Goal" value="@val"
+                                       class="gw-goal-option" id="goal_@val" />
+                                <label class="gw-goal-label" for="goal_@val">
+                                    <span class="gl-icon">@icon</span>
+                                    <span class="gl-name">@name</span>
+                                    <span class="gl-sub">@sub</span>
+                                </label>
                             </div>
-                            <div class="col-md-4">
-                                <div class="form-check form-switch">
-                                    <input asp-for="Vegan" class="form-check-input" type="checkbox" />
-                                    <label class="form-check-label">Веганское</label>
-                                </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── 2. Калории ── -->
+            <div class="gw-card">
+                <div class="gw-card-head">
+                    <div class="gw-card-icon icon-brown">🔥</div>
+                    <div>
+                        <h3>Калории в день</h3>
+                        <p>Базовая суточная потребность</p>
+                    </div>
+                </div>
+                <div class="gw-card-body">
+                    <div class="kcal-display">
+                        <div>
+                            <span class="kcal-value" id="kcalDisplay">2000</span>
+                            <span class="kcal-unit"> ккал</span>
+                        </div>
+                        <div class="kcal-adjusted" id="kcalAdjusted"></div>
+                    </div>
+                    <input type="range" class="gw-slider"
+                           asp-for="DailyCalories"
+                           min="1000" max="4500" step="50"
+                           id="kcalSlider" />
+                    <div class="kcal-marks">
+                        <span>1000</span><span>1500</span><span>2000</span><span>2500</span><span>3000</span><span>3500</span><span>4000</span><span>4500</span>
+                    </div>
+                    <span asp-validation-for="DailyCalories" class="text-danger"></span>
+
+                    <div class="gw-preview" id="kcalPreview" style="margin-top:1rem;">
+                        <div class="gw-preview-item">🌅 Завтрак: <strong id="pvBreakfast">500</strong> ккал</div>
+                        <div class="gw-preview-item">☀️ Обед: <strong id="pvLunch">700</strong> ккал</div>
+                        <div class="gw-preview-item">🌙 Ужин: <strong id="pvDinner">600</strong> ккал</div>
+                        <div class="gw-preview-item">🍎 Перекус: <strong id="pvSnack">200</strong> ккал</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── 3. Макронутриенты ── -->
+            <div class="gw-card">
+                <div class="gw-card-head">
+                    <div class="gw-card-icon icon-blue">📊</div>
+                    <div>
+                        <h3>Макронутриенты <span style="font-weight:400;color:var(--muted)">(необязательно)</span></h3>
+                        <p>Целевые значения белков, жиров, углеводов в день</p>
+                    </div>
+                </div>
+                <div class="gw-card-body">
+                    <div class="gw-macro-grid">
+                        <div>
+                            <label class="gw-label">Белки</label>
+                            <div class="gw-macro-input-wrap">
+                                <input asp-for="ProteinGoal" type="number" class="gw-input" placeholder="120" min="0" max="500" style="padding-right:2.5rem" />
+                                <span class="gw-macro-unit">г</span>
+                            </div>
+                            <span class="gw-macro-color" style="background:#4caf89"></span>
+                            <span asp-validation-for="ProteinGoal" class="text-danger"></span>
+                        </div>
+                        <div>
+                            <label class="gw-label">Жиры</label>
+                            <div class="gw-macro-input-wrap">
+                                <input asp-for="FatGoal" type="number" class="gw-input" placeholder="65" min="0" max="300" style="padding-right:2.5rem" />
+                                <span class="gw-macro-unit">г</span>
+                            </div>
+                            <span class="gw-macro-color" style="background:#e8a03e"></span>
+                            <span asp-validation-for="FatGoal" class="text-danger"></span>
+                        </div>
+                        <div>
+                            <label class="gw-label">Углеводы</label>
+                            <div class="gw-macro-input-wrap">
+                                <input asp-for="CarbsGoal" type="number" class="gw-input" placeholder="250" min="0" max="700" style="padding-right:2.5rem" />
+                                <span class="gw-macro-unit">г</span>
+                            </div>
+                            <span class="gw-macro-color" style="background:#5b8dd9"></span>
+                            <span asp-validation-for="CarbsGoal" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── 4. Предпочтения ── -->
+            <div class="gw-card">
+                <div class="gw-card-head">
+                    <div class="gw-card-icon icon-purple">🥦</div>
+                    <div>
+                        <h3>Диетические предпочтения</h3>
+                        <p>Выберите одно или несколько</p>
+                    </div>
+                </div>
+                <div class="gw-card-body">
+                    <div class="gw-diet-grid">
+                        @foreach (var (id, field, icon, label) in new[]
+                        {
+                            ("chkVeg",   "Vegetarian", "🌿", "Вегетарианское"),
+                            ("chkVegan", "Vegan",      "🌱", "Веганское"),
+                            ("chkGF",    "GlutenFree", "🌾", "Без глютена"),
+                            ("chkLC",    "LowCarb",    "📉", "Мало углеводов"),
+                            ("chkHP",    "HighProtein","💪", "Высокий белок"),
+                            ("chkLF",    "LowFat",     "🫗", "Мало жиров"),
+                        })
+                        {
+                            <div>
+                                <input type="checkbox" id="@id" class="gw-diet-chk"
+                                       name="@field" value="true" />
+                                <label class="gw-diet-btn" for="@id">
+                                    <span>@icon</span> @label
+                                </label>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── 5. Исключения ── -->
+            <div class="gw-card">
+                <div class="gw-card-head">
+                    <div class="gw-card-icon icon-red">🚫</div>
+                    <div>
+                        <h3>Исключить продукты</h3>
+                        <p>Аллергены, нелюбимые ингредиенты</p>
+                    </div>
+                </div>
+                <div class="gw-card-body">
+                    <div class="tag-field-wrap" id="tagWrap">
+                        <input id="tagInput" type="text" placeholder="Введите продукт и нажмите Enter…" autocomplete="off" />
+                    </div>
+                    <input type="hidden" asp-for="ExcludedProducts" id="excludedHidden" />
+                    <p style="font-size:.78rem;color:var(--muted);margin:.5rem 0 0">
+                        Быстрые варианты:
+                        @foreach (var q in new[]{"молоко","орехи","рыба","яйца","глютен","сахар"})
+                        {
+                            <button type="button" class="quick-tag"
+                                    onclick="addTag('@q')"
+                                    style="background:none;border:1px solid var(--border);border-radius:5px;padding:.15rem .5rem;font-size:.78rem;cursor:pointer;margin:.1rem;color:var(--muted)">
+                                @q
+                            </button>
+                        }
+                    </p>
+                </div>
+            </div>
+
+            <!-- ── 6. Бюджет ── -->
+            <div class="gw-card">
+                <div class="gw-card-head">
+                    <div class="gw-card-icon icon-teal">💰</div>
+                    <div>
+                        <h3>Бюджет на неделю</h3>
+                        <p>Учитывать стоимость рецептов при подборе</p>
+                    </div>
+                </div>
+                <div class="gw-card-body">
+                    <div class="gw-budget-toggle">
+                        <label class="gw-switch">
+                            <input type="checkbox" asp-for="ConsiderBudget" id="budgetToggle" />
+                            <span class="gw-switch-slider"></span>
+                        </label>
+                        <span style="font-size:.92rem;color:var(--brown-lt)">Учитывать бюджет</span>
+                    </div>
+                    <div id="budgetDetails" class="hidden">
+                        <label class="gw-label">Бюджет на неделю</label>
+                        <div class="gw-macro-input-wrap" style="max-width:280px">
+                            <input asp-for="WeeklyBudget" type="number" class="gw-input"
+                                   min="500" max="50000" step="100" style="padding-right:2.8rem" />
+                            <span class="gw-macro-unit">₽</span>
+                        </div>
+                        <p style="font-size:.8rem;color:var(--muted);margin:.4rem 0 0">
+                            ≈ <span id="dailyBudgetPreview">500</span> ₽/день
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── 7. Настройки плана ── -->
+            <div class="gw-card">
+                <div class="gw-card-head">
+                    <div class="gw-card-icon icon-blue">⚙️</div>
+                    <div>
+                        <h3>Настройки плана</h3>
+                        <p>Количество приёмов пищи и повторы</p>
+                    </div>
+                </div>
+                <div class="gw-card-body">
+                    <div style="display:flex;flex-wrap:wrap;gap:2rem;align-items:flex-start">
+                        <div>
+                            <label class="gw-label">Приёмов пищи в день</label>
+                            <div class="gw-stepper">
+                                <button type="button" onclick="stepMeals(-1)">−</button>
+                                <input asp-for="MealsPerDay" id="mealsInput" type="number" min="3" max="6" readonly />
+                                <button type="button" onclick="stepMeals(1)">+</button>
+                            </div>
+                        </div>
+                        <div style="display:flex;flex-direction:column;gap:.7rem;padding-top:1.8rem">
+                            <div class="gw-budget-toggle" style="margin:0">
+                                <label class="gw-switch">
+                                    <input type="checkbox" asp-for="IncludeSnacks" id="snackToggle" />
+                                    <span class="gw-switch-slider"></span>
+                                </label>
+                                <span style="font-size:.92rem;color:var(--brown-lt)">Включать перекусы</span>
+                            </div>
+                            <div class="gw-budget-toggle" style="margin:0">
+                                <label class="gw-switch">
+                                    <input type="checkbox" asp-for="AvoidRepeats" id="repeatToggle" />
+                                    <span class="gw-switch-slider"></span>
+                                </label>
+                                <span style="font-size:.92rem;color:var(--brown-lt)">Не повторять рецепты</span>
                             </div>
                         </div>
                     </div>
-
-                    <div class="col-12">
-                        <label class="form-label fw-medium">Исключить продукты (через запятую)</label>
-                        <input asp-for="ExcludedProducts" class="form-control form-control-lg" placeholder="молоко, орехи, рыба" />
-                    </div>
                 </div>
+            </div>
 
-                <div class="text-center mt-5">
-                    <button type="submit" class="btn btn-success btn-lg px-5">
-                        <i class="fas fa-magic me-2"></i> Сгенерировать меню
+            <!-- Validation summary -->
+            @if (!ViewData.ModelState.IsValid)
+            {
+                <div style="background:#fde8e8;border-radius:10px;padding:1rem 1.2rem;margin-bottom:1rem;color:#a33">
+                    <div asp-validation-summary="ModelOnly"></div>
+                </div>
+            }
+
+            <!-- Submit -->
+            <div class="gw-card">
+                <div class="gw-submit-wrap">
+                    <button type="submit" class="gw-btn-generate" id="submitBtn">
+                        <span class="btn-icon">✦</span>
+                        <span class="btn-spinner">⏳</span>
+                        Сгенерировать меню
                     </button>
+                    <p style="margin:.8rem 0 0;font-size:.8rem;color:var(--muted)">
+                        Генерация занимает несколько секунд
+                    </p>
                 </div>
-            </form>
-        </div>
+            </div>
+
+        </form>
     </div>
 </div>
+
+@section Scripts {
+<script>
+// ── Калорийный слайдер ──────────────────────────────────────────
+const slider    = document.getElementById('kcalSlider');
+const display   = document.getElementById('kcalDisplay');
+const adjusted  = document.getElementById('kcalAdjusted');
+const pvBreak   = document.getElementById('pvBreakfast');
+const pvLunch   = document.getElementById('pvLunch');
+const pvDinner  = document.getElementById('pvDinner');
+const pvSnack   = document.getElementById('pvSnack');
+
+function goalAdjust(base) {
+    const g = document.querySelector('.gw-goal-option:checked')?.value ?? 'maintain';
+    const map = { maintain:0, lose:-400, lose_fast:-700, gain:400, gain_lean:200 };
+    return base + (map[g] ?? 0);
+}
+
+function updateSlider() {
+    const base = +slider.value;
+    const min  = +slider.min, max = +slider.max;
+    const pct  = ((base - min) / (max - min) * 100).toFixed(1);
+    slider.style.setProperty('--pct', pct + '%');
+    display.textContent = base.toLocaleString('ru-RU');
+
+    const adj = goalAdjust(base);
+    const diff = adj - base;
+    adjusted.textContent = diff !== 0
+        ? `С учётом цели: ${adj.toLocaleString('ru-RU')} ккал (${diff>0?'+':''}${diff})`
+        : '';
+
+    pvBreak.textContent  = Math.round(adj * .25);
+    pvLunch.textContent  = Math.round(adj * .35);
+    pvDinner.textContent = Math.round(adj * .30);
+    pvSnack.textContent  = Math.round(adj * .10);
+}
+
+slider.addEventListener('input', updateSlider);
+document.querySelectorAll('.gw-goal-option').forEach(r =>
+    r.addEventListener('change', updateSlider));
+updateSlider();
+
+// ── Бюджет ──────────────────────────────────────────────────────
+const budgetToggle  = document.getElementById('budgetToggle');
+const budgetDetails = document.getElementById('budgetDetails');
+const weeklyInput   = document.querySelector('[name="WeeklyBudget"]');
+const dailyPreview  = document.getElementById('dailyBudgetPreview');
+
+function updateBudget() {
+    const weekly = +weeklyInput.value;
+    dailyPreview.textContent = Math.round(weekly / 7).toLocaleString('ru-RU');
+}
+budgetToggle.addEventListener('change', () => {
+    budgetDetails.classList.toggle('hidden', !budgetToggle.checked);
+});
+weeklyInput.addEventListener('input', updateBudget);
+updateBudget();
+
+// ── Тег-инпут для исключений ────────────────────────────────────
+const tagWrap   = document.getElementById('tagWrap');
+const tagInput  = document.getElementById('tagInput');
+const hidden    = document.getElementById('excludedHidden');
+let   tags      = [];
+
+function renderTags() {
+    tagWrap.querySelectorAll('.tag-pill').forEach(p => p.remove());
+    tags.forEach(t => {
+        const pill = document.createElement('span');
+        pill.className = 'tag-pill';
+        pill.innerHTML = `${t} <button type="button" onclick="removeTag('${t}')">×</button>`;
+        tagWrap.insertBefore(pill, tagInput);
+    });
+    hidden.value = tags.join(', ');
+}
+
+function addTag(val) {
+    const v = val.trim().toLowerCase();
+    if (v && !tags.includes(v)) { tags.push(v); renderTags(); }
+    tagInput.value = '';
+    tagInput.focus();
+}
+
+function removeTag(t) {
+    tags = tags.filter(x => x !== t);
+    renderTags();
+}
+
+tagInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ',') {
+        e.preventDefault();
+        addTag(tagInput.value);
+    }
+    if (e.key === 'Backspace' && !tagInput.value && tags.length)
+        removeTag(tags[tags.length - 1]);
+});
+tagWrap.addEventListener('click', () => tagInput.focus());
+
+// ── Степпер порций ───────────────────────────────────────────────
+function stepMeals(delta) {
+    const inp = document.getElementById('mealsInput');
+    const v   = Math.min(6, Math.max(3, +inp.value + delta));
+    inp.value = v;
+}
+
+// ── Загрузка формы ───────────────────────────────────────────────
+document.getElementById('generateForm').addEventListener('submit', function () {
+    const btn = document.getElementById('submitBtn');
+    btn.classList.add('loading');
+    btn.disabled = true;
+});
+</script>
+}

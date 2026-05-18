@@ -1,4 +1,4 @@
-﻿namespace Services.UserService.DTO;
+﻿namespace Services.DTO;
 
 public class ActivateAdminRequest
 {

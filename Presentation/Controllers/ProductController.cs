@@ -23,7 +23,7 @@ namespace Presentation.Controllers
         // GET: /Product
         public async Task<IActionResult> Index(
             string searchTerm, 
-            ProductCategory? category,           // ← изменили на Enum
+            ProductCategory? category, 
             decimal? minCalories,
             decimal? maxCalories,
             decimal? minPrice,

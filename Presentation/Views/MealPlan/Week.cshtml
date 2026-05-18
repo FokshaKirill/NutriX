@@ -230,30 +230,118 @@ body { font-family: 'DM Sans', sans-serif; }
 .btn-wp.primary:hover { background: var(--sage-d); }
 
 /* ── Print ── */
+/* ── Print Optimization ── */
 @@media print {
-    .wp-tabs, .wp-actions, .no-print { display: none !important; }
-    .wp-section { display: block !important; }
+    body, .wp-page {
+        margin: 0 !important;
+        padding: 10mm !important;
+        font-size: 10.5pt !important;
+        line-height: 1.25 !important;
+    }
 
-    .print-meal-plan  .shop-section  { display: none !important; }
-    .print-shop-list  .meal-section  { display: none !important; }
+    .wp-tabs, .wp-actions, .no-print, header, footer, .btn-wp {
+        display: none !important;
+    }
 
-    body { font-size: 11pt; }
-    .week-table th { background: #4e7d58 !important; -webkit-print-color-adjust: exact; }
+    .wp-section { 
+        display: block !important; 
+        page-break-inside: avoid;
+    }
+
+    .print-only {
+        display: block !important;
+        margin-bottom: 25px !important;
+        page-break-after: avoid;
+    }
+    
+    /* Альбомная ориентация + минимальные поля */
+    @@page {
+        margin: 8mm 10mm;
+    }
+
+    /* Таблица меню — главное */
+    .week-table {
+        font-size: 9.5pt !important;
+        table-layout: fixed !important;
+        width: 100% !important;
+    }
+
+    .week-table th,
+    .week-table td {
+        padding: 4px 6px !important;
+        font-size: 9.5pt !important;
+        border: 1px solid #ccc !important;
+    }
+
+    .week-table th {
+        background: #4e7d58 !important;
+        color: white !important;
+        -webkit-print-color-adjust: exact;
+        font-size: 10pt !important;
+    }
+
+    /* Уменьшаем ширину колонок */
+    .week-table td:first-child { width: 11% !important; }   /* День */
+    .week-table td:nth-child(2) { width: 22% !important; }  /* Завтрак */
+    .week-table td:nth-child(3) { width: 22% !important; }  /* Обед */
+    .week-table td:nth-child(4) { width: 22% !important; }  /* Ужин */
+    .week-table td:nth-child(5) { width: 15% !important; }  /* Перекус */
+    .week-table td:last-child  { width: 8% !important; }    /* Итого */
+
+    .meal-name {
+        font-size: 9.5pt !important;
+        white-space: normal !important;
+        line-height: 1.2 !important;
+    }
+
+    .meal-macros, .day-date {
+        font-size: 8.5pt !important;
+    }
+
+    /* Скрываем лишнее в ячейках */
+    .meal-thumb, .meal-thumb-placeholder {
+        display: none !important;
+    }
+
+    /* Убираем лишние отступы */
+    .wp-page {
+        max-width: none !important;
+        padding: 0 !important;
+    }
+
+    .day-label {
+        font-size: 11pt !important;
+    }
+
+    /* Для списка покупок */
+    .shop-table th, .shop-table td {
+        font-size: 10pt !important;
+        padding: 5px 8px !important;
+    }
 }
 
+/* Дополнительно — принудительно альбомная для всей страницы */
 @@media print {
-    .no-print { display: none !important; }
-    .print-only { display: block !important; }
+    .print-meal-plan .shop-section,
+    .print-shop-list .meal-section {
+        display: none !important;
+    }
 }
 </style>
 
 <link href="https://fonts.googleapis.com/css2?family=Lora:wght@500;600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
 
+<div class="print-only" style="display: none; text-align: center; margin-bottom: 20px; font-size: 14pt; font-family: 'Lora', serif;">
+    <strong>План питания на неделю</strong><br>
+    <span style="font-size: 11pt; color: #555;">
+        @Model.StartDate.ToString("dd MMMM yyyy") — @Model.StartDate.AddDays(6).ToString("dd MMMM yyyy")
+    </span>
+</div>
 
 <div class="wp-page">
 
     <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:1.5rem;flex-wrap:wrap;gap:1rem">
-        <div>
+        <div class="no-print">
             <h2 style="font-family:'Lora',serif;color:var(--sage-d);margin:0 0 .2rem">План питания</h2>
             <p style="color:var(--muted);margin:0;font-size:.9rem">
                 @Model.StartDate.ToString("d MMMM") — @Model.StartDate.AddDays(6).ToString("d MMMM yyyy")
@@ -355,10 +443,10 @@ body { font-family: 'DM Sans', sans-serif; }
                                 @if (day.Meals.Any())
                                 {
                                     <div class="day-total">
-                                        <b>@day.Meals.Sum(m => m.Calories)</b> ккал<br>
-                                        Б <b>@day.Meals.Sum(m => m.Protein)</b> ·
-                                        Ж <b>@day.Meals.Sum(m => m.Fat)</b> ·
-                                        У <b>@day.Meals.Sum(m => m.Carbs)</b>
+                                        <b>@day.Meals.Sum(m => m.Calories)</b> ккал
+                                        <b>@day.Meals.Sum(m => m.Protein)</b> Б
+                                        <b>@day.Meals.Sum(m => m.Fat)</b> Ж
+                                        <b>@day.Meals.Sum(m => m.Carbs)</b> У
                                     </div>
                                 }
                                 else { <span class="day-empty">—</span> }
@@ -450,17 +538,11 @@ document.getElementById('checkAll')?.addEventListener('change', function() {
 });
 
 function printSection(section) {
-    // Временно показываем только нужную секцию
-    const meal = document.getElementById('tabMeal');
-    const shop = document.getElementById('tabShop');
-    meal.style.display = section === 'meal' ? 'block' : 'none';
-    shop.style.display = section === 'shop' ? 'block' : 'none';
+    document.body.classList.add(section === 'meal' ? 'print-meal-plan' : 'print-shop-list');
     window.print();
-    // Возвращаем активную вкладку
-    const active = document.querySelector('.wp-tab.active');
-    const isMeal = active?.textContent.includes('Меню');
-    meal.style.display = isMeal ? 'block' : 'none';
-    shop.style.display = isMeal ? 'none'  : 'block';
+    setTimeout(() => {
+        document.body.classList.remove('print-meal-plan', 'print-shop-list');
+    }, 1000);
 }
 </script>
 }

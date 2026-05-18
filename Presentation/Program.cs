@@ -43,6 +43,7 @@ builder.Services.AddScoped<IMealTypeService, MealTypeService>();
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<IRecipeService, RecipeService>();
 builder.Services.AddScoped<IFavoriteService, FavoriteService>();
+builder.Services.AddScoped<IMealPlanGeneratorService, MealPlanGeneratorService>();
 
 builder.Services.AddScoped<SeedService>();
 builder.Services.AddScoped<PriceUpdateJob>();

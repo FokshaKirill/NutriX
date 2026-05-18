@@ -1,8 +1,9 @@
 ﻿@model List<Presentation.Models.RecipeListViewModel>
 @{
-    ViewData["Title"] ??= "Рецепты";
-    var isFavPage = ViewData["Title"]?.ToString() == "Избранные рецепты";
+ViewData["Title"] = ViewData["Title"] ?? "Все рецепты";
+var isFavPage = ViewData["Title"]?.ToString() == "Избранные рецепты";
 }
+
 @Html.AntiForgeryToken()
 
 <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
@@ -14,132 +15,168 @@
     <div class="page-head">
         <div>
             <h1>@ViewData["Title"]</h1>
-            <p>@(Model.Count == 0 ? "Нет рецептов" : $"Найдено: {Model.Count}")</p>
+            <p>@(Model.Count == 0 ? "Ничего не найдено" : $"Найдено рецептов: {ViewBag.TotalCount}")</p>
         </div>
         @if (!isFavPage)
         {
-            <div class="head-actions">
-                <a asp-action="Import" class="btn-outline-soft">
-                    <i class="fas fa-download"></i> Импорт
-                </a>
-                <a asp-action="Create" class="btn-primary-soft">
-                    <i class="fas fa-plus"></i> Создать
-                </a>
-            </div>
+        <div class="head-actions">
+            <a asp-action="Import" class="btn-outline-soft">
+                <i class="fas fa-download"></i> Импорт
+            </a>
+            <a asp-action="Create" class="btn-primary-soft">
+                <i class="fas fa-plus"></i> Создать рецепт
+            </a>
+        </div>
         }
     </div>
+
+    <!-- Фильтры + Поиск -->
+    @if (!isFavPage)
+    {
+    <div class="d-flex flex-wrap gap-3 mb-4 align-items-end">
+        <form asp-action="Index" method="get" class="d-flex flex-grow-1 gap-2 flex-wrap">
+
+            <!-- Поиск -->
+            <div style="min-width: 280px;">
+                <input type="search" name="searchTerm" value="@ViewBag.SearchTerm"
+                       class="form-control" placeholder="Поиск по названию или описанию..." />
+            </div>
+
+            <!-- Фильтр по категории -->
+            <div style="min-width: 200px;">
+                <select name="category" class="form-select">
+                    <option value="">Все категории</option>
+                    @foreach (var cat in ViewBag.Categories)
+                    {
+                    <option value="@cat.Value" selected="@cat.Selected">@cat.Text</option>
+                    }
+                </select>
+            </div>
+
+            <button type="submit" class="btn-primary-soft">Найти</button>
+            <a asp-action="Index" class="btn btn-outline-secondary">Сбросить</a>
+        </form>
+    </div>
+    }
 
     <!-- Пустое состояние -->
     @if (!Model.Any())
     {
-        <div class="recipes-empty">
-            <div class="empty-icon">@(isFavPage ? "♡" : "🍽")</div>
-            <h3>@(isFavPage ? "Избранное пусто" : "Рецептов пока нет")</h3>
-            <p>@(isFavPage ? "Добавьте рецепты, которые вам нравятся" : "Создайте первый рецепт или импортируйте из интернета")</p>
-            @if (!isFavPage)
-            {
-                <div style="display:flex;gap:.75rem;flex-wrap:wrap;justify-content:center;margin-top:.5rem">
-                    <a asp-action="Import" class="btn-outline-soft"><i class="fas fa-download"></i> Импорт</a>
-                    <a asp-action="Create" class="btn-primary-soft"><i class="fas fa-plus"></i> Создать</a>
-                </div>
-            }
-            else
-            {
-                <a asp-action="Index" class="btn-outline-soft" style="margin-top:.5rem">Смотреть все рецепты</a>
-            }
-        </div>
+    <div class="recipes-empty">
+        <div class="empty-icon">@(isFavPage ? "♡" : "🍽")</div>
+        <h3>@(isFavPage ? "Избранное пусто" : "Рецептов не найдено")</h3>
+        <p>@(isFavPage ? "Добавляйте понравившиеся рецепты в избранное" : "Попробуйте изменить параметры поиска")</p>
+    </div>
     }
     else
     {
-        <div class="recipes-grid" data-page="@(isFavPage ? "favorites" : "recipes")">
-            @foreach (var r in Model)
-            {
-                <div class="recipe-card-wrap">
+    <!-- Сетка рецептов -->
+    <div class="recipes-grid" data-page="@(isFavPage ? "favorites" : "recipes")">
+        @foreach (var r in Model)
+        {
+        <div class="recipe-card-wrap">
+            <div class="recipe-thumb">
+                @if (!string.IsNullOrEmpty(r.ImageUrl))
+                {
+                <img src="@r.ImageUrl" alt="@r.Name" loading="lazy" />
+                }
+                else
+                {
+                <div class="recipe-thumb-placeholder">🥘</div>
+                }
 
-                    <!-- Изображение -->
-                    <div class="recipe-thumb">
-                        @if (!string.IsNullOrEmpty(r.ImageUrl))
-                        {
-                            <img src="@r.ImageUrl" alt="@r.Name" loading="lazy" />
-                        }
-                        else
-                        {
-                            <div class="recipe-thumb-placeholder">🥘</div>
-                        }
+                <button class="fav-btn @(r.IsFavorite ? "is-fav" : "")"
+                        data-id="@r.Id" title="@(r.IsFavorite ? "Убрать из избранного" : "В избранное")">
+                    <i class="@(r.IsFavorite ? "fas" : "far") fa-heart"></i>
+                </button>
 
-                        <!-- ❤ кнопка избранного -->
-                        <button class="fav-btn @(r.IsFavorite ? "is-fav" : "")"
-                                data-id="@r.Id"
-                                data-loading="false"
-                                title="@(r.IsFavorite ? "Убрать из избранного" : "В избранное")">
-                            <i class="@(r.IsFavorite ? "fas" : "far") fa-heart"></i>
-                        </button>
+                <div class="badge-servings">@r.DefaultServings порц.</div>
+            </div>
 
-                        <div class="badge-servings">
-                            <i class="fas fa-user" style="font-size:.65rem"></i>
-                            @r.DefaultServings порц.
-                        </div>
-                    </div>
+            <div class="recipe-body">
+                <a asp-action="Details" asp-route-id="@r.Id" class="recipe-title">@r.Name</a>
 
-                    <!-- Тело -->
-                    <div class="recipe-body">
-                        <a asp-action="Details" asp-route-id="@r.Id" class="recipe-title">@r.Name</a>
+                @if (!string.IsNullOrEmpty(r.Description))
+                {
+                <p class="recipe-desc">@(r.Description.Length > 85 ? r.Description[..85] + "…" : r.Description)</p>
+                }
 
-                        @if (!string.IsNullOrEmpty(r.Description))
-                        {
-                            <p class="recipe-desc">
-                                @(r.Description.Length > 80 ? r.Description[..80] + "…" : r.Description)
-                            </p>
-                        }
-
-                        <!-- КБЖУ -->
-                        @if (r.CaloriesPerServing > 0 || r.ProteinPerServing > 0)
-                        {
-                            <div class="macros">
-                                @if (r.CaloriesPerServing > 0)
-                                {
-                                    <span class="macro-tag macro-kcal">🔥 @((int)r.CaloriesPerServing!) ккал</span>
-                                }
-                                @if (r.ProteinPerServing > 0)
-                                {
-                                    <span class="macro-tag macro-p">Б @((int)r.ProteinPerServing!)г</span>
-                                }
-                                @if (r.FatPerServing > 0)
-                                {
-                                    <span class="macro-tag macro-f">Ж @((int)r.FatPerServing!)г</span>
-                                }
-                                @if (r.CarbsPerServing > 0)
-                                {
-                                    <span class="macro-tag macro-c">У @((int)r.CarbsPerServing!)г</span>
-                                }
-                            </div>
-                        }
-
-                        <!-- Действия -->
-                        <div class="recipe-actions">
-                            <a asp-action="Details" asp-route-id="@r.Id" class="btn-card">
-                                <i class="fas fa-eye"></i> Открыть
-                            </a>
-                            <a asp-action="Edit" asp-route-id="@r.Id" class="btn-card">
-                                <i class="fas fa-pen"></i>
-                            </a>
-                            <button class="btn-card danger"
-                                    onclick="openDeleteModal('@r.Id', '@Html.Raw(r.Name.Replace("'", "\\'"))')">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    </div>
+                <div class="macros">
+                    @if (r.CaloriesPerServing > 0) { <span class="macro-tag macro-kcal">🔥 @((int)r.CaloriesPerServing) ккал</span> }
+                    @if (r.ProteinPerServing > 0) { <span class="macro-tag macro-p">Б @((int)r.ProteinPerServing)г</span> }
+                    @if (r.FatPerServing > 0)     { <span class="macro-tag macro-f">Ж @((int)r.FatPerServing)г</span> }
+                    @if (r.CarbsPerServing > 0)   { <span class="macro-tag macro-c">У @((int)r.CarbsPerServing)г</span> }
                 </div>
-            }
+
+                <div class="recipe-actions">
+                    <a asp-action="Details" asp-route-id="@r.Id" class="btn-card">
+                        <i class="fas fa-eye"></i> Открыть
+                    </a>
+                    @if (!isFavPage)
+                    {
+                    <a asp-action="Edit" asp-route-id="@r.Id" class="btn-card">
+                        <i class="fas fa-pen"></i>
+                    </a>
+                    }
+                </div>
+            </div>
         </div>
+        }
+    </div>
+
+    <!-- Пагинация -->
+    @if (ViewBag.TotalPages > 1)
+    {
+    <nav aria-label="Пагинация" class="mt-5">
+        <ul class="pagination justify-content-center flex-wrap">
+
+            @if (ViewBag.CurrentPage > 1)
+            {
+            <li class="page-item">
+                <a class="page-link" asp-action="Index"
+                   asp-route-page="@(ViewBag.CurrentPage - 1)"
+                   asp-route-searchTerm="@ViewBag.SearchTerm"
+                   asp-route-category="@ViewBag.SelectedCategory">
+                    &laquo; Назад
+                </a>
+            </li>
+            }
+
+            @for (int i = Math.Max(1, ViewBag.CurrentPage - 5);
+            i <= Math.Min((int)ViewBag.TotalPages, ViewBag.CurrentPage + 5); i++)
+            {
+            <li class="page-item @(i == ViewBag.CurrentPage ? "active" : "")">
+                <a class="page-link" asp-action="Index"
+                   asp-route-page="@i"
+                   asp-route-searchTerm="@ViewBag.SearchTerm"
+                   asp-route-category="@ViewBag.SelectedCategory">
+                    @i
+                </a>
+            </li>
+            }
+
+            @if (ViewBag.CurrentPage < ViewBag.TotalPages)
+            {
+            <li class="page-item">
+                <a class="page-link" asp-action="Index"
+                   asp-route-page="@(ViewBag.CurrentPage + 1)"
+                   asp-route-searchTerm="@ViewBag.SearchTerm"
+                   asp-route-category="@ViewBag.SelectedCategory">
+                    Вперед &raquo;
+                </a>
+            </li>
+            }
+        </ul>
+    </nav>
+    }
     }
 </div>
 
-<!-- Модалка подтверждения удаления -->
+<!-- Модалка удаления -->
 <div class="del-modal-backdrop" id="delBackdrop" onclick="closeDeleteModal(event)">
     <div class="del-modal" onclick="event.stopPropagation()">
         <h4>Удалить рецепт?</h4>
-        <p>«<span id="delRecipeName"></span>» будет удалён навсегда. Отменить нельзя.</p>
+        <p>«<span id="delRecipeName"></span>» будет удалён навсегда.</p>
         <div class="del-modal-btns">
             <button class="btn-card" onclick="closeDeleteModal()">Отмена</button>
             <form id="delForm" method="post">

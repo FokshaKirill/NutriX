@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Domain.Enums;
 
 namespace Services.Interfaces
 {
@@ -13,5 +14,10 @@ namespace Services.Interfaces
         Task UpdateAsync(Recipe recipe);
         Task DeleteAsync(Guid id);
         Task<IEnumerable<Recipe>> GetByAuthorAsync(Guid authorId);
+        Task<(List<Recipe> Recipes, int TotalCount)> GetPagedRecipesAsync(
+            int page,
+            int pageSize,
+            string? searchTerm = null,
+            RecipeCategory? category = null);
     }
 }

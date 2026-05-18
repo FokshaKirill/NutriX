@@ -1,7 +1,9 @@
 ﻿using System.Security.Claims;
 using AutoMapper;
 using Domain.Entities;
+using Domain.Enums;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Presentation.Models;
 using Services.Interfaces;
 
@@ -33,22 +35,65 @@ public class RecipeController : Controller
         Guid.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out var id) ? id : null;
 
     // GET: /Recipe
-    public async Task<IActionResult> Index()
+    public async Task<IActionResult> Index(
+        string? searchTerm = null,
+        RecipeCategory? category = null,
+        int page = 1)
     {
-        var recipes = await _recipeService.GetAllRecipesAsync();
-        var model   = _mapper.Map<List<RecipeListViewModel>>(recipes);
+        const int PageSize = 12;
+
+        var (recipes, totalCount) = await _recipeService.GetPagedRecipesAsync(
+            page, PageSize, searchTerm, category);
+
+        var model = _mapper.Map<List<RecipeListViewModel>>(recipes);
 
         if (CurrentUserId.HasValue)
         {
             var favIds = (await _favoriteService.GetFavoritesAsync(CurrentUserId.Value))
                 .Select(r => r.Id).ToHashSet();
+
             foreach (var r in model)
                 r.IsFavorite = favIds.Contains(r.Id);
         }
 
+        ViewBag.SearchTerm = searchTerm;
+        ViewBag.SelectedCategory = category;
+        ViewBag.CurrentPage = page;
+        ViewBag.TotalPages = (int)Math.Ceiling(totalCount / (double)PageSize);
+        ViewBag.TotalCount = totalCount;
+
+        // Список категорий для фильтра
+        ViewBag.Categories = Enum.GetValues<RecipeCategory>()
+            .Where(c => c != RecipeCategory.Other)
+            .Select(c => new SelectListItem
+            {
+                Value = ((int)c).ToString(),
+                Text = GetCategoryDisplayName(c),
+                Selected = c == category
+            })
+            .ToList();
+
         return View(model);
     }
-    
+
+    private string GetCategoryDisplayName(RecipeCategory category)
+    {
+        return category switch
+        {
+            RecipeCategory.Breakfast => "Завтрак",
+            RecipeCategory.Lunch => "Обед",
+            RecipeCategory.Dinner => "Ужин",
+            RecipeCategory.Snack => "Перекус",
+            RecipeCategory.Dessert => "Десерт",
+            RecipeCategory.Salad => "Салат",
+            RecipeCategory.Soup => "Суп",
+            RecipeCategory.MainCourse => "Основное блюдо",
+            RecipeCategory.Healthy => "ПП / Здоровое",
+            RecipeCategory.Quick => "Быстрый рецепт",
+            RecipeCategory.Festive => "Праздничный",
+            _ => category.ToString()
+        };
+    }
     
     public async Task<IActionResult> Import()
     {

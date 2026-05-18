@@ -10,8 +10,8 @@
         public Guid MealTypeId { get; set; }
         public MealType MealType { get; set; } = null!;
 
-        public Guid? RecipeId { get; set; }
-        public Recipe? Recipe { get; set; }
+        public Guid RecipeId { get; set; }
+        public Recipe Recipe { get; set; }
 
         public int DayOffset { get; set; } 
         public int Servings { get; set; } = 1;

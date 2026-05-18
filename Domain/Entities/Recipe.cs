@@ -1,4 +1,6 @@
-﻿namespace Domain.Entities
+﻿using Domain.Enums;
+
+namespace Domain.Entities
 {
     public class Recipe
     {
@@ -8,6 +10,7 @@
         public int DefaultServings { get; set; } = 1;
         public string? ImageUrl { get; set; }
         public bool IsPublic { get; set; } = true; 
+        public RecipeCategory Category { get; set; } = RecipeCategory.Other;
 
         // Автор рецепта (null = системный рецепт)
         public Guid? AuthorId { get; set; }

@@ -1,4 +1,5 @@
 ﻿using Domain.Entities;
+using Domain.Enums;
 using Infrastructure.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Services.Interfaces;
@@ -104,6 +105,39 @@ namespace Services.Services
                 .Where(r => r.AuthorId == authorId)
                 .OrderBy(r => r.Name)
                 .ToListAsync();
+        }
+        
+        public async Task<(List<Recipe> Recipes, int TotalCount)> GetPagedRecipesAsync(
+            int page, 
+            int pageSize, 
+            string? searchTerm = null,
+            RecipeCategory? category = null)
+        {
+            IQueryable<Recipe> query = _recipes.Query()
+                .Include(r => r.Ingredients)
+                .ThenInclude(i => i.Product);
+
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                var term = searchTerm.ToLower();
+                query = query.Where(r => r.Name.ToLower().Contains(term) ||
+                                         (r.Description != null && r.Description.ToLower().Contains(term)));
+            }
+
+            if (category.HasValue && category.Value != RecipeCategory.Other)
+            {
+                query = query.Where(r => r.Category == category.Value);
+            }
+
+            var totalCount = await query.CountAsync();
+
+            var recipes = await query
+                .OrderByDescending(r => r.CreatedAt)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return (recipes, totalCount);
         }
     }
 }

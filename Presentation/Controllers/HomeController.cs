@@ -35,14 +35,18 @@ namespace Presentation.Controllers
             var latest = allRecipes.OrderByDescending(r => r.CreatedAt).Take(8).ToList();
             ViewBag.LatestRecipes = _mapper.Map<List<RecipeListViewModel>>(latest);
 
-            if (CurrentUserId.HasValue)
+            if (User.Identity?.IsAuthenticated == true && CurrentUserId.HasValue)
             {
                 var user = await _userService.GetByIdAsync(CurrentUserId.Value);
                 ViewBag.CurrentUser = user;
 
-                // Загружаем сегодняшние блюда из плана
+                ViewBag.CalGoal  = (int)(user?.DailyCalorieGoal  ?? 2000);
+                ViewBag.ProtGoal = (int)(user?.DailyProteinGoal  ?? 120m);
+                ViewBag.FatGoal  = (int)(user?.DailyFatGoal      ?? 70m);
+                ViewBag.CarbGoal = (int)(user?.DailyCarbsGoal    ?? 250m);
+
                 var todayMeals = await _mealPlanService.GetTodayMealsAsync(CurrentUserId.Value);
-                ViewBag.TodayMeals = todayMeals; // ← передаём во вьюху
+                ViewBag.TodayMeals = todayMeals;
             }
 
             return View();

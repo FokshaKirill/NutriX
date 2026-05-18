@@ -54,15 +54,15 @@
                     </form>
                 </div>
                 
-                <!-- Кнопка "Добавить продукт" -->
-                <div class="text-end" style="margin-right: 4px;">
-                    <button type="button" class="btn btn-success btn-lg" data-bs-toggle="modal" data-bs-target="#createProductModal">
-                        <i class="fas fa-plus"></i>
-                    </button>
-                </div>
-                
                 @if (User.IsInRole("Admin"))
                 {
+                    <!-- Кнопка "Добавить продукт" -->
+                    <div class="text-end" style="margin-right: 4px;">
+                        <button type="button" class="btn btn-success btn-lg" data-bs-toggle="modal" data-bs-target="#createProductModal">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+                    
                     <!-- Кнопка "Импорт продуктов" -->
                     <div class="text-end">
                         <a asp-action="Parser" asp-controller="Admin">

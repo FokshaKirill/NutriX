@@ -1,47 +1,117 @@
 ﻿@model Presentation.Models.ProductViewModel
+@{
+ViewData["Title"] = Model.Name;
+}
 
 <div class="container py-5">
-    <div class="card" style="border-radius: 1.8rem; overflow: hidden;">
-        <div class="card-header text-center" style="background: var(--primary-light); padding: 3rem;">
-            <img src="@Model.ImageUrl" alt="@Model.Name" class="rounded-4" style="width: 100%; max-height: 400px; object-fit: cover;">
-            <h2 class="mt-4" style="color: var(--primary);">@Model.Name</h2>
-            @if (!string.IsNullOrEmpty(Model.CategoryName))
-            {
-                <p class="text-muted fs-5">Категория: @Model.CategoryName</p>
-            }
-        </div>
 
-        <div class="card-body p-5">
-            <div class="row g-5 text-center">
-                <div class="col-md-4 align-content-center">
-                    <div class="fs-1 fw-bold" style="color: var(--primary);">@Model.PricePerUnit ₽</div>
-                    <small class="text-muted">за @Model.Unit</small>
+    <div class="row justify-content-center">
+        <div class="col-lg-10 col-xl-8">
+
+            <div class="card shadow-sm border-0" style="border-radius: 20px; overflow: hidden;">
+
+                <!-- Hero изображение -->
+                <div style="height: 420px; background: #f8f9fa; position: relative;">
+                    @if (!string.IsNullOrEmpty(Model.ImageUrl))
+                    {
+                    <img src="@Model.ImageUrl" alt="@Model.Name"
+                         style="width: 100%; height: 100%; object-fit: cover;">
+                    }
+                    else
+                    {
+                    <div style="height: 100%; display: flex; align-items: center; justify-content: center; font-size: 120px; background: linear-gradient(135deg, #f0f7f2, #e4ede6);">
+                        🛒
+                    </div>
+                    }
                 </div>
-                <div class="col-md-8">
-                    <h4 class="mb-4" style="color: var(--primary);">Пищевая ценность на 100 г/мл</h4>
-                    <div class="row g-4">
-                        <div class="col-3">
-                            <div class="fs-3 fw-bold" style="color: var(--primary);">@(Model.CaloriesPer100 ?? 0)</div>
-                            <small>ккал</small>
+
+                <div class="card-body p-5">
+
+                    <div class="d-flex justify-content-between align-items-start mb-4">
+                        <div>
+                            <h1 class="display-5 fw-bold mb-1">@Model.Name</h1>
+                            @if (!string.IsNullOrEmpty(Model.CategoryName))
+                            {
+                                <span class="badge bg-success fs-6">@Model.CategoryName</span>
+                            }
                         </div>
-                        <div class="col-3">
-                            <div class="fs-3 fw-bold" style="color: var(--primary);">@(Model.ProteinPer100 ?? 0)</div>
-                            <small>белков</small>
-                        </div>
-                        <div class="col-3">
-                            <div class="fs-3 fw-bold" style="color: var(--primary);">@(Model.FatPer100 ?? 0)</div>
-                            <small>жиров</small>
-                        </div>
-                        <div class="col-3">
-                            <div class="fs-3 fw-bold" style="color: var(--primary);">@(Model.CarbsPer100 ?? 0)</div>
-                            <small>углеводов</small>
+
+                        <div class="text-end">
+                            <div class="fs-1 fw-bold text-success">@Model.PricePerUnit ₽</div>
+                            <small class="text-muted">
+                                за 
+                                @(Model.Unit switch
+                                {
+                                    "шт" or "уп" or "упак" => "1 " + Model.Unit,
+                                    "кг" => "1 кг",
+                                    "л" => "1 л",
+                                    _ => "100 " + Model.Unit
+                                })
+                            </small>
                         </div>
                     </div>
-                </div>
-            </div>
 
-            <div class="text-center mt-5">
-                <a asp-action="Index" class="btn btn-outline-primary btn-lg">← Назад к списку</a>
+                    <!-- Пищевая ценность -->
+                    <div class="row g-4 mb-5 text-center">
+                        <div class="col-3">
+                            <div class="fs-2 fw-bold">@(Model.CaloriesPer100?.ToString("F0") ?? "—")</div>
+                            <div class="small text-muted">ккал</div>
+                        </div>
+                        <div class="col-3">
+                            <div class="fs-2 fw-bold text-primary">@(Model.ProteinPer100?.ToString("F1") ?? "—")</div>
+                            <div class="small text-muted">белки</div>
+                        </div>
+                        <div class="col-3">
+                            <div class="fs-2 fw-bold text-danger">@(Model.FatPer100?.ToString("F1") ?? "—")</div>
+                            <div class="small text-muted">жиры</div>
+                        </div>
+                        <div class="col-3">
+                            <div class="fs-2 fw-bold text-warning">@(Model.CarbsPer100?.ToString("F1") ?? "—")</div>
+                            <div class="small text-muted">углеводы</div>
+                        </div>
+                    </div>
+
+                    <!-- Дополнительная информация -->
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <h5 class="mb-3">Информация</h5>
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td class="text-muted">Единица измерения</td>
+                                    <td><strong>@Model.Unit</strong></td>
+                                </tr>
+                                @if (Model.WeightGrams.HasValue)
+                                {
+                                <tr>
+                                    <td class="text-muted">Вес упаковки</td>
+                                    <td><strong>@Model.WeightGrams г</strong></td>
+                                </tr>
+                                }
+                                <tr>
+                                    <td class="text-muted">Источник данных</td>
+                                    <td>@(Model.Source ?? "Внутренняя база")</td>
+                                </tr>
+                            </table>
+                        </div>
+
+                        <div class="col-md-6">
+                            <h5 class="mb-3">Как использовать</h5>
+                            <div class="alert alert-light">
+                                <ul class="mb-0">
+                                    <li>Идеально подходит для расчёта КБЖУ в рецептах</li>
+                                    <li>Цена актуальна на сегодняшний день</li>
+                                    <li>Можно использовать в планировщике питания</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="text-center mt-5">
+                        <a asp-action="Index" class="btn btn-outline-primary btn-lg px-5">
+                            ← Вернуться к каталогу продуктов
+                        </a>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
