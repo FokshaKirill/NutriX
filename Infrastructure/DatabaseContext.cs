@@ -75,9 +75,11 @@ namespace Infrastructure
                 .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<PlannedMeal>()
-                .HasIndex(pm => new { pm.MealPlanId, pm.DayOffset, pm.MealTypeId })
-                .IsUnique();
-
+                .HasOne(pm => pm.Recipe)
+                .WithMany(r => r.PlannedMeals)
+                .HasForeignKey(pm => pm.RecipeId)
+                .OnDelete(DeleteBehavior.Cascade);
+                
             modelBuilder.Entity<RecipeStep>()
                 .HasIndex(rs => new { rs.RecipeId, rs.Order })
                 .IsUnique();
@@ -103,12 +105,6 @@ namespace Infrastructure
                 .HasKey(f => new { f.UserId, f.RecipeId });
  
             modelBuilder.Entity<FavoriteRecipe>()
-                .HasOne(f => f.User)
-                .WithMany(u => u.FavoriteRecipes)
-                .HasForeignKey(f => f.UserId)
-                .OnDelete(DeleteBehavior.Cascade);
- 
-            modelBuilder.Entity<FavoriteRecipe>()
                 .HasOne(f => f.Recipe)
                 .WithMany(r => r.FavoritedBy)
                 .HasForeignKey(f => f.RecipeId)
@@ -116,10 +112,11 @@ namespace Infrastructure
  
             // ── Recipe: автор ──
             modelBuilder.Entity<Recipe>()
+                .Ignore(r => r.TotalCost)
                 .HasOne(r => r.Author)
                 .WithMany(u => u.Recipes)
                 .HasForeignKey(r => r.AuthorId)
-                .OnDelete(DeleteBehavior.SetNull); // рецепт остаётся при удалении юзера
+                .OnDelete(DeleteBehavior.SetNull); 
         }
     }
 }

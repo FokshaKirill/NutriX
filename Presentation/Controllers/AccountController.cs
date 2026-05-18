@@ -11,15 +11,18 @@ public class AccountController : Controller
     private readonly ILogger<AccountController> _logger;
     private readonly IUserService               _userService;
     private readonly IFavoriteService           _favoriteService;
+    private readonly IRecipeService           _recipeService;
 
     public AccountController(
         ILogger<AccountController> logger,
         IUserService               userService,
-        IFavoriteService           favoriteService)
+        IFavoriteService           favoriteService,
+        IRecipeService           recipeService)
     {
         _logger          = logger;
         _userService     = userService;
         _favoriteService = favoriteService;
+        _recipeService = recipeService;
     }
 
     private Guid? CurrentUserId
@@ -78,11 +81,14 @@ public class AccountController : Controller
 
         var user      = await _userService.GetByIdAsync(CurrentUserId.Value);
         var favorites = await _favoriteService.GetFavoritesAsync(CurrentUserId.Value);
+        var myRecipes = await _recipeService.GetByAuthorAsync(CurrentUserId.Value);
 
         ViewBag.CurrentUser = user;
         ViewBag.Favorites   = favorites;
+        ViewBag.MyRecipes   = myRecipes;
 
         ViewData["Title"] = "Аккаунт";
+        ViewBag.IsAdmin = User.IsInRole("Admin"); 
         return View();
     }
 }

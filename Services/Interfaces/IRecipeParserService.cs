@@ -6,5 +6,5 @@ namespace Services.Interfaces;
 public interface IRecipeParserService
 {
     Task<ParsedRecipeDto> ParseRecipeFromUrlAsync(string url);
-    Task<Recipe> ConvertToRecipeAsync(ParsedRecipeDto parsedRecipe);
+    Task<Recipe> ConvertToRecipeAsync(ParsedRecipeDto parsedRecipe);  
 }

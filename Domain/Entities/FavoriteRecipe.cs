@@ -11,6 +11,6 @@
         public Guid RecipeId { get; set; }
         public Recipe Recipe { get; set; } = null!;
 
-        public DateTime AddedAt { get; set; } = DateTime.UtcNow;
+        public DateTime AddedAt { get; set; }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Domain.Entities;
+using Domain.Enums;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Presentation.Models;
@@ -22,7 +23,7 @@ namespace Presentation.Controllers
         // GET: /Product
         public async Task<IActionResult> Index(
             string searchTerm, 
-            Guid? categoryId,
+            ProductCategory? category,           // ← изменили на Enum
             decimal? minCalories,
             decimal? maxCalories,
             decimal? minPrice,
@@ -35,7 +36,7 @@ namespace Presentation.Controllers
                 page, 
                 PageSize, 
                 searchTerm, 
-                categoryId,
+                category,                    // передаём Enum
                 minCalories,
                 maxCalories,
                 minPrice,
@@ -43,26 +44,16 @@ namespace Presentation.Controllers
 
             var viewModels = _mapper.Map<List<ProductViewModel>>(products);
 
-            foreach (var vm in viewModels)
-            {
-                var entity = products.First(p => p.Id == vm.Id);
-                vm.CategoryName = entity.Parent?.Name;
-                vm.ImageUrl = entity.ImageUrl;
-            }
+            // Категории для фильтра (Enum)
+            ViewBag.Categories = await _productService.GetCategorySelectListAsync();
 
-            // Категории для фильтра
-            var categories = await _productService.GetCategoriesAsync();
-            ViewBag.Categories = new SelectList(categories, "Id", "Name");
-
-            // Параметры фильтрации
             ViewBag.SearchTerm = searchTerm;
-            ViewBag.SelectedCategoryId = categoryId;
+            ViewBag.SelectedCategory = category;   // Enum
             ViewBag.MinCalories = minCalories;
             ViewBag.MaxCalories = maxCalories ?? 900;
             ViewBag.MinPrice = minPrice;
             ViewBag.MaxPrice = maxPrice;
 
-            // Пагинация
             ViewBag.CurrentPage = page;
             ViewBag.TotalPages = (int)Math.Ceiling(totalCount / (double)PageSize);
             ViewBag.TotalCount = totalCount;
@@ -159,55 +150,6 @@ namespace Presentation.Controllers
             await _productService.CreateAsync(category);
 
             return Json(new { success = true, id = category.Id, name = category.Name });
-        }
-        
-        /// <summary>
-        /// Импорт только БЖУ из Calorizator.ru
-        /// </summary>
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> ImportProducts()
-        {
-            try
-            {
-                await _productService.ImportProductsAsync();
-                TempData["Success"] = "✅ БЖУ база успешно импортирована из Calorizator.ru";
-            }
-            catch (Exception ex)
-            {
-                TempData["Error"] = $"❌ Ошибка импорта: {ex.Message}";
-            }
-            
-            return RedirectToAction("ImportOptions");
-        }
-
-        /// <summary>
-        /// Полный импорт: БЖУ + Примерные цены (РЕКОМЕНДУЕТСЯ)
-        /// </summary>
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> ImportCombined()
-        {
-            try
-            {
-                // await _productService.ImportCombinedAsync();
-                TempData["Success"] = "✅ Полная база успешно импортирована! ~2000 продуктов с БЖУ и ценами";
-            }
-            catch (Exception ex)
-            {
-                TempData["Error"] = $"❌ Ошибка импорта: {ex.Message}";
-            }
-            
-            return RedirectToAction("ImportOptions");
-        }
-
-        /// <summary>
-        /// Страница выбора источника импорта
-        /// </summary>
-        [HttpGet]
-        public IActionResult ImportOptions()
-        {
-            return View();
         }
     }
 }

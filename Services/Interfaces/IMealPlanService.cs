@@ -7,7 +7,7 @@ namespace Services.Interfaces
         /// <summary>
         /// Получить текущий план на эту неделю (по StartDate = понедельник текущей недели)
         /// </summary>
-        Task<MealPlan?> GetCurrentWeekPlanAsync();
+        Task<MealPlan?> GetCurrentWeekPlanAsync(Guid userId);
 
         /// <summary>
         /// Получить план по ID
@@ -38,5 +38,20 @@ namespace Services.Interfaces
         /// Сгенерировать список покупок по плану (с суммированием количества)
         /// </summary>
         Task<List<RecipeIngredient>> GenerateShoppingListAsync(Guid mealPlanId);
+
+        /// <summary>
+        /// Получить сегодняшний план
+        /// </summary>
+        Task<List<PlannedMeal>> GetTodayMealsAsync(Guid userId);
+
+        /// <summary>
+        /// Получить запланнированный рецепт по ID
+        /// </summary>
+        Task<PlannedMeal?> GetPlannedMealByIdAsync(Guid id);
+
+        /// <summary>
+        /// Сменить запланнированный рецепт
+        /// </summary>
+        Task ReplaceMealRecipeAsync(Guid plannedMealId, Guid newRecipeId);
     }
 }

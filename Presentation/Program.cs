@@ -1,5 +1,7 @@
 using System.Security.Claims;
 using System.Text;
+using Hangfire;
+using Hangfire.PostgreSql;
 using Infrastructure.Interfaces;
 using Infrastructure.Repositories;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -7,11 +9,13 @@ using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Presentation;
 using Presentation.Helpers;
 using PuppeteerSharp;
 using Services;
 using Services.Helpers;
 using Services.Interfaces;
+using Services.Jobs;
 using Services.Services;
 using Services.UserService.Services.Implementations;
 using Services.UserService.Services.Interfaces;
@@ -38,10 +42,26 @@ builder.Services.AddScoped<IMealPlanService, MealPlanService>();
 builder.Services.AddScoped<IMealTypeService, MealTypeService>();
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<IRecipeService, RecipeService>();
-builder.Services.AddScoped<IRecipeParserService, RecipeParserService>();
 builder.Services.AddScoped<IFavoriteService, FavoriteService>();
-builder.Services.AddSingleton<PriceRuParser>();
-builder.Services.AddHttpClient<IUsdaFoodService, UsdaFoodService>();
+
+builder.Services.AddScoped<SeedService>();
+builder.Services.AddScoped<PriceUpdateJob>();
+
+builder.Services.AddHttpClient<IRecipeParserService, RecipeParserService>(client =>
+{
+    client.DefaultRequestHeaders.UserAgent.ParseAdd(
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36");
+    client.Timeout = TimeSpan.FromSeconds(30);
+});
+
+builder.Services.AddHangfire(config => config
+    .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+    .UseSimpleAssemblyNameTypeSerializer()
+    .UseRecommendedSerializerSettings()
+    .UsePostgreSqlStorage(c =>
+        c.UseNpgsqlConnection(builder.Configuration.GetConnectionString("DefaultConnection"))));
+ 
+builder.Services.AddHangfireServer();
 
 // HttpClient для nutrition API
 builder.Services.AddHttpClient<INutritionApiService, NutritionApiService>(client =>
@@ -81,13 +101,13 @@ builder.Services.AddSession(options =>
 
 builder.Services.AddAuthentication(options =>
     {
-        options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-        options.DefaultChallengeScheme = GoogleDefaults.AuthenticationScheme;
+        options.DefaultScheme          = CookieAuthenticationDefaults.AuthenticationScheme;
+        options.DefaultChallengeScheme = CookieAuthenticationDefaults.AuthenticationScheme; // ← было Google
     })
     .AddCookie(options =>
     {
-        options.LoginPath = "/api/auth/google";
-        options.Cookie.SameSite = SameSiteMode.Lax;
+        options.LoginPath = "/account/authpage";
+        options.Cookie.SameSite    = SameSiteMode.Lax;
         options.Cookie.SecurePolicy = CookieSecurePolicy.None;
     })
     .AddGoogle(options =>
@@ -108,6 +128,20 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddAuthorization();
 
 var app = builder.Build();
+
+// Hangfire Dashboard (только для разработки или для админов)
+app.UseHangfireDashboard("/hangfire", new DashboardOptions
+{
+    // Разрешаем только локально, или добавь авторизацию
+    Authorization = new[] { new HangfireAdminFilter() }
+});
+ 
+// Регистрируем recurring job — каждые 5 дней в 3:00
+RecurringJob.AddOrUpdate<PriceUpdateJob>(
+    "update-prices-every-5-days",
+    job => job.ExecuteAsync(5m, 15m),
+    "0 3 */5 * *"   // cron: каждые 5 дней в 03:00
+);
 
 // Применяем миграции при старте (с обработкой ошибок)
 using (var scope = app.Services.CreateScope())

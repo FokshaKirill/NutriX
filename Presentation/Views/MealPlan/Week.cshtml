@@ -1,76 +1,466 @@
-﻿@model Presentation.Models.WeekPlanViewModel
+﻿@using Presentation.Models
+@model Presentation.Models.WeekPlanViewModel
+@{
+    ViewData["Title"] = "План питания";
+    var totalCost = Model.ShoppingList.Sum(i => i.TotalPrice);
+}
 
-<div class="container py-5">
-    <div class="card mb-5" style="border-radius: 1.8rem;">
-        <div class="card-header text-center" style="background: var(--primary-light); padding: 3rem;">
-            <h2 class="mb-0" style="color: var(--primary);">Меню на неделю</h2>
-            <p class="fs-4 text-muted">
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@500;600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+
+
+<style>
+:root {
+    --sage:      #7aab84;
+    --sage-d:    #4e7d58;
+    --sage-pale: #F2f7f2;
+    --bark:      #2d2417;
+    --muted:     #7a7168;
+    --border:    #e4ede6;
+}
+
+body { font-family: 'DM Sans', sans-serif; }
+
+/* ── Page layout ── */
+.wp-page { padding: 2rem 1.5rem 5rem;margin: 0 auto; }
+
+.wp-tabs {
+    display: flex;
+    gap: .5rem;
+    margin-bottom: 1.5rem;
+    border-bottom: 2px solid var(--border);
+    padding-bottom: 0;
+}
+.wp-tab {
+    padding: .6rem 1.4rem;
+    border: none;
+    background: none;
+    font-size: .9rem;
+    font-weight: 600;
+    color: var(--muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    transition: all .2s;
+}
+.wp-tab.active { color: var(--sage-d); border-bottom-color: var(--sage-d); }
+.wp-tab:hover:not(.active) { color: var(--bark); }
+
+.wp-section { display: none; }
+.wp-section.active { display: block; }
+
+/* ── Week table ── */
+.week-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: .82rem;
+}
+.week-table th {
+    background: var(--sage);
+    color: #fff;
+    padding: .6rem .75rem;
+    text-align: left;
+    font-weight: 600;
+    white-space: nowrap;
+}
+.week-table th:first-child { border-radius: 10px 0 0 0; }
+.week-table th:last-child  { border-radius: 0 10px 0 0; }
+
+.week-table td {
+    padding: .5rem .75rem;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+}
+.week-table tr:last-child td { border-bottom: none; }
+.week-table tr:hover td { background: var(--sage-pale); }
+.week-table tr.today td { background: #e8f5ec; }
+
+.day-label {
+    font-weight: 700;
+    color: var(--bark);
+    white-space: nowrap;
+}
+.day-date { font-size: .75rem; color: var(--muted); }
+.today-badge {
+    display: inline-block;
+    background: var(--sage);
+    color: #fff;
+    font-size: .65rem;
+    font-weight: 700;
+    padding: .1rem .4rem;
+    border-radius: 999px;
+    margin-left: .3rem;
+    vertical-align: middle;
+}
+
+.meal-cell { display: flex; flex-direction: column; gap: .35rem; }
+.meal-entry {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    padding: .3rem .5rem;
+    border-radius: 6px;
+    background: var(--sage-pale);
+}
+.meal-thumb {
+    width: 36px; height: 36px;
+    border-radius: 5px;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+.meal-thumb-placeholder {
+    width: 36px; height: 36px;
+    border-radius: 5px;
+    background: #dde8df;
+    display: flex; align-items: center; justify-content: center;
+    font-size: .9rem;
+    flex-shrink: 0;
+}
+.meal-info { flex: 1; min-width: 0; }
+.meal-name {
+    font-weight: 600;
+    color: var(--bark);
+    font-size: .8rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 160px;
+}
+.meal-type { font-size: .7rem; color: var(--muted); }
+.meal-macros { font-size: .68rem; color: var(--muted); white-space: nowrap; }
+.meal-link {
+    font-size: .7rem;
+    color: var(--sage-d);
+    text-decoration: none;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+.meal-link:hover { text-decoration: underline; }
+
+.day-empty { color: var(--muted); font-size: .8rem; font-style: italic; }
+
+/* day totals */
+.day-total {
+    font-size: .72rem;
+    color: var(--muted);
+    white-space: nowrap;
+    padding-top: .25rem;
+}
+.day-total b { color: var(--bark); }
+
+/* ── Shopping list ── */
+.shop-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+.shop-total {
+    font-family: 'Lora', serif;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--sage-d);
+}
+.shop-total span { font-size: .85rem; color: var(--muted); font-family: 'DM Sans', sans-serif; font-weight: 400; }
+
+.shop-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: .85rem;
+}
+.shop-table thead th {
+    background: var(--sage-pale);
+    padding: .5rem .75rem;
+    text-align: left;
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    color: var(--muted);
+    border-bottom: 2px solid var(--border);
+}
+.shop-table td {
+    padding: .5rem .75rem;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+}
+.shop-table tr:hover td { background: var(--sage-pale); }
+.shop-table .cat-row td {
+    background: var(--sage-pale);
+    font-weight: 700;
+    font-size: .75rem;
+    color: var(--sage-d);
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    padding: .35rem .75rem;
+}
+.shop-check {
+    width: 16px; height: 16px;
+    accent-color: var(--sage);
+    cursor: pointer;
+}
+.shop-table tr.checked td { opacity: .4; text-decoration: line-through; }
+.price-col { text-align: right; font-weight: 600; color: var(--sage-d); }
+
+/* ── Buttons ── */
+.wp-actions {
+    display: flex;
+    gap: .75rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.5rem;
+}
+.btn-wp {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    padding: .5rem 1.1rem;
+    border-radius: 8px;
+    font-size: .85rem;
+    font-weight: 500;
+    border: 1.5px solid var(--border);
+    background: #fff;
+    color: var(--muted);
+    cursor: pointer;
+    text-decoration: none;
+    transition: all .15s;
+}
+.btn-wp:hover { border-color: var(--sage); color: var(--sage-d); background: var(--sage-pale); }
+.btn-wp.primary { background: var(--sage); color: #fff; border-color: var(--sage); }
+.btn-wp.primary:hover { background: var(--sage-d); }
+
+/* ── Print ── */
+@@media print {
+    .wp-tabs, .wp-actions, .no-print { display: none !important; }
+    .wp-section { display: block !important; }
+
+    .print-meal-plan  .shop-section  { display: none !important; }
+    .print-shop-list  .meal-section  { display: none !important; }
+
+    body { font-size: 11pt; }
+    .week-table th { background: #4e7d58 !important; -webkit-print-color-adjust: exact; }
+}
+
+@@media print {
+    .no-print { display: none !important; }
+    .print-only { display: block !important; }
+}
+</style>
+
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@500;600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+
+
+<div class="wp-page">
+
+    <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:1.5rem;flex-wrap:wrap;gap:1rem">
+        <div>
+            <h2 style="font-family:'Lora',serif;color:var(--sage-d);margin:0 0 .2rem">План питания</h2>
+            <p style="color:var(--muted);margin:0;font-size:.9rem">
                 @Model.StartDate.ToString("d MMMM") — @Model.StartDate.AddDays(6).ToString("d MMMM yyyy")
             </p>
         </div>
+        <div class="no-print" style="display:flex;gap:.5rem;flex-wrap:wrap">
+            <button class="btn-wp" onclick="printSection('meal')">
+                <i class="fas fa-print"></i> Печать меню
+            </button>
+            <button class="btn-wp" onclick="printSection('shop')">
+                <i class="fas fa-print"></i> Печать покупок
+            </button>
+            <a asp-action="GenerateWeek" class="btn-wp primary">
+                <i class="fas fa-sync-alt"></i> Новый план
+            </a>
+        </div>
     </div>
 
-    <div class="row g-5">
-        @foreach (var day in Model.Days)
-        {
-            var isToday = day.Date.Date == DateTime.Today;
-            <div class="col-lg-12 mb-5">
-                <div class="card @(isToday ? "border-success border-3" : "")" style="border-radius: 1.8rem; overflow: hidden;">
-                    <div class="card-header text-center py-4" style="background: var(--primary-light);">
-                        <h3 class="mb-0" style="color: var(--primary);">
-                            @day.Date.ToString("dddd")<br>
-                            <span class="fs-2">@day.Date.Day</span> @day.Date.ToString("MMMM")
-                        </h3>
-                    </div>
-                    <div class="card-body p-5">
-                        @if (!day.Meals.Any())
-                        {
-                            <p class="text-center text-muted fs-4 py-5">— День свободный —</p>
-                        }
-                        else
-                        {
-                            foreach (var meal in day.Meals)
-                            {
-                                <div class="d-flex align-items-center mb-5 p-4 rounded-4" style="background: var(--primary-light);">
-                                    <div class="me-4">
-                                        @if (!string.IsNullOrEmpty(meal.RecipeImageUrl))
-                                        {
-                                            <img src="@meal.RecipeImageUrl" alt="@meal.RecipeName" class="rounded-4" style="width: 120px; height: 120px; object-fit: cover;">
-                                        }
-                                        else
-                                        {
-                                            <div class="bg-light rounded-4 d-flex align-items-center justify-content-center" style="width: 120px; height: 120px;">
-                                                <i class="fas fa-utensils fs-1 text-muted"></i>
-                                            </div>
-                                        }
-                                    </div>
-                                    <div class="flex-grow-1">
-                                        <h4 style="color: var(--primary);">@meal.MealTypeName</h4>
-                                        <h5>@meal.RecipeName (@meal.Servings порц.)</h5>
-                                        <p class="mb-0 text-muted">
-                                            @meal.Calories ккал • Б: @meal.Protein г • Ж: @meal.Fat г • У: @meal.Carbs г
-                                        </p>
-                                    </div>
-                                    <a asp-controller="Recipe" asp-action="Details" asp-route-id="@meal.RecipeId" class="btn btn-outline-primary btn-lg">
-                                        Посмотреть рецепт
-                                    </a>
+    <!-- Табы -->
+    <div class="wp-tabs no-print">
+        <button class="wp-tab active" onclick="switchTab('meal', this)">📅 Меню на неделю</button>
+        <button class="wp-tab"        onclick="switchTab('shop', this)">🛒 Список покупок</button>
+    </div>
+
+    <!-- Меню -->
+    <div class="wp-section meal-section active" id="tabMeal">
+        <div style="overflow-x:auto">
+            <table class="week-table">
+                <thead>
+                    <tr>
+                        <th>День</th>
+                        <th>Завтрак</th>
+                        <th>Обед</th>
+                        <th>Ужин</th>
+                        <th>Перекус</th>
+                        <th>Итого</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var day in Model.Days)
+                    {
+                        var isToday  = day.Date.Date == DateTime.Today;
+                        var byType   = day.Meals.GroupBy(m => m.MealTypeName ?? "").ToDictionary(g => g.Key, g => g.ToList());
+
+                        Func<string, List<PlannedMealViewModel>> get = key =>
+                            byType.TryGetValue(key, out var v) ? v : new();
+
+                        var breakfast = get("Завтрак");
+                        var lunch     = get("Обед");
+                        var dinner    = get("Ужин");
+                        var snack     = get("Перекус");
+
+                        <tr class="@(isToday ? "today" : "")">
+                            <td>
+                                <div class="day-label">
+                                    @day.Date.ToString("ddd")
+                                    @if (isToday) { <span class="today-badge">сегодня</span> }
                                 </div>
+                                <div class="day-date">@day.Date.ToString("d MMM")</div>
+                            </td>
+
+                            @foreach (var group in new[] { breakfast, lunch, dinner, snack })
+                            {
+                                <td>
+                                    @if (!group.Any())
+                                    {
+                                        <span class="day-empty">—</span>
+                                    }
+                                    else
+                                    {
+                                        <div class="meal-cell">
+                                            @foreach (var meal in group)
+                                            {
+                                                <div class="meal-entry">
+                                                    @if (!string.IsNullOrEmpty(meal.RecipeImageUrl))
+                                                    {
+                                                        <img src="@meal.RecipeImageUrl" class="meal-thumb" alt="@meal.RecipeName"/>
+                                                    }
+                                                    else
+                                                    {
+                                                        <div class="meal-thumb-placeholder">🍽</div>
+                                                    }
+                                                    <div class="meal-info">
+                                                        <a asp-controller="Recipe" asp-action="Details"
+                                                           asp-route-id="@meal.RecipeId" class="meal-name"
+                                                           title="@meal.RecipeName">@meal.RecipeName</a>
+                                                        <div class="meal-macros">
+                                                            @meal.Servings п. · @meal.Calories ккал
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            }
+                                        </div>
+                                    }
+                                </td>
                             }
-                        }
-                    </div>
+
+                            <td>
+                                @if (day.Meals.Any())
+                                {
+                                    <div class="day-total">
+                                        <b>@day.Meals.Sum(m => m.Calories)</b> ккал<br>
+                                        Б <b>@day.Meals.Sum(m => m.Protein)</b> ·
+                                        Ж <b>@day.Meals.Sum(m => m.Fat)</b> ·
+                                        У <b>@day.Meals.Sum(m => m.Carbs)</b>
+                                    </div>
+                                }
+                                else { <span class="day-empty">—</span> }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Список покупок -->
+    <div class="wp-section shop-section" id="tabShop">
+        <div class="shop-header">
+            <div>
+                <div class="shop-total">
+                    @totalCost.ToString("F2") ₽ <span>общая стоимость</span>
+                </div>
+                <div style="font-size:.8rem;color:var(--muted);margin-top:.2rem">
+                    @Model.ShoppingList.Count позиций
                 </div>
             </div>
-        }
-    </div>
+            <label style="font-size:.82rem;color:var(--muted);display:flex;align-items:center;gap:.4rem;cursor:pointer" class="no-print">
+                <input type="checkbox" id="checkAll" style="accent-color:var(--sage)"> Отметить всё
+            </label>
+        </div>
 
-    <div class="text-center mt-5">
-        <a asp-action="ShoppingList" asp-route-id="@Model.MealPlanId" class="btn btn-success btn-lg">
-            <i class="fas fa-shopping-cart me-2"></i> Список покупок
-        </a>
-    </div>
-    <div class="text-center my-4">
-        <button class="btn btn-outline-secondary btn-lg" onclick="window.print()">
-            <i class="fas fa-print me-2"></i> Распечатать план
-        </button>
+        <table class="shop-table">
+            <thead>
+                <tr>
+                    <th class="no-print" style="width:28px"></th>
+                    <th>Продукт</th>
+                    <th>Количество</th>
+                    <th class="price-col">Цена</th>
+                </tr>
+            </thead>
+            <tbody>
+                @{
+                    string? lastCat = null;
+                }
+                @foreach (var item in Model.ShoppingList)
+                {
+                    if (item.Category != lastCat)
+                    {
+                        lastCat = item.Category;
+                        <tr class="cat-row">
+                            <td colspan="4">@(item.Category ?? "Прочее")</td>
+                        </tr>
+                    }
+                    <tr class="shop-row">
+                        <td class="no-print">
+                            <input type="checkbox" class="shop-check" onchange="toggleChecked(this)">
+                        </td>
+                        <td style="font-weight:500;color:var(--bark)">@item.ProductName</td>
+                        <td style="color:var(--muted)">@Math.Round(item.Amount, 0) @item.Unit</td>
+                        <td class="price-col">@item.TotalPrice.ToString("F2") ₽</td>
+                    </tr>
+                }
+                <tr style="border-top:2px solid var(--border)">
+                    <td class="no-print"></td>
+                    <td colspan="2" style="font-weight:700;color:var(--bark);padding:.75rem">Итого</td>
+                    <td class="price-col" style="font-family:'Lora',serif;font-size:1.1rem">
+                        @totalCost.ToString("F2") ₽
+                    </td>
+                </tr>
+            </tbody>
+        </table>
     </div>
 </div>
+
+@section Scripts {
+<script>
+function switchTab(name, btn) {
+    document.querySelectorAll('.wp-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.wp-section').forEach(s => s.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab' + name[0].toUpperCase() + name.slice(1)).classList.add('active');
+}
+
+function toggleChecked(cb) {
+    cb.closest('tr').classList.toggle('checked', cb.checked);
+}
+
+document.getElementById('checkAll')?.addEventListener('change', function() {
+    document.querySelectorAll('.shop-check').forEach(cb => {
+        cb.checked = this.checked;
+        cb.closest('tr').classList.toggle('checked', this.checked);
+    });
+});
+
+function printSection(section) {
+    // Временно показываем только нужную секцию
+    const meal = document.getElementById('tabMeal');
+    const shop = document.getElementById('tabShop');
+    meal.style.display = section === 'meal' ? 'block' : 'none';
+    shop.style.display = section === 'shop' ? 'block' : 'none';
+    window.print();
+    // Возвращаем активную вкладку
+    const active = document.querySelector('.wp-tab.active');
+    const isMeal = active?.textContent.includes('Меню');
+    meal.style.display = isMeal ? 'block' : 'none';
+    shop.style.display = isMeal ? 'none'  : 'block';
+}
+</script>
+}

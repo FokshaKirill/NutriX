@@ -1,147 +1,183 @@
-﻿@{
-var quick = (Dictionary<string,string>)ViewBag.QuickImports;
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Парсер продуктов";
 }
+
+@* Проверка роли Admin через Claims *@
+@if (!User.IsInRole("Admin"))
+{
+    <div class="container py-5 text-center">
+        <div style="font-size: 4rem;">🔒</div>
+        <h2 class="mt-3" style="color: var(--primary);">Доступ запрещён</h2>
+        <p class="text-muted">Эта страница доступна только администраторам.</p>
+        <a asp-action="Index" asp-controller="Home" class="btn btn-outline-primary mt-3">На главную</a>
+    </div>
+    return;
+}
+
 @Html.AntiForgeryToken()
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <title>Импорт продуктов</title>
-    <style>
-        *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-        body{font-family:system-ui,sans-serif;background:#f4f6f5;color:#1a1a1a;padding:2rem}
-        h1{font-size:1.4rem;margin-bottom:.25rem}
-        .sub{color:#666;font-size:.82rem;margin-bottom:1.75rem}
-        .sub a{color:#4e7d58}
-        .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1.2rem;margin-bottom:1.2rem}
-        .card{background:#fff;border-radius:14px;padding:1.4rem;border:1px solid #e0e0e0;box-shadow:0 2px 8px rgba(0,0,0,.05)}
-        h2{font-size:.95rem;font-weight:600;margin-bottom:1rem;color:#333}
-        label{font-size:.78rem;color:#777;display:block;margin-bottom:.3rem}
-        input[type=text],input[type=number]{width:100%;padding:.55rem .8rem;border:1.5px solid #ddd;border-radius:8px;font-size:.875rem;margin-bottom:.8rem;transition:border-color .2s}
-        input:focus{outline:none;border-color:#7aab84}
-        .btn{display:inline-flex;align-items:center;gap:.4rem;padding:.6rem 1.2rem;border-radius:8px;border:none;font-size:.85rem;font-weight:500;cursor:pointer;transition:all .2s;white-space:nowrap}
-        .btn:active{transform:scale(.97)}
-        .g{background:#7aab84;color:#fff}.g:hover{background:#4e7d58}
-        .o{background:#f09c3a;color:#fff}.o:hover{background:#c97b1e}
-        .r{background:#e05c5c;color:#fff}.r:hover{background:#b83535}
-        .result{margin-top:.85rem;padding:.85rem;border-radius:8px;background:#f0f7f2;border:1px solid #c8e6cc;font-size:.78rem;display:none;white-space:pre-wrap;max-height:220px;overflow-y:auto;font-family:monospace;line-height:1.5}
-        .result.open{display:block}.result.err{background:#fdf0f0;border-color:#f5c0c0}
-        .spin{display:none;width:13px;height:13px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:sp .7s linear infinite}
-        .spin.on{display:inline-block}
-        .quick-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:.5rem;margin-bottom:.85rem}
-        .qbtn{padding:.5rem .6rem;border-radius:8px;border:1.5px solid #ddd;background:#fff;cursor:pointer;font-size:.8rem;transition:all .2s;text-align:center}
-        .qbtn:hover{border-color:#7aab84;background:#f0f7f2;color:#2d6a3f}
-        .status{padding:.45rem 1rem;border-radius:8px;background:#fff8e1;border:1px solid #ffc107;font-size:.8rem;margin-bottom:1rem;display:none}
-        .status.on{display:block}
-        .info{background:#e8f4fd;border:1px solid #90caf9;border-radius:10px;padding:.85rem 1rem;font-size:.8rem;color:#1565c0;margin-bottom:1.5rem}
-        .info b{display:block;margin-bottom:.3rem}
-    </style>
-</head>
-<body>
 
-<h1>🥗 Импорт продуктов</h1>
-<p class="sub">Источник: <a href="https://fdc.nal.usda.gov" target="_blank">USDA FoodData Central</a> — база Министерства сельского хозяйства США, 1 млн+ продуктов с КБЖУ</p>
+<div class="container py-5" style="max-width: 860px;">
 
-<div class="info">
-    <b>⚡ Бесплатный API-ключ (30 сек):</b>
-    1. Открой <a href="https://fdc.nal.usda.gov/api-guide.html" target="_blank">fdc.nal.usda.gov/api-guide.html</a>
-    → нажми <b>Sign Up / Get an API Key</b> → введи email → ключ сразу на экране<br/>
-    2. Добавь в <b>appsettings.json</b>: <code>"Usda": { "ApiKey": "ВАШ_КЛЮЧ" }</code><br/>
-    Без ключа работает DEMO_KEY (30 запросов/час — хватит для тестирования)
-</div>
-
-<div id="status" class="status"></div>
-
-<div class="grid">
-
-    <!-- Поиск -->
-    <div class="card">
-        <h2>🔍 Поиск по названию</h2>
-        <label>Название на английском</label>
-        <input type="text" id="q" placeholder="chicken breast, milk, buckwheat…"/>
-        <label>Количество результатов</label>
-        <input type="number" id="ql" value="50" min="1" max="200"/>
-        <button class="btn g" onclick="doSearch()">
-            <span class="spin" id="qs"></span> Найти и сохранить
-        </button>
-        <div class="result" id="qr"></div>
+    <div class="mb-5">
+        <h2 style="color: var(--primary); font-weight: 700;">
+            <i class="fas fa-terminal me-2"></i>Панель парсера
+        </h2>
+        <p class="text-muted mb-0">Импорт продуктов и обновление цен. Только для администраторов.</p>
     </div>
 
-    <!-- Быстрый импорт -->
-    <div class="card">
-        <h2>⚡ Быстрый импорт по группам</h2>
-        <div class="quick-grid">
-            @foreach (var kv in quick)
-            {
-            <button class="qbtn"
-                    onclick="doQuick('@kv.Key', '@kv.Value')">@kv.Key</button>
-            }
+    <div class="row g-4 mb-5">
+
+        {{!-- Кнопка 1: Парсинг всех продуктов --}}
+        <div class="col-md-6">
+            <div class="card h-100 p-4 shadow-sm" style="border-radius: 1.2rem; border: 2px solid var(--primary-light);">
+                <div class="mb-3">
+                    <span style="font-size: 2.5rem;">🥗</span>
+                </div>
+                <h4 style="color: var(--primary);">Парсинг продуктов</h4>
+                <p class="text-muted small mb-4">
+                    Загружает все группы продуктов из USDA FoodData Central (~320 продуктов: мясо, рыба, овощи, молочка, крупы и т.д.)
+                </p>
+                <div class="mb-3">
+                    <label class="form-label small text-muted">Продуктов на группу</label>
+                    <input type="number" id="productsLimit" class="form-control" value="40" min="5" max="100">
+                </div>
+                <button class="btn btn-success w-100 mt-auto" id="btnParseProducts" onclick="parseProducts()">
+                    <span class="spin me-2" id="spinProducts"></span>
+                    <i class="fas fa-download me-2"></i>Запустить парсинг
+                </button>
+            </div>
         </div>
-        <label>Продуктов на группу</label>
-        <input type="number" id="qql" value="40" min="1" max="100"/>
-        <div class="result" id="qqr"></div>
+
+        {{!-- Кнопка 2: Обновление цен --}}
+        <div class="col-md-6">
+            <div class="card h-100 p-4 shadow-sm" style="border-radius: 1.2rem; border: 2px solid #fff3cd;">
+                <div class="mb-3">
+                    <span style="font-size: 2.5rem;">💰</span>
+                </div>
+                <h4 style="color: #856404;">Обновление цен</h4>
+                <p class="text-muted small mb-4">
+                    Применяет рандомное изменение цен (±5–15%) ко всем продуктам в базе. Имитирует рыночные колебания.
+                </p>
+                <div class="mb-3">
+                    <label class="form-label small text-muted">Диапазон изменения (%)</label>
+                    <div class="d-flex gap-2">
+                        <input type="number" id="priceMin" class="form-control" value="5" min="1" max="50" placeholder="Мин">
+                        <input type="number" id="priceMax" class="form-control" value="15" min="1" max="50" placeholder="Макс">
+                    </div>
+                </div>
+                <button class="btn w-100 mt-auto" id="btnUpdatePrices" onclick="updatePrices()"
+                        style="background: #ffc107; color: #000; font-weight: 600;">
+                    <span class="spin me-2" id="spinPrices"></span>
+                    <i class="fas fa-sync-alt me-2"></i>Обновить цены
+                </button>
+            </div>
+        </div>
     </div>
 
+    {{!-- JSON-ответ --}}
+    <div id="resultBlock" style="display: none;">
+        <div class="d-flex align-items-center justify-content-between mb-2">
+            <h5 class="mb-0" style="color: var(--primary);">
+                <i class="fas fa-code me-2"></i>Ответ сервера
+            </h5>
+            <button class="btn btn-sm btn-outline-secondary" onclick="clearResult()">
+                <i class="fas fa-times me-1"></i>Очистить
+            </button>
+        </div>
+        <pre id="resultJson" style="
+            background: #1e1e2e;
+            color: #cdd6f4;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            font-size: .82rem;
+            max-height: 420px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-break: break-word;
+            border: 1px solid #313244;
+        "></pre>
+    </div>
+
+    {{!-- Статус --}}
+    <div id="statusBar" style="display: none;"
+         class="alert mt-3 mb-0" role="alert"></div>
 </div>
 
-<!-- Всё сразу -->
-<div class="card" style="max-width:420px">
-    <h2>🚀 Загрузить все группы сразу</h2>
-    <p style="font-size:.8rem;color:#666;margin-bottom:1rem">
-        Импортирует все @quick.Count групп (~@(quick.Count * 40) продуктов). Займёт 2-4 минуты.
-    </p>
-    <label>Продуктов на группу</label>
-    <input type="number" id="al" value="40" min="1" max="100"/>
-    <button class="btn r" onclick="doAll()">
-        <span class="spin" id="as"></span> Загрузить всё
-    </button>
-    <div class="result" id="ar"></div>
-</div>
+@section Scripts {
+<style>
+    .spin {
+        display: none;
+        width: 14px; height: 14px;
+        border: 2px solid rgba(255,255,255,.35);
+        border-top-color: #fff;
+        border-radius: 50%;
+        animation: sp .7s linear infinite;
+        vertical-align: middle;
+    }
+    .spin.on { display: inline-block; }
+    @@keyframes sp { to { transform: rotate(360deg); } }
+</style>
 
 <script>
     const tok = document.querySelector('input[name="__RequestVerificationToken"]')?.value ?? '';
 
-    function setStatus(msg){ const s=document.getElementById('status'); s.textContent=msg; s.classList.add('on'); }
-    function clearStatus(){ document.getElementById('status').classList.remove('on'); }
+    function setStatus(msg, type = 'info') {
+        const bar = document.getElementById('statusBar');
+        bar.className = `alert alert-${type} mt-3 mb-0`;
+        bar.textContent = msg;
+        bar.style.display = 'block';
+    }
 
-    async function post(url, data, spinId, resId){
-        const spin=document.getElementById(spinId), res=document.getElementById(resId);
-        spin.classList.add('on'); res.className='result';
-        try{
-            const body=new URLSearchParams({...data,__RequestVerificationToken:tok});
-            const r=await fetch(url,{method:'POST',body});
-            const j=await r.json();
-            res.textContent=JSON.stringify(j,null,2);
-            res.classList.add('open');
-            if(j.error) res.classList.add('err');
+    function showResult(data) {
+        document.getElementById('resultBlock').style.display = 'block';
+        document.getElementById('resultJson').textContent = JSON.stringify(data, null, 2);
+        document.getElementById('resultBlock').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function clearResult() {
+        document.getElementById('resultBlock').style.display = 'none';
+        document.getElementById('statusBar').style.display = 'none';
+    }
+
+    async function post(url, data, spinId) {
+        const spin = document.getElementById(spinId);
+        spin.classList.add('on');
+        try {
+            const body = new URLSearchParams({ ...data, __RequestVerificationToken: tok });
+            const r = await fetch(url, { method: 'POST', body });
+            const j = await r.json();
+            showResult(j);
             return j;
-        }catch(e){
-            res.textContent='Ошибка: '+e.message;
-            res.classList.add('open','err');
-        }finally{
-            spin.classList.remove('on'); clearStatus();
+        } catch (e) {
+            showResult({ error: e.message });
+            setStatus('Ошибка запроса: ' + e.message, 'danger');
+        } finally {
+            spin.classList.remove('on');
         }
     }
 
-    async function doSearch(){
-        const q=document.getElementById('q').value.trim();
-        if(!q){alert('Введите запрос');return;}
-        setStatus(`Ищем "${q}" в USDA…`);
-        await post('/Admin/ParseSearch',{query:q,limit:document.getElementById('ql').value},'qs','qr');
+    async function parseProducts() {
+        const limit = document.getElementById('productsLimit').value;
+        setStatus('⏳ Парсинг продуктов... Не закрывайте страницу.', 'warning');
+        const result = await post('/Admin/ParseAll', { limitPerGroup: limit }, 'spinProducts');
+        if (result && !result.error) {
+            setStatus(`✅ Готово! Сохранено: ${result.totalSaved} продуктов.`, 'success');
+        }
     }
 
-    async function doQuick(label, queries){
-        setStatus(`Загружаем группу "${label}"…`);
-        await post('/Admin/ParseQuick',
-            {label,queries,limit:document.getElementById('qql').value},
-            'qs','qqr');
-    }
-
-    async function doAll(){
-        if(!confirm('Загрузка всех групп займёт несколько минут. Продолжить?')) return;
-        setStatus('Загружаем все группы… Не закрывайте страницу.');
-        await post('/Admin/ParseAll',{limitPerGroup:document.getElementById('al').value},'as','ar');
+    async function updatePrices() {
+        const minPct = document.getElementById('priceMin').value;
+        const maxPct = document.getElementById('priceMax').value;
+        if (parseInt(minPct) > parseInt(maxPct)) {
+            setStatus('❌ Минимум не может быть больше максимума', 'danger');
+            return;
+        }
+        setStatus('⏳ Обновляем цены...', 'warning');
+        const result = await post('/Admin/UpdatePrices', { minPct, maxPct }, 'spinPrices');
+        if (result && !result.error) {
+            setStatus(`✅ Цены обновлены у ${result.updated} продуктов.`, 'success');
+        }
     }
 </script>
-</body>
-</html>
+}

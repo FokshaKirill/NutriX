@@ -18,21 +18,45 @@ namespace Services.Services
             _plannedMeals = plannedMeals;
         }
 
-        public async Task<MealPlan?> GetCurrentWeekPlanAsync()
+        public async Task<MealPlan?> GetCurrentWeekPlanAsync(Guid userId)
         {
             var today = DateTime.Today;
-            var monday = today.AddDays(-(int)today.DayOfWeek + (int)DayOfWeek.Monday);
+            var diff = (7 + (today.DayOfWeek - DayOfWeek.Monday)) % 7;
+            var monday = today.AddDays(-diff).Date;
 
             return await _plans.Query()
                 .Include(p => p.Meals)
-                    .ThenInclude(pm => pm.Recipe)
-                        .ThenInclude(r => r.Ingredients)
-                            .ThenInclude(i => i.Product)
+                .ThenInclude(m => m.MealType)
                 .Include(p => p.Meals)
-                    .ThenInclude(pm => pm.MealType)
-                .FirstOrDefaultAsync(p => p.StartDate == monday);
+                .ThenInclude(m => m.Recipe)
+                .ThenInclude(r => r.Ingredients)
+                .ThenInclude(i => i.Product)
+                .Where(p => p.UserId == userId 
+                            && p.StartDate >= monday 
+                            && p.StartDate < monday.AddDays(7))  
+                .OrderByDescending(p => p.StartDate)     
+                .FirstOrDefaultAsync();
         }
+        
+        public async Task<List<PlannedMeal>> GetTodayMealsAsync(Guid userId)
+        {
+            var today  = DateTime.Today;
+            var diff = (7 + (today.DayOfWeek - DayOfWeek.Monday)) % 7;
+            var monday = today.AddDays(-diff).Date;
+            var offset = (today - monday).Days;
 
+            return await _plans.Query()
+                .Where(p =>
+                    p.UserId == userId &&
+                    p.StartDate >= monday &&
+                    p.StartDate < monday.AddDays(1))
+                .SelectMany(p => p.Meals)
+                .Where(m => m.DayOffset == offset)
+                .Include(m => m.MealType)
+                .Include(m => m.Recipe)
+                .ToListAsync();
+        }
+        
         public async Task<List<MealPlan>> GetAllPlansAsync()
         {
             return await _plans.Query()
@@ -54,11 +78,24 @@ namespace Services.Services
 
         public async Task<MealPlan> CreateAsync(MealPlan plan)
         {
+            var existingPlan = await _plans.Query()
+                .Include(p => p.Meals)
+                .FirstOrDefaultAsync(p =>
+                    p.UserId == plan.UserId &&
+                    p.StartDate.Date == plan.StartDate.Date);
+
+            if (existingPlan != null)
+            {
+                await _plans.DeleteAsync(existingPlan);
+                await _plans.SaveChangesAsync();
+            }
+
             if (plan.Id == Guid.Empty)
                 plan.Id = Guid.NewGuid();
 
             await _plans.AddAsync(plan);
             await _plans.SaveChangesAsync();
+
             return plan;
         }
 
@@ -119,6 +156,25 @@ namespace Services.Services
                 .ToList();
 
             return grouped;
+        }
+        
+        public async Task<PlannedMeal?> GetPlannedMealByIdAsync(Guid id)
+        {
+            return await _plannedMeals.Query()
+                .Include(m => m.Recipe)
+                .Include(m => m.MealType)
+                .FirstOrDefaultAsync(m => m.Id == id);
+        }
+
+        public async Task ReplaceMealRecipeAsync(Guid plannedMealId, Guid newRecipeId)
+        {
+            var meal = await _plannedMeals.Query()
+                .FirstOrDefaultAsync(m => m.Id == plannedMealId);
+            if (meal == null) return;
+
+            meal.RecipeId = newRecipeId;
+            await _plannedMeals.UpdateAsync(meal);
+            await _plannedMeals.SaveChangesAsync();
         }
     }
 }

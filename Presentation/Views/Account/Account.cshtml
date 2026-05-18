@@ -1,4 +1,4 @@
-﻿@using System.Security.Claims
+@using System.Security.Claims
 @using Domain.Entities
 @model dynamic
 @{
@@ -10,14 +10,33 @@
     var avatarUrl = user?.AvatarUrl;
     var initials = string.IsNullOrEmpty(userName) ? "?" : string.Concat(userName.Split(' ').Take(2).Select(w => w[0].ToString().ToUpper()));
     var isPro = user?.SubscriptionType == Domain.Enums.SubscriptionType.Premium;
-    var createdAt = user?.CreatedAt.ToString("dd MMM yyyy") ?? "";
-    var lastLogin = user?.LastLoginAt?.ToString("dd MMM yyyy HH:mm") ?? "сегодня";
+    var createdAt = user?.CreatedAt.ToLocalTime().ToString("dd MMM yyyy") ?? "";
+    var lastLogin = user?.LastLoginAt != null 
+        ? user.LastLoginAt.Value.ToLocalTime().ToString("dd MMM yyyy HH:mm") 
+        : "сегодня";
+
+    var calGoal  = (double)(user?.DailyCalorieGoal  ?? 2000);
+    var protGoal = (double)(user?.DailyProteinGoal ?? 120);
+    var fatGoal  = (double)(user?.DailyFatGoal  ?? 70);
+    var carbGoal = (double)(user?.DailyCarbsGoal ?? 250);
 }
 @Html.AntiForgeryToken()
 
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+
+<style>
+:root {
+    --sage: #86bf92; --sage-d: #5a9668; --sage-pale: #f0f7f2;
+    --ink: #1a1a18; --muted: #7a7168; --border: #e4ede6;
+    --card: #fff; --danger: #e24b4a;
+    --radius: 16px; --shadow: 0 4px 20px rgba(0,0,0,.06);
+}
+
+</style>
+
 <div class="acc-wrap">
 
-    <!-- Шапка профиля -->
+    <!-- HEADER -->
     <div class="acc-header">
         <div class="avatar-wrap">
             @if (!string.IsNullOrEmpty(avatarUrl))
@@ -33,74 +52,54 @@
             <h2>@userName</h2>
             <p>@userEmail</p>
             <div class="badges-row">
-                @if (isPro)
-                {
-                    <span class="badge badge-pro">Pro план</span>
-                }
-                else
-                {
-                    <span class="badge badge-free">Free план</span>
-                }
+                <span class="badge @(isPro ? "badge-pro" : "badge-free")">@(isPro ? "Pro" : "Free")</span>
                 @if (user?.IsGoogleUser == true)
                 {
                     <span class="badge badge-google">
-                        <svg width="12" height="12" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z"/></svg>
+                        <svg width="11" height="11" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z"/></svg>
                         Google
                     </span>
                 }
-                <span class="meta-text">Последний вход: @lastLogin</span>
+                <span class="meta-text">Вход: @lastLogin</span>
             </div>
         </div>
-        <div class="acc-actions">
-            <button class="btn-logout" onclick="logout()">Выйти</button>
-        </div>
+        <button class="btn-logout" onclick="logout()">Выйти</button>
     </div>
 
-    <!-- Сетка: цели питания + статистика -->
+    <!-- GRID: цели + статистика -->
     <div class="acc-grid">
 
         <!-- Цели питания -->
         <div class="acc-card">
-            <h3 class="card-label">Цели питания на сегодня</h3>
-
-            @{
-                var calGoal = user?.DailyCalorieGoal ?? 2000;
-                var protGoal = (double)(user?.DailyProteinGoal ?? 120);
-                var fatGoal  = (double)(user?.DailyFatGoal ?? 70);
-                var carbGoal = (double)(user?.DailyCarbsGoal ?? 250);
-            }
-
+            <p class="card-label">Цели питания</p>
             <div class="stat-row">
                 <span class="stat-label">Калории</span>
-                <span class="stat-val">— / @calGoal ккал</span>
+                <span class="stat-val">@calGoal ккал/день</span>
             </div>
-            <div class="goal-bar"><div class="goal-fill" style="width:0%"></div></div>
-
-            <div class="stat-row" style="margin-top:10px">
+            <div class="goal-bar"><div class="goal-fill" id="gKcal" style="width:0%;background:#86bf92"></div></div>
+            <div class="stat-row">
                 <span class="stat-label">Белки</span>
-                <span class="stat-val">— / @protGoal г</span>
+                <span class="stat-val">@protGoal.ToString("F0") г/день</span>
             </div>
-            <div class="goal-bar"><div class="goal-fill" style="width:0%;background:#378add"></div></div>
-
-            <div class="stat-row" style="margin-top:10px">
+            <div class="goal-bar"><div class="goal-fill" id="gP" style="width:0%;background:#3b82f6"></div></div>
+            <div class="stat-row">
                 <span class="stat-label">Углеводы</span>
-                <span class="stat-val">— / @carbGoal г</span>
+                <span class="stat-val">@carbGoal.ToString("F0") г/день</span>
             </div>
-            <div class="goal-bar"><div class="goal-fill" style="width:0%;background:#ef9f27"></div></div>
-
-            <div class="stat-row" style="margin-top:10px">
+            <div class="goal-bar"><div class="goal-fill" id="gC" style="width:0%;background:#eab308"></div></div>
+            <div class="stat-row">
                 <span class="stat-label">Жиры</span>
-                <span class="stat-val">— / @fatGoal г</span>
+                <span class="stat-val">@fatGoal.ToString("F0") г/день</span>
             </div>
-            <div class="goal-bar"><div class="goal-fill" style="width:0%;background:#e24b4a"></div></div>
+            <div class="goal-bar" style="margin-bottom:0"><div class="goal-fill" id="gF" style="width:0%;background:#f97316"></div></div>
         </div>
 
-        <!-- Статистика -->
+        <!-- Статистика аккаунта -->
         <div class="acc-card">
-            <h3 class="card-label">Статистика аккаунта</h3>
+            <p class="card-label">Статистика</p>
             <div class="stat-row">
                 <span class="stat-label">Мои рецепты</span>
-                <span class="stat-val">@user?.Recipes.Count</span>
+                <span class="stat-val">@(user?.Recipes.Count ?? 0)</span>
             </div>
             <div class="stat-row">
                 <span class="stat-label">Избранных</span>
@@ -108,91 +107,315 @@
             </div>
             <div class="stat-row">
                 <span class="stat-label">Планов питания</span>
-                <span class="stat-val">@user?.MealPlans.Count</span>
-            </div>
-            <div class="stat-row">
-                <span class="stat-label">Часовой пояс</span>
-                <span class="stat-val">@(user?.TimeZone ?? "UTC")</span>
+                <span class="stat-val">@(user?.MealPlans.Count ?? 0)</span>
             </div>
             <div class="stat-row">
                 <span class="stat-label">Подписка</span>
-                <span class="stat-val @(isPro ? "text-pro" : "text-free") text-green">@(isPro ? "Pro" : "Free")</span>
+                <span class="stat-val text-green">@(isPro ? "Pro" : "Free")</span>
             </div>
             <div class="stat-row">
-                <span class="stat-label">Дата регистрации</span>
+                <span class="stat-label">Регистрация</span>
                 <span class="stat-val">@createdAt</span>
             </div>
             <div class="stat-row">
                 <span class="stat-label">Email подтверждён</span>
-                <span class="stat-val">@(user?.IsEmailConfirmed == true ? "Да" : "Нет")</span>
+                <span class="stat-val">@(user?.IsEmailConfirmed == true ? "✓ Да" : "Нет")</span>
             </div>
         </div>
-
     </div>
 
-    <!-- Избранные рецепты -->
+    <!-- КБЖУ ПРОГРЕСС НА СЕГОДНЯ -->
+    <div class="kbzu-section">
+        <p class="card-label">КБЖУ на сегодня — из меню дня</p>
+        <div class="kbzu-totals">
+            <div class="kbzu-bubble">
+                <div class="kbzu-bubble-val" id="accKcal">0</div>
+                <div class="kbzu-bubble-label">ккал</div>
+            </div>
+            <div class="kbzu-bubble">
+                <div class="kbzu-bubble-val" id="accP" style="color:#1d4ed8">0г</div>
+                <div class="kbzu-bubble-label">белки</div>
+            </div>
+            <div class="kbzu-bubble">
+                <div class="kbzu-bubble-val" id="accF" style="color:#c2410c">0г</div>
+                <div class="kbzu-bubble-label">жиры</div>
+            </div>
+            <div class="kbzu-bubble">
+                <div class="kbzu-bubble-val" id="accC" style="color:#a16207">0г</div>
+                <div class="kbzu-bubble-label">углеводы</div>
+            </div>
+        </div>
+        <div class="prog-row">
+            <span class="prog-label">Калории</span>
+            <div class="prog-bar-wrap"><div class="prog-bar" id="accBarKcal" style="width:0%;background:#86bf92"></div></div>
+            <span class="prog-val" id="accLblKcal">0 / @calGoal.ToString("F0")</span>
+        </div>
+        <div class="prog-row">
+            <span class="prog-label">Белки</span>
+            <div class="prog-bar-wrap"><div class="prog-bar" id="accBarP" style="width:0%;background:#3b82f6"></div></div>
+            <span class="prog-val" id="accLblP">0 / @protGoal.ToString("F0")г</span>
+        </div>
+        <div class="prog-row">
+            <span class="prog-label">Жиры</span>
+            <div class="prog-bar-wrap"><div class="prog-bar" id="accBarF" style="width:0%;background:#f97316"></div></div>
+            <span class="prog-val" id="accLblF">0 / @fatGoal.ToString("F0")г</span>
+        </div>
+        <div class="prog-row">
+            <span class="prog-label">Углеводы</span>
+            <div class="prog-bar-wrap"><div class="prog-bar" id="accBarC" style="width:0%;background:#eab308"></div></div>
+            <span class="prog-val" id="accLblC">0 / @carbGoal.ToString("F0")г</span>
+        </div>
+        <p style="font-size:.75rem;color:var(--muted);margin-top:.75rem;margin-bottom:0">
+            Считаются только отмеченные как «приготовлено» блюда из <a href="/" style="color:var(--sage-d)">меню дня</a>
+        </p>
+    </div>
+
+    <!-- ФАВОРИТЫ (горизонтальный скролл) -->
     <div class="fav-section">
         <div class="fav-header">
-            <h3 class="card-label">Избранные рецепты</h3>
-            <span class="fav-count">@favorites.Count()</span>
+            <p class="card-label" style="margin:0">Избранные рецепты</p>
+            <span class="fav-count-badge">@favorites.Count()</span>
         </div>
 
         @if (!favorites.Any())
         {
             <div class="fav-empty">
-                <p>Вы ещё не добавили рецепты в избранное</p>
-                <a href="/Recipe" class="btn-explore">Найти рецепты</a>
+                <div style="font-size:2rem;margin-bottom:.5rem">♡</div>
+                <p>Пока ничего нет. <a asp-action="Index" asp-controller="Recipe">Найти рецепты</a></p>
             </div>
         }
         else
         {
-            <div class="fav-grid">
+            <div class="fav-scroll">
                 @foreach (var recipe in favorites)
                 {
-                    <div class="recipe-card">
-                        @if (!string.IsNullOrEmpty(recipe.ImageUrl))
-                        {
-                            <div class="recipe-img-wrap">
-                                <img src="@recipe.ImageUrl" alt="@recipe.Name" class="recipe-img" />
-                            </div>
-                        }
-                        else
-                        {
-                            <div class="recipe-img-placeholder">🍽</div>
-                        }
-                        <div class="recipe-body">
-                            <div class="recipe-top-row">
-                                <span class="recipe-name">@recipe.Name</span>
-                                <form asp-action="ToggleFavorite" asp-controller="Favorites" method="post" style="display:inline">
+                    <div class="fav-card">
+                        <div class="fav-card-img">
+                            @if (!string.IsNullOrEmpty(recipe.ImageUrl))
+                            {
+                                <img src="@recipe.ImageUrl" alt="@recipe.Name" />
+                            }
+                            else
+                            {
+                                <span>🍽</span>
+                            }
+                        </div>
+                        <div class="fav-card-body">
+                            <div class="fav-card-name">@recipe.Name</div>
+                            @if (recipe.TotalCalories > 0)
+                            {
+                                <div class="fav-card-meta">🔥 @((int)recipe.CaloriesPerServing) ккал · Б @((int)recipe.ProteinPerServing)г</div>
+                            }
+                            <div class="fav-card-actions">
+                                <a asp-action="Details" asp-controller="Recipe" asp-route-id="@recipe.Id" class="fav-open-btn">
+                                    <i class="fas fa-eye" style="font-size:.65rem"></i> Открыть
+                                </a>
+                                <form asp-action="ToggleFavorite" asp-controller="Favorites" method="post" style="display:contents">
                                     <input type="hidden" name="recipeId" value="@recipe.Id" />
                                     <input type="hidden" name="returnUrl" value="/account" />
-                                    <button type="submit" class="heart-btn" title="Убрать из избранного">♥</button>
+                                    <button type="submit" class="fav-rm-btn" title="Убрать из избранного">♥</button>
                                 </form>
                             </div>
-                            <div class="recipe-meta">
-                                @if (recipe.TotalCalories > 0)
-                                {
-                                    <span>🔥 @((int)recipe.CaloriesPerServing) ккал</span>
-                                }
-                                @if (!string.IsNullOrEmpty(recipe.Description))
-                                {
-                                    <span class="recipe-desc">@(recipe.Description.Length > 40 ? recipe.Description[..40] + "…" : recipe.Description)</span>
-                                }
-                            </div>
-                            @if (recipe.TotalProtein > 0 || recipe.TotalFat > 0 || recipe.TotalCarbs > 0)
-                            {
-                                <div class="recipe-macros">
-                                    <span class="macro macro-p" title="Белки">Б @((int)recipe.ProteinPerServing)г</span>
-                                    <span class="macro macro-f" title="Жиры">Ж @((int)recipe.FatPerServing)г</span>
-                                    <span class="macro macro-c" title="Углеводы">У @((int)recipe.CarbsPerServing)г</span>
-                                </div>
-                            }
                         </div>
                     </div>
                 }
             </div>
         }
     </div>
+    
+    @{
+    var myRecipes = ViewBag.MyRecipes as IEnumerable<Domain.Entities.Recipe> 
+                   ?? Enumerable.Empty<Domain.Entities.Recipe>();
+}
+
+<!-- МОИ РЕЦЕПТЫ -->
+<div class="fav-section">
+    <div class="fav-header">
+        <p class="card-label" style="margin:0">Мои рецепты</p>
+        <span class="fav-count-badge">@myRecipes.Count()</span>
+    </div>
+
+    @if (!myRecipes.Any())
+    {
+        <div class="fav-empty">
+            <div style="font-size:2rem;margin-bottom:.5rem">🍳</div>
+            <p>Ещё нет рецептов. 
+               <a asp-action="Create" asp-controller="Recipe">Создать</a> или 
+               <a asp-action="Import" asp-controller="Recipe">Импортировать</a>
+            </p>
+        </div>
+    }
+    else
+    {
+        <div class="fav-scroll">
+            @foreach (var recipe in myRecipes.OrderByDescending(r => r.CreatedAt))
+            {
+                <div class="fav-card">
+                    <div class="fav-card-img">
+                        @if (!string.IsNullOrEmpty(recipe.ImageUrl))
+                        {
+                            <img src="@recipe.ImageUrl" alt="@recipe.Name"/>
+                        }
+                        else { <span>🍽</span> }
+                    </div>
+                    <div class="fav-card-body">
+                        <div class="fav-card-name">@recipe.Name</div>
+                        @if (recipe.TotalCalories > 0)
+                        {
+                            <div class="fav-card-meta">
+                                🔥 @((int)recipe.CaloriesPerServing) ккал ·
+                                @recipe.DefaultServings порц.
+                            </div>
+                        }
+                        @* <div class="fav-card-meta" style="color:var(--sage-d)"> *@
+                        @*     @(recipe.Source != null ? "📥 импорт" : "✏️ создан вручную") *@
+                        @* </div> *@
+                        <div class="fav-card-actions">
+                            <a asp-action="Details" asp-controller="Recipe"
+                               asp-route-id="@recipe.Id" class="fav-open-btn">
+                                <i class="fas fa-eye" style="font-size:.65rem"></i> Открыть
+                            </a>
+                            <a asp-action="Edit" asp-controller="Recipe"
+                               asp-route-id="@recipe.Id" class="fav-open-btn"
+                               style="background:#f0f7f2">
+                                <i class="fas fa-pen" style="font-size:.65rem"></i>
+                            </a>
+                            <form asp-action="Delete" asp-controller="Recipe" method="post" style="display:contents">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@recipe.Id"/>
+                                <button type="submit" class="fav-rm-btn"
+                                        onclick="return confirm('Удалить «@recipe.Name»?')"
+                                        title="Удалить">🗑</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+    <!-- ADMIN -->
+    <div class="admin-activate-section @(User.IsInRole("Admin") ? "is-admin" : "")">
+        @if (User.IsInRole("Admin"))
+        {
+            <div class="admin-badge-row">
+                <div class="admin-crown">👑</div>
+                <div>
+                    <div class="admin-badge-title">Вы — Администратор</div>
+                    <div class="admin-badge-sub">Доступ к панели управления открыт</div>
+                </div>
+                <a asp-action="Parser" asp-controller="Admin" class="btn-admin-panel">Панель →</a>
+            </div>
+        }
+        else
+        {
+            <div class="admin-activate-inner">
+                <div class="admin-lock-icon">🔑</div>
+                <div class="admin-activate-text">
+                    <div class="admin-activate-title">Активация расширенного доступа</div>
+                    <div class="admin-activate-sub">Введите секретный код администратора</div>
+                </div>
+                <div class="admin-activate-form">
+                    <input type="password" id="adminSecretInput" placeholder="Секретный код" autocomplete="off" maxlength="64"/>
+                    <button id="adminActivateBtn" onclick="activateAdmin()">Активировать</button>
+                </div>
+                <div id="adminActivateMsg" class="admin-activate-msg" style="display:none"></div>
+            </div>
+        }
+    </div>
+
 </div>
 
 <script src="~/js/auth.js" asp-append-version="true"></script>
+<script>
+// ── Читаем КБЖУ из localStorage (то же что главная страница) ──
+(function() {
+    const goals = {
+        kcal: @calGoal.ToString("F0", System.Globalization.CultureInfo.InvariantCulture),
+        p: @protGoal.ToString("F0", System.Globalization.CultureInfo.InvariantCulture),
+        f: @fatGoal.ToString("F0", System.Globalization.CultureInfo.InvariantCulture),
+        c: @carbGoal.ToString("F0", System.Globalization.CultureInfo.InvariantCulture)
+    };
+
+    const storeKey = 'nutrix_day_meals_' + new Date().toISOString().slice(0,10);
+    let data = {};
+    try { data = JSON.parse(localStorage.getItem(storeKey) || '{}'); } catch {}
+
+    let totKcal = 0, totP = 0, totF = 0, totC = 0;
+    Object.values(data).forEach(entries => {
+        if (!Array.isArray(entries)) return;
+        entries.filter(e => e.done).forEach(e => {
+            totKcal += e.kcal || 0;
+            totP    += e.p    || 0;
+            totF    += e.f    || 0;
+            totC    += e.c    || 0;
+        });
+    });
+
+    // Плашки
+    document.getElementById('accKcal').textContent = Math.round(totKcal);
+    document.getElementById('accP').textContent    = Math.round(totP) + 'г';
+    document.getElementById('accF').textContent    = Math.round(totF) + 'г';
+    document.getElementById('accC').textContent    = Math.round(totC) + 'г';
+
+    // Прогресс-бары
+    function setBar(barId, lblId, current, goal, unit) {
+        const pct = Math.min(100, goal > 0 ? (current / goal) * 100 : 0);
+        const bar = document.getElementById(barId);
+        const lbl = document.getElementById(lblId);
+        if (bar) bar.style.width = pct + '%';
+        if (lbl) lbl.textContent = Math.round(current) + (unit === 'kcal' ? '' : 'г') + ' / ' + goal + (unit === 'kcal' ? '' : 'г');
+    }
+    setBar('accBarKcal', 'accLblKcal', totKcal, goals.kcal, 'kcal');
+    setBar('accBarP',    'accLblP',    totP,    goals.p,    'g');
+    setBar('accBarF',    'accLblF',    totF,    goals.f,    'g');
+    setBar('accBarC',    'accLblC',    totC,    goals.c,    'g');
+
+    // Полоски целей (левая карточка) — процент заполненности
+    function setGoalBar(id, current, goal) {
+        const el = document.getElementById(id);
+        if (el) el.style.width = Math.min(100, goal > 0 ? (current/goal)*100 : 0) + '%';
+    }
+    setGoalBar('gKcal', totKcal, goals.kcal);
+    setGoalBar('gP',    totP,    goals.p);
+    setGoalBar('gF',    totF,    goals.f);
+    setGoalBar('gC',    totC,    goals.c);
+})();
+
+// ── Активация admin ──
+async function activateAdmin() {
+    const input = document.getElementById('adminSecretInput');
+    const btn   = document.getElementById('adminActivateBtn');
+    const msgEl = document.getElementById('adminActivateMsg');
+    const code  = input?.value?.trim();
+    if (!code) { showAdminMsg('Введите код', 'error'); return; }
+    btn.disabled = true; btn.textContent = 'Проверяем...';
+    try {
+        const res  = await fetch('/api/auth/activate-admin', {
+            method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({ secretCode: code })
+        });
+        const data = await res.json();
+        if (res.ok) {
+            showAdminMsg(data.message || 'Готово!', 'success');
+            input.value = '';
+            setTimeout(() => window.location.reload(), 1500);
+        } else {
+            showAdminMsg(data.message || 'Ошибка', 'error');
+            btn.disabled = false; btn.textContent = 'Активировать';
+        }
+    } catch {
+        showAdminMsg('Нет соединения', 'error');
+        btn.disabled = false; btn.textContent = 'Активировать';
+    }
+}
+function showAdminMsg(text, type) {
+    const el = document.getElementById('adminActivateMsg');
+    if (!el) return;
+    el.textContent = text; el.className = 'admin-activate-msg ' + type; el.style.display = 'block';
+}
+document.getElementById('adminSecretInput')?.addEventListener('keypress', e => {
+    if (e.key === 'Enter') activateAdmin();
+});
+</script>

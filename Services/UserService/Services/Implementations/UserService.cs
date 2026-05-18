@@ -14,7 +14,11 @@ public class UserService : IUserService
 
     public async Task<User?> GetByIdAsync(Guid id)
     {
-        return await _context.Users.FindAsync(id);
+        return await _context.Users
+            .Include(u => u.Recipes)
+            .Include(u => u.FavoriteRecipes)
+            .Include(u => u.MealPlans) 
+            .FirstOrDefaultAsync(u => u.Id == id);
     }
 
     public async Task<User?> GetByEmailAsync(string email)

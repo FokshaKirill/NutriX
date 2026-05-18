@@ -10,8 +10,15 @@
                 <form asp-action="Index" method="get">
                     <div class="mb-4">
                         <label class="form-label fw-medium">Категория</label>
-                        <select name="categoryId" class="form-select form-select-lg" asp-items="@ViewBag.Categories">
-                            <option value="">Все</option>
+                        <select name="category" class="form-select form-select-lg">
+                            <option value="">Все категории</option>
+                            @foreach (var cat in ViewBag.Categories)
+                            {
+                                <option value="@cat.Value" 
+                                        selected="@(ViewBag.SelectedCategory?.ToString() == cat.Value ? "selected" : null)">
+                                    @cat.Text
+                                </option>
+                            }
                         </select>
                     </div>
                     
@@ -54,12 +61,15 @@
                     </button>
                 </div>
                 
-                <!-- Кнопка "Импорт продуктов" -->
-                <div class="text-end">
-                    <a asp-action="ImportOptions" asp-controller="Product">
-                        <button class="btn btn-success btn-lg">Импорт</button>
-                    </a>
-                </div>
+                @if (User.IsInRole("Admin"))
+                {
+                    <!-- Кнопка "Импорт продуктов" -->
+                    <div class="text-end">
+                        <a asp-action="Parser" asp-controller="Admin">
+                            <button class="btn btn-success btn-lg">Импорт</button>
+                        </a>
+                    </div>
+                }
             </div>
 
             <!-- Информация о результатах -->

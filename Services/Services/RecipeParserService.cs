@@ -3,6 +3,7 @@ using System.Text.RegularExpressions;
 using HtmlAgilityPack;
 using Domain.Entities;
 using Services.Interfaces;
+using Services.Services;
 
 namespace Services.Services
 {
@@ -123,75 +124,97 @@ namespace Services.Services
         }
 
         private List<ParsedIngredientDto> ParseIngredientsNew(HtmlDocument doc)
+{
+    var ingredients = new List<ParsedIngredientDto>();
+
+    // Берём все узлы внутри формы списка — и group-name, и ingredient
+    var container = doc.DocumentNode.SelectSingleNode(
+        "//form[contains(@class,'dotted-list')]");
+    
+    if (container == null) return ingredients;
+
+    var nodes = container.ChildNodes
+        .Where(n => n.NodeType == HtmlNodeType.Element)
+        .ToList();
+
+    string? currentGroup = null;
+
+    foreach (var node in nodes)
+    {
+        // Встретили заголовок группы
+        if (node.HasClass("group-name"))
         {
-            var ingredients = new List<ParsedIngredientDto>();
-
-            // Новая структура: div.ingredient с meta itemprop="recipeIngredient"
-            var ingredientNodes = doc.DocumentNode.SelectNodes("//div[@class='ingredient list-item']");
-
-            if (ingredientNodes == null) return ingredients;
-
-            foreach (var node in ingredientNodes)
-            {
-                try
-                {
-                    // Название продукта из <a class="name">
-                    var nameNode = node.SelectSingleNode(".//a[@class='name']");
-                    var name = nameNode?.InnerText.Trim();
-
-                    if (string.IsNullOrWhiteSpace(name)) continue;
-
-                    // Количество из <span class="squant value">
-                    var quantityNode = node.SelectSingleNode(".//span[@class='squant value']");
-                    var quantityStr = quantityNode?.InnerText.Trim();
-
-                    // Единица измерения из <select class="recalc_s_num">
-                    var unitNode = node.SelectSingleNode(".//select[@class='recalc_s_num']/option[@selected]");
-                    var unit = unitNode?.InnerText.Trim();
-
-                    // Проверка на "по вкусу"
-                    var tasteNode = node.SelectSingleNode(".//span[@class='type']");
-                    var isByTaste = tasteNode?.InnerText.Trim() == "по вкусу";
-
-                    // Комментарий из span.ingredient-info
-                    var commentNode = node.SelectSingleNode(".//span[@class='ingredient-info mr-1']");
-                    var comment = commentNode?.InnerText.Trim().TrimStart('(').TrimEnd(')');
-
-                    decimal amount = 0;
-                    if (!isByTaste && !string.IsNullOrEmpty(quantityStr))
-                    {
-                        decimal.TryParse(quantityStr.Replace(',', '.'), out amount);
-                    }
-
-                    // Нормализация единиц
-                    var normalizedUnit = NormalizeUnit(unit ?? "г");
-                    
-                    // Конвертация в граммы
-                    if (amount > 0)
-                    {
-                        amount = ConvertToGrams(amount, normalizedUnit);
-                    }
-
-                    ingredients.Add(new ParsedIngredientDto
-                    {
-                        Name = name,
-                        Amount = amount,
-                        Unit = "г",
-                        Comment = isByTaste ? "по вкусу" : comment,
-                        OriginalText = $"{name} - {quantityStr} {unit}"
-                    });
-                }
-                catch (Exception ex)
-                {
-                    // Логируем и пропускаем проблемный ингредиент
-                    Console.WriteLine($"Error parsing ingredient: {ex.Message}");
-                    continue;
-                }
-            }
-
-            return ingredients;
+            currentGroup = node.InnerText
+                .Trim()
+                .TrimEnd(':', ' ')  // убираем "Для блинов:: " → "Для блинов"
+                .Trim();
+            continue;
         }
 
+        // Встретили ингредиент
+        if (!node.HasClass("ingredient") || !node.HasClass("list-item"))
+            continue;
+
+        try
+        {
+            var nameNode = node.SelectSingleNode(
+                ".//a[contains(@class,'name')]");
+            var name = nameNode?.InnerText.Trim();
+            if (string.IsNullOrWhiteSpace(name)) continue;
+
+            var quantityNode = node.SelectSingleNode(
+                ".//span[contains(@class,'squant') and contains(@class,'value')]");
+            var quantityStr = quantityNode?.InnerText.Trim();
+
+            var unitNode = node.SelectSingleNode(
+                ".//select[contains(@class,'recalc_s_num')]/option[@selected]");
+            var unit = unitNode?.InnerText.Trim();
+
+            var tasteNode = node.SelectSingleNode(".//span[@class='type']");
+            var isByTaste = tasteNode?.InnerText.Trim() == "по вкусу";
+
+            var commentNode = node.SelectSingleNode(
+                ".//span[contains(@class,'ingredient-info')]");
+            var rawComment = commentNode?.InnerText.Trim()
+                .TrimStart('(').TrimEnd(')');
+
+            decimal amount = 0;
+            if (!isByTaste && !string.IsNullOrEmpty(quantityStr))
+                decimal.TryParse(quantityStr.Replace(',', '.'),
+                    System.Globalization.NumberStyles.Any,
+                    System.Globalization.CultureInfo.InvariantCulture,
+                    out amount);
+
+            var normalizedUnit = NormalizeUnit(unit ?? "г");
+            if (amount > 0)
+                amount = ConvertToGrams(amount, normalizedUnit);
+
+            // Собираем comment: группа + скобочный комментарий + по вкусу
+            var commentParts = new List<string>();
+            if (currentGroup != null)      commentParts.Add($"[{currentGroup}]");
+            if (isByTaste)                 commentParts.Add("по вкусу");
+            else if (!string.IsNullOrWhiteSpace(rawComment)) commentParts.Add(rawComment);
+
+            ingredients.Add(new ParsedIngredientDto
+            {
+                Name         = name,
+                Amount       = amount,
+                Unit         = "г",
+                Comment      = commentParts.Count > 0
+                                   ? string.Join(" ", commentParts)
+                                   : null,
+                OriginalText = $"{name} - {quantityStr} {unit}"
+            });
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error parsing ingredient: {ex.Message}");
+        }
+    }
+
+    return ingredients;
+}
+        
         private string NormalizeUnit(string unit)
         {
             unit = unit.ToLower().Trim().Replace(".", "");
@@ -228,59 +251,67 @@ namespace Services.Services
         }
 
         private List<ParsedStepDto> ParseStepsNew(HtmlDocument doc)
+{
+    var steps = new List<ParsedStepDto>();
+
+    var stepNodes = doc.DocumentNode.SelectNodes(
+        "//ol[contains(@class,'instructions')]//li[not(contains(@class,'as-ad-step')) and not(contains(@class,'as-video-step'))]");
+
+    if (stepNodes == null) return steps;
+
+    int order = 1;
+    foreach (var node in stepNodes)
+    {
+        try
         {
-            var steps = new List<ParsedStepDto>();
+            // Берём div.instruction и убираем infoblock-параграфы (советы, секреты и т.д.)
+            var instrDiv = node.SelectSingleNode(".//div[@class='instruction']");
+            if (instrDiv == null) continue;
 
-            // Новая структура: ol.instructions > li
-            var stepNodes = doc.DocumentNode.SelectNodes("//ol[@class='instructions']//li[not(contains(@class, 'as-ad-step'))]");
+            // Клонируем чтобы не портить оригинал
+            var instrClone = instrDiv.CloneNode(true);
 
-            if (stepNodes == null) return steps;
+            // Удаляем блоки infoblock (советы, секреты шеф-повара и т.д.)
+            var infoblocks = instrClone.SelectNodes(".//*[contains(@class,'infoblock')]");
+            if (infoblocks != null)
+                foreach (var ib in infoblocks.ToList())
+                    ib.Remove();
 
-            int order = 1;
-            foreach (var node in stepNodes)
+            // Берём первый <p> — это основное описание шага
+            var firstP = instrClone.SelectSingleNode(".//p");
+            var description = firstP != null
+                ? HtmlEntity.DeEntitize(firstP.InnerText).Trim()
+                : HtmlEntity.DeEntitize(instrClone.InnerText).Trim();
+
+            // Убираем лишние пробелы и переносы
+            description = System.Text.RegularExpressions.Regex
+                .Replace(description, @"\s{2,}", " ").Trim();
+
+            if (string.IsNullOrWhiteSpace(description)) continue;
+
+            // Изображение шага из a.step-img
+            var imgNode = node.SelectSingleNode(".//a[contains(@class,'step-img')]");
+            var imgUrl  = imgNode?.GetAttributeValue("href", null);
+            if (!string.IsNullOrEmpty(imgUrl) && imgUrl.StartsWith("//"))
+                imgUrl = "https:" + imgUrl;
+
+            steps.Add(new ParsedStepDto
             {
-                try
-                {
-                    // Заголовок шага из h3.r-section-header
-                    var headerNode = node.SelectSingleNode(".//h3[@class='r-section-header']");
-                    var header = headerNode?.InnerText.Trim();
-
-                    // Описание из p.instruction
-                    var descNode = node.SelectSingleNode(".//p[@class='instruction']");
-                    var description = descNode?.InnerText.Trim();
-
-                    if (string.IsNullOrWhiteSpace(description)) continue;
-
-                    // Изображение шага из a.step-img
-                    var imgNode = node.SelectSingleNode(".//a[@class='step-img foto_gallery']");
-                    var imgUrl = imgNode?.GetAttributeValue("href", null);
-
-                    if (!string.IsNullOrEmpty(imgUrl) && imgUrl.StartsWith("//"))
-                    {
-                        imgUrl = "https:" + imgUrl;
-                    }
-
-                    // Извлекаем таймер из текста
-                    var timerSeconds = ExtractTimerFromText(description);
-
-                    steps.Add(new ParsedStepDto
-                    {
-                        Order = order++,
-                        Description = description,
-                        TimerSeconds = timerSeconds,
-                        ImageUrl = imgUrl
-                    });
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Error parsing step: {ex.Message}");
-                    continue;
-                }
-            }
-
-            return steps;
+                Order        = order++,
+                Description  = description,
+                TimerSeconds = ExtractTimerFromText(description),
+                ImageUrl     = imgUrl
+            });
         }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error parsing step {order}: {ex.Message}");
+        }
+    }
 
+    return steps;
+}
+        
         private int? ExtractTimerFromText(string text)
         {
             // Ищем время в тексте
@@ -371,7 +402,6 @@ namespace Services.Services
 
             // Конвертируем ингредиенты
             var ingredients = new List<RecipeIngredient>();
-            decimal totalCost = 0;
 
             foreach (var parsedIng in parsedRecipe.Ingredients)
             {
@@ -390,16 +420,9 @@ namespace Services.Services
                 };
 
                 ingredients.Add(ingredient);
-
-                // Рассчитываем стоимость
-                if (product.PricePerUnit != 0 && parsedIng.Amount > 0)
-                {
-                    totalCost += (parsedIng.Amount / 100) * product.PricePerUnit;
-                }
             }
 
             recipe.Ingredients = ingredients;
-            recipe.TotalCost = totalCost;
 
             // Конвертируем шаги
             recipe.Steps = parsedRecipe.Steps.Select(s => new RecipeStep

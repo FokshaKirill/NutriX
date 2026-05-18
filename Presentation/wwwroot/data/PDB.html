@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>NutriX — База продуктов питания</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: #f5f5f5; }
+    h1 { color: #2d6a4f; margin-bottom: 4px; }
+    .subtitle { color: #666; margin-bottom: 20px; font-size: 14px; }
+    table { width: 100%; border-collapse: collapse; background: white; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+    thead { background: #2d6a4f; color: white; }
+    th { padding: 10px 8px; text-align: left; font-size: 13px; white-space: nowrap; }
+    td { padding: 8px 8px; font-size: 13px; border-bottom: 1px solid #eee; }
+    tr:hover td { background: #f0f7f2; }
+    .cat { color: #2d6a4f; font-weight: 600; font-size: 12px; }
+    .num { text-align: right; }
+  </style>
+</head>
+<body>
+<h1>База продуктов питания NutriX</h1>
+<p class="subtitle">Справочник пищевой ценности и средних цен. Версия 2024. Источник данных: научные таблицы состава продуктов.</p>
+
+<table id="products-table">
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Название</th>
+      <th>Категория</th>
+      <th>Единица</th>
+      <th class="num">Цена (₽)</th>
+      <th class="num">Ккал/100г</th>
+      <th class="num">Белки (г)</th>
+      <th class="num">Жиры (г)</th>
+      <th class="num">Углеводы (г)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td>1</td><td>Говядина (вырезка)</td><td class="cat">Мясо</td><td>г</td><td class="num">149</td><td class="num">187</td><td class="num">18.9</td><td class="num">12.4</td><td class="num">0.0</td></tr>
+    <tr><td>2</td><td>Говядина (лопатка)</td><td class="cat">Мясо</td><td>г</td><td class="num">119</td><td class="num">193</td><td class="num">19.0</td><td class="num">12.8</td><td class="num">0.0</td></tr>
+    <tr><td>3</td><td>Говядина (грудинка)</td><td class="cat">Мясо</td><td>г</td><td class="num">109</td><td class="num">224</td><td class="num">17.0</td><td class="num">17.4</td><td class="num">0.0</td></tr>
+    <tr><td>4</td><td>Говядина (фарш)</td><td class="cat">Мясо</td><td>г</td><td class="num">109</td><td class="num">254</td><td class="num">17.2</td><td class="num">20.0</td><td class="num">0.0</td></tr>
+    <tr><td>5</td><td>Свинина (шея)</td><td class="cat">Мясо</td><td>г</td><td class="num">99</td><td class="num">343</td><td class="num">13.3</td><td class="num">32.2</td><td class="num">0.0</td></tr>
+    <tr><td>6</td><td>Свинина (окорок)</td><td class="cat">Мясо</td><td>г</td><td class="num">89</td><td class="num">261</td><td class="num">15.6</td><td class="num">21.9</td><td class="num">0.0</td></tr>
+    <tr><td>7</td><td>Свинина (грудинка)</td><td class="cat">Мясо</td><td>г</td><td class="num">95</td><td class="num">494</td><td class="num">10.0</td><td class="num">50.8</td><td class="num">0.0</td></tr>
+    <tr><td>8</td><td>Свинина (вырезка)</td><td class="cat">Мясо</td><td>г</td><td class="num">129</td><td class="num">142</td><td class="num">19.4</td><td class="num">6.6</td><td class="num">0.0</td></tr>
+    <tr><td>9</td><td>Свинина (фарш)</td><td class="cat">Мясо</td><td>г</td><td class="num">89</td><td class="num">351</td><td class="num">14.0</td><td class="num">32.4</td><td class="num">0.0</td></tr>
+    <tr><td>10</td><td>Баранина (лопатка)</td><td class="cat">Мясо</td><td>г</td><td class="num">149</td><td class="num">209</td><td class="num">16.3</td><td class="num">16.3</td><td class="num">0.0</td></tr>
+    <tr><td>11</td><td>Баранина (корейка)</td><td class="cat">Мясо</td><td>г</td><td class="num">169</td><td class="num">191</td><td class="num">16.7</td><td class="num">13.8</td><td class="num">0.0</td></tr>
+    <tr><td>12</td><td>Телятина</td><td class="cat">Мясо</td><td>г</td><td class="num">179</td><td class="num">97</td><td class="num">19.7</td><td class="num">1.2</td><td class="num">0.0</td></tr>
+    <tr><td>13</td><td>Кролик</td><td class="cat">Мясо</td><td>г</td><td class="num">159</td><td class="num">183</td><td class="num">21.1</td><td class="num">11.0</td><td class="num">0.0</td></tr>
+    <tr><td>14</td><td>Печень говяжья</td><td class="cat">Мясо</td><td>г</td><td class="num">79</td><td class="num">127</td><td class="num">17.4</td><td class="num">3.1</td><td class="num">5.8</td></tr>
+    <tr><td>15</td><td>Печень свиная</td><td class="cat">Мясо</td><td>г</td><td class="num">69</td><td class="num">109</td><td class="num">18.8</td><td class="num">3.6</td><td class="num">4.7</td></tr>
+    <tr><td>16</td><td>Сердце говяжье</td><td class="cat">Мясо</td><td>г</td><td class="num">79</td><td class="num">96</td><td class="num">15.0</td><td class="num">3.0</td><td class="num">0.0</td></tr>
+    <tr><td>17</td><td>Язык говяжий</td><td class="cat">Мясо</td><td>г</td><td class="num">129</td><td class="num">163</td><td class="num">13.6</td><td class="num">12.1</td><td class="num">0.0</td></tr>
+    <tr><td>18</td><td>Колбаса варёная Докторская</td><td class="cat">Мясо</td><td>г</td><td class="num">89</td><td class="num">257</td><td class="num">12.8</td><td class="num">22.2</td><td class="num">1.5</td></tr>
+    <tr><td>19</td><td>Колбаса полукопчёная</td><td class="cat">Мясо</td><td>г</td><td class="num">119</td><td class="num">350</td><td class="num">16.5</td><td class="num">30.0</td><td class="num">0.0</td></tr>
+    <tr><td>20</td><td>Сосиски молочные</td><td class="cat">Мясо</td><td>г</td><td class="num">89</td><td class="num">266</td><td class="num">11.4</td><td class="num">23.9</td><td class="num">1.6</td></tr>
+    <tr><td>21</td><td>Курица (грудка)</td><td class="cat">Птица</td><td>г</td><td class="num">89</td><td class="num">113</td><td class="num">23.6</td><td class="num">1.9</td><td class="num">0.0</td></tr>
+    <tr><td>22</td><td>Курица (бедро)</td><td class="cat">Птица</td><td>г</td><td class="num">79</td><td class="num">185</td><td class="num">17.4</td><td class="num">12.6</td><td class="num">0.0</td></tr>
+    <tr><td>23</td><td>Курица (голень)</td><td class="cat">Птица</td><td>г</td><td class="num">69</td><td class="num">158</td><td class="num">18.2</td><td class="num">9.4</td><td class="num">0.0</td></tr>
+    <tr><td>24</td><td>Курица (крыло)</td><td class="cat">Птица</td><td>г</td><td class="num">65</td><td class="num">186</td><td class="num">18.3</td><td class="num">12.4</td><td class="num">0.0</td></tr>
+    <tr><td>25</td><td>Курица целая</td><td class="cat">Птица</td><td>г</td><td class="num">69</td><td class="num">165</td><td class="num">18.2</td><td class="num">10.2</td><td class="num">0.0</td></tr>
+    <tr><td>26</td><td>Курица (фарш)</td><td class="cat">Птица</td><td>г</td><td class="num">79</td><td class="num">143</td><td class="num">17.6</td><td class="num">8.1</td><td class="num">0.0</td></tr>
+    <tr><td>27</td><td>Индейка (грудка)</td><td class="cat">Птица</td><td>г</td><td class="num">109</td><td class="num">84</td><td class="num">19.2</td><td class="num">0.7</td><td class="num">0.0</td></tr>
+    <tr><td>28</td><td>Индейка (бедро)</td><td class="cat">Птица</td><td>г</td><td class="num">99</td><td class="num">144</td><td class="num">19.1</td><td class="num">7.7</td><td class="num">0.0</td></tr>
+    <tr><td>29</td><td>Утка</td><td class="cat">Птица</td><td>г</td><td class="num">119</td><td class="num">308</td><td class="num">15.8</td><td class="num">27.2</td><td class="num">0.0</td></tr>
+    <tr><td>30</td><td>Перепёлка</td><td class="cat">Птица</td><td>г</td><td class="num">149</td><td class="num">234</td><td class="num">21.8</td><td class="num">16.1</td><td class="num">0.0</td></tr>
+    <tr><td>31</td><td>Лосось</td><td class="cat">Рыба</td><td>г</td><td class="num">299</td><td class="num">142</td><td class="num">19.8</td><td class="num">6.3</td><td class="num">0.0</td></tr>
+    <tr><td>32</td><td>Сёмга</td><td class="cat">Рыба</td><td>г</td><td class="num">349</td><td class="num">153</td><td class="num">20.0</td><td class="num">8.1</td><td class="num">0.0</td></tr>
+    <tr><td>33</td><td>Форель</td><td class="cat">Рыба</td><td>г</td><td class="num">279</td><td class="num">88</td><td class="num">17.5</td><td class="num">2.1</td><td class="num">0.0</td></tr>
+    <tr><td>34</td><td>Треска</td><td class="cat">Рыба</td><td>г</td><td class="num">149</td><td class="num">69</td><td class="num">16.0</td><td class="num">0.6</td><td class="num">0.0</td></tr>
+    <tr><td>35</td><td>Минтай</td><td class="cat">Рыба</td><td>г</td><td class="num">99</td><td class="num">72</td><td class="num">15.9</td><td class="num">0.9</td><td class="num">0.0</td></tr>
+    <tr><td>36</td><td>Хек</td><td class="cat">Рыба</td><td>г</td><td class="num">89</td><td class="num">86</td><td class="num">16.6</td><td class="num">2.2</td><td class="num">0.0</td></tr>
+    <tr><td>37</td><td>Тунец</td><td class="cat">Рыба</td><td>г</td><td class="num">249</td><td class="num">96</td><td class="num">23.0</td><td class="num">1.0</td><td class="num">0.0</td></tr>
+    <tr><td>38</td><td>Скумбрия</td><td class="cat">Рыба</td><td>г</td><td class="num">119</td><td class="num">191</td><td class="num">18.0</td><td class="num">13.2</td><td class="num">0.0</td></tr>
+    <tr><td>39</td><td>Сельдь</td><td class="cat">Рыба</td><td>г</td><td class="num">89</td><td class="num">145</td><td class="num">17.7</td><td class="num">9.7</td><td class="num">0.0</td></tr>
+    <tr><td>40</td><td>Карп</td><td class="cat">Рыба</td><td>г</td><td class="num">99</td><td class="num">112</td><td class="num">16.0</td><td class="num">5.3</td><td class="num">0.0</td></tr>
+    <tr><td>41</td><td>Судак</td><td class="cat">Рыба</td><td>г</td><td class="num">119</td><td class="num">83</td><td class="num">18.4</td><td class="num">1.1</td><td class="num">0.0</td></tr>
+    <tr><td>42</td><td>Тилапия</td><td class="cat">Рыба</td><td>г</td><td class="num">129</td><td class="num">96</td><td class="num">20.1</td><td class="num">1.7</td><td class="num">0.0</td></tr>
+    <tr><td>43</td><td>Кальмар</td><td class="cat">Рыба</td><td>г</td><td class="num">149</td><td class="num">92</td><td class="num">18.0</td><td class="num">2.2</td><td class="num">1.9</td></tr>
+    <tr><td>44</td><td>Креветки варёные</td><td class="cat">Рыба</td><td>г</td><td class="num">249</td><td class="num">95</td><td class="num">20.6</td><td class="num">1.7</td><td class="num">0.0</td></tr>
+    <tr><td>45</td><td>Мидии</td><td class="cat">Рыба</td><td>г</td><td class="num">179</td><td class="num">77</td><td class="num">11.5</td><td class="num">2.0</td><td class="num">3.3</td></tr>
+    <tr><td>46</td><td>Икра красная</td><td class="cat">Рыба</td><td>г</td><td class="num">999</td><td class="num">251</td><td class="num">31.5</td><td class="num">13.8</td><td class="num">0.0</td></tr>
+    <tr><td>47</td><td>Сёмга слабосолёная</td><td class="cat">Рыба</td><td>г</td><td class="num">399</td><td class="num">202</td><td class="num">22.5</td><td class="num">12.5</td><td class="num">0.0</td></tr>
+    <tr><td>48</td><td>Шпроты консервы</td><td class="cat">Рыба</td><td>г</td><td class="num">69</td><td class="num">363</td><td class="num">17.4</td><td class="num">32.4</td><td class="num">0.0</td></tr>
+    <tr><td>49</td><td>Тунец консервы</td><td class="cat">Рыба</td><td>г</td><td class="num">89</td><td class="num">96</td><td class="num">22.0</td><td class="num">0.7</td><td class="num">0.0</td></tr>
+    <tr><td>50</td><td>Горбуша</td><td class="cat">Рыба</td><td>г</td><td class="num">199</td><td class="num">142</td><td class="num">20.5</td><td class="num">6.5</td><td class="num">0.0</td></tr>
+    <tr><td>51</td><td>Молоко 2.5%</td><td class="cat">Молочное</td><td>мл</td><td class="num">7</td><td class="num">52</td><td class="num">2.8</td><td class="num">2.5</td><td class="num">4.7</td></tr>
+    <tr><td>52</td><td>Молоко 3.2%</td><td class="cat">Молочное</td><td>мл</td><td class="num">8</td><td class="num">58</td><td class="num">2.9</td><td class="num">3.2</td><td class="num">4.7</td></tr>
+    <tr><td>53</td><td>Кефир 1%</td><td class="cat">Молочное</td><td>мл</td><td class="num">6</td><td class="num">40</td><td class="num">2.8</td><td class="num">1.0</td><td class="num">4.1</td></tr>
+    <tr><td>54</td><td>Кефир 3.2%</td><td class="cat">Молочное</td><td>мл</td><td class="num">7</td><td class="num">56</td><td class="num">2.8</td><td class="num">3.2</td><td class="num">4.1</td></tr>
+    <tr><td>55</td><td>Ряженка 4%</td><td class="cat">Молочное</td><td>мл</td><td class="num">7</td><td class="num">67</td><td class="num">2.8</td><td class="num">4.0</td><td class="num">4.2</td></tr>
+    <tr><td>56</td><td>Сметана 15%</td><td class="cat">Молочное</td><td>г</td><td class="num">12</td><td class="num">158</td><td class="num">2.6</td><td class="num">15.0</td><td class="num">3.0</td></tr>
+    <tr><td>57</td><td>Сметана 20%</td><td class="cat">Молочное</td><td>г</td><td class="num">14</td><td class="num">206</td><td class="num">2.5</td><td class="num">20.0</td><td class="num">3.2</td></tr>
+    <tr><td>58</td><td>Творог 0%</td><td class="cat">Молочное</td><td>г</td><td class="num">13</td><td class="num">71</td><td class="num">16.5</td><td class="num">0.0</td><td class="num">1.8</td></tr>
+    <tr><td>59</td><td>Творог 5%</td><td class="cat">Молочное</td><td>г</td><td class="num">15</td><td class="num">121</td><td class="num">17.2</td><td class="num">5.0</td><td class="num">1.8</td></tr>
+    <tr><td>60</td><td>Творог 9%</td><td class="cat">Молочное</td><td>г</td><td class="num">17</td><td class="num">159</td><td class="num">16.7</td><td class="num">9.0</td><td class="num">2.0</td></tr>
+    <tr><td>61</td><td>Сыр Российский</td><td class="cat">Молочное</td><td>г</td><td class="num">99</td><td class="num">363</td><td class="num">23.4</td><td class="num">29.5</td><td class="num">0.0</td></tr>
+    <tr><td>62</td><td>Сыр Гауда</td><td class="cat">Молочное</td><td>г</td><td class="num">119</td><td class="num">356</td><td class="num">24.9</td><td class="num">27.5</td><td class="num">0.0</td></tr>
+    <tr><td>63</td><td>Сыр Пармезан</td><td class="cat">Молочное</td><td>г</td><td class="num">249</td><td class="num">392</td><td class="num">35.8</td><td class="num">26.0</td><td class="num">0.0</td></tr>
+    <tr><td>64</td><td>Сыр Моцарелла</td><td class="cat">Молочное</td><td>г</td><td class="num">129</td><td class="num">280</td><td class="num">18.0</td><td class="num">22.0</td><td class="num">0.0</td></tr>
+    <tr><td>65</td><td>Сыр Сулугуни</td><td class="cat">Молочное</td><td>г</td><td class="num">99</td><td class="num">285</td><td class="num">20.5</td><td class="num">22.4</td><td class="num">0.0</td></tr>
+    <tr><td>66</td><td>Сыр Адыгейский</td><td class="cat">Молочное</td><td>г</td><td class="num">89</td><td class="num">240</td><td class="num">19.8</td><td class="num">14.0</td><td class="num">0.0</td></tr>
+    <tr><td>67</td><td>Сыр Фета</td><td class="cat">Молочное</td><td>г</td><td class="num">149</td><td class="num">264</td><td class="num">14.2</td><td class="num">21.3</td><td class="num">4.1</td></tr>
+    <tr><td>68</td><td>Масло сливочное 82.5%</td><td class="cat">Молочное</td><td>г</td><td class="num">79</td><td class="num">748</td><td class="num">0.5</td><td class="num">82.5</td><td class="num">0.8</td></tr>
+    <tr><td>69</td><td>Сливки 10%</td><td class="cat">Молочное</td><td>мл</td><td class="num">15</td><td class="num">118</td><td class="num">3.0</td><td class="num">10.0</td><td class="num">4.0</td></tr>
+    <tr><td>70</td><td>Сливки 33%</td><td class="cat">Молочное</td><td>мл</td><td class="num">25</td><td class="num">322</td><td class="num">2.2</td><td class="num">33.0</td><td class="num">3.3</td></tr>
+    <tr><td>71</td><td>Йогурт натуральный</td><td class="cat">Молочное</td><td>г</td><td class="num">10</td><td class="num">68</td><td class="num">5.0</td><td class="num">3.2</td><td class="num">3.5</td></tr>
+    <tr><td>72</td><td>Йогурт греческий</td><td class="cat">Молочное</td><td>г</td><td class="num">15</td><td class="num">66</td><td class="num">5.0</td><td class="num">0.4</td><td class="num">3.5</td></tr>
+    <tr><td>73</td><td>Яйцо куриное С1</td><td class="cat">Яйца</td><td>шт</td><td class="num">9</td><td class="num">157</td><td class="num">12.7</td><td class="num">11.5</td><td class="num">0.7</td></tr>
+    <tr><td>74</td><td>Яйцо куриное С0</td><td class="cat">Яйца</td><td>шт</td><td class="num">11</td><td class="num">157</td><td class="num">12.7</td><td class="num">11.5</td><td class="num">0.7</td></tr>
+    <tr><td>75</td><td>Яйцо перепелиное</td><td class="cat">Яйца</td><td>шт</td><td class="num">4</td><td class="num">168</td><td class="num">11.9</td><td class="num">13.1</td><td class="num">0.6</td></tr>
+    <tr><td>76</td><td>Гречка</td><td class="cat">Крупы</td><td>г</td><td class="num">9</td><td class="num">313</td><td class="num">12.6</td><td class="num">3.3</td><td class="num">57.1</td></tr>
+    <tr><td>77</td><td>Рис белый</td><td class="cat">Крупы</td><td>г</td><td class="num">7</td><td class="num">344</td><td class="num">6.7</td><td class="num">0.7</td><td class="num">78.9</td></tr>
+    <tr><td>78</td><td>Рис бурый</td><td class="cat">Крупы</td><td>г</td><td class="num">12</td><td class="num">337</td><td class="num">7.4</td><td class="num">1.8</td><td class="num">72.9</td></tr>
+    <tr><td>79</td><td>Овсянка хлопья</td><td class="cat">Крупы</td><td>г</td><td class="num">8</td><td class="num">352</td><td class="num">11.9</td><td class="num">7.2</td><td class="num">61.8</td></tr>
+    <tr><td>80</td><td>Перловка</td><td class="cat">Крупы</td><td>г</td><td class="num">5</td><td class="num">320</td><td class="num">9.3</td><td class="num">1.1</td><td class="num">66.9</td></tr>
+    <tr><td>81</td><td>Пшено</td><td class="cat">Крупы</td><td>г</td><td class="num">6</td><td class="num">334</td><td class="num">11.5</td><td class="num">3.3</td><td class="num">66.5</td></tr>
+    <tr><td>82</td><td>Манка</td><td class="cat">Крупы</td><td>г</td><td class="num">6</td><td class="num">326</td><td class="num">10.3</td><td class="num">1.0</td><td class="num">70.6</td></tr>
+    <tr><td>83</td><td>Кукурузная крупа</td><td class="cat">Крупы</td><td>г</td><td class="num">6</td><td class="num">337</td><td class="num">8.3</td><td class="num">1.2</td><td class="num">71.0</td></tr>
+    <tr><td>84</td><td>Булгур</td><td class="cat">Крупы</td><td>г</td><td class="num">12</td><td class="num">342</td><td class="num">12.3</td><td class="num">1.3</td><td class="num">68.0</td></tr>
+    <tr><td>85</td><td>Киноа</td><td class="cat">Крупы</td><td>г</td><td class="num">29</td><td class="num">368</td><td class="num">14.1</td><td class="num">6.1</td><td class="num">57.2</td></tr>
+    <tr><td>86</td><td>Чечевица красная</td><td class="cat">Крупы</td><td>г</td><td class="num">11</td><td class="num">316</td><td class="num">24.0</td><td class="num">1.5</td><td class="num">46.3</td></tr>
+    <tr><td>87</td><td>Чечевица зелёная</td><td class="cat">Крупы</td><td>г</td><td class="num">11</td><td class="num">295</td><td class="num">24.8</td><td class="num">1.1</td><td class="num">42.7</td></tr>
+    <tr><td>88</td><td>Горох</td><td class="cat">Крупы</td><td>г</td><td class="num">7</td><td class="num">298</td><td class="num">23.0</td><td class="num">1.2</td><td class="num">46.5</td></tr>
+    <tr><td>89</td><td>Нут</td><td class="cat">Крупы</td><td>г</td><td class="num">14</td><td class="num">364</td><td class="num">20.1</td><td class="num">6.0</td><td class="num">52.7</td></tr>
+    <tr><td>90</td><td>Фасоль красная</td><td class="cat">Крупы</td><td>г</td><td class="num">10</td><td class="num">298</td><td class="num">22.3</td><td class="num">1.7</td><td class="num">47.0</td></tr>
+    <tr><td>91</td><td>Фасоль белая</td><td class="cat">Крупы</td><td>г</td><td class="num">10</td><td class="num">292</td><td class="num">21.0</td><td class="num">2.0</td><td class="num">46.0</td></tr>
+    <tr><td>92</td><td>Маш</td><td class="cat">Крупы</td><td>г</td><td class="num">15</td><td class="num">347</td><td class="num">23.9</td><td class="num">1.5</td><td class="num">54.5</td></tr>
+    <tr><td>93</td><td>Макароны спагетти</td><td class="cat">Хлеб и макароны</td><td>г</td><td class="num">9</td><td class="num">344</td><td class="num">10.4</td><td class="num">1.1</td><td class="num">71.5</td></tr>
+    <tr><td>94</td><td>Лапша яичная</td><td class="cat">Хлеб и макароны</td><td>г</td><td class="num">11</td><td class="num">340</td><td class="num">12.0</td><td class="num">3.7</td><td class="num">61.0</td></tr>
+    <tr><td>95</td><td>Хлеб белый</td><td class="cat">Хлеб и макароны</td><td>г</td><td class="num">5</td><td class="num">242</td><td class="num">7.9</td><td class="num">2.4</td><td class="num">47.2</td></tr>
+    <tr><td>96</td><td>Хлеб чёрный</td><td class="cat">Хлеб и макароны</td><td>г</td><td class="num">5</td><td class="num">207</td><td class="num">6.8</td><td class="num">1.3</td><td class="num">40.7</td></tr>
+    <tr><td>97</td><td>Хлеб цельнозерновой</td><td class="cat">Хлеб и макароны</td><td>г</td><td class="num">8</td><td class="num">229</td><td class="num">8.1</td><td class="num">3.4</td><td class="num">41.3</td></tr>
+    <tr><td>98</td><td>Мука пшеничная</td><td class="cat">Хлеб и макароны</td><td>г</td><td class="num">5</td><td class="num">334</td><td class="num">10.3</td><td class="num">1.1</td><td class="num">68.9</td></tr>
+    <tr><td>99</td><td>Мука ржаная</td><td class="cat">Хлеб и макароны</td><td>г</td><td class="num">6</td><td class="num">298</td><td class="num">8.9</td><td class="num">1.7</td><td class="num">61.8</td></tr>
+    <tr><td>100</td><td>Лаваш тонкий</td><td class="cat">Хлеб и макароны</td><td>г</td><td class="num">6</td><td class="num">277</td><td class="num">9.1</td><td class="num">1.1</td><td class="num">57.1</td></tr>
+    <tr><td>101</td><td>Картофель</td><td class="cat">Овощи</td><td>г</td><td class="num">9</td><td class="num">77</td><td class="num">2.0</td><td class="num">0.1</td><td class="num">16.3</td></tr>
+    <tr><td>102</td><td>Морковь</td><td class="cat">Овощи</td><td>г</td><td class="num">6</td><td class="num">32</td><td class="num">1.3</td><td class="num">0.1</td><td class="num">6.9</td></tr>
+    <tr><td>103</td><td>Лук репчатый</td><td class="cat">Овощи</td><td>г</td><td class="num">5</td><td class="num">41</td><td class="num">1.4</td><td class="num">0.0</td><td class="num">8.2</td></tr>
+    <tr><td>104</td><td>Чеснок</td><td class="cat">Овощи</td><td>г</td><td class="num">15</td><td class="num">149</td><td class="num">6.5</td><td class="num">0.5</td><td class="num">29.9</td></tr>
+    <tr><td>105</td><td>Капуста белокочанная</td><td class="cat">Овощи</td><td>г</td><td class="num">5</td><td class="num">27</td><td class="num">1.8</td><td class="num">0.1</td><td class="num">4.7</td></tr>
+    <tr><td>106</td><td>Капуста цветная</td><td class="cat">Овощи</td><td>г</td><td class="num">12</td><td class="num">30</td><td class="num">2.5</td><td class="num">0.3</td><td class="num">4.2</td></tr>
+    <tr><td>107</td><td>Брокколи</td><td class="cat">Овощи</td><td>г</td><td class="num">14</td><td class="num">28</td><td class="num">2.8</td><td class="num">0.4</td><td class="num">3.5</td></tr>
+    <tr><td>108</td><td>Томаты (помидоры)</td><td class="cat">Овощи</td><td>г</td><td class="num">10</td><td class="num">20</td><td class="num">1.1</td><td class="num">0.2</td><td class="num">3.7</td></tr>
+    <tr><td>109</td><td>Огурец</td><td class="cat">Овощи</td><td>г</td><td class="num">7</td><td class="num">15</td><td class="num">0.8</td><td class="num">0.1</td><td class="num">2.5</td></tr>
+    <tr><td>110</td><td>Болгарский перец красный</td><td class="cat">Овощи</td><td>г</td><td class="num">15</td><td class="num">31</td><td class="num">1.3</td><td class="num">0.0</td><td class="num">6.0</td></tr>
+    <tr><td>111</td><td>Болгарский перец зелёный</td><td class="cat">Овощи</td><td>г</td><td class="num">12</td><td class="num">20</td><td class="num">0.9</td><td class="num">0.2</td><td class="num">3.5</td></tr>
+    <tr><td>112</td><td>Баклажан</td><td class="cat">Овощи</td><td>г</td><td class="num">10</td><td class="num">24</td><td class="num">1.2</td><td class="num">0.1</td><td class="num">4.5</td></tr>
+    <tr><td>113</td><td>Кабачок</td><td class="cat">Овощи</td><td>г</td><td class="num">8</td><td class="num">24</td><td class="num">0.6</td><td class="num">0.3</td><td class="num">4.6</td></tr>
+    <tr><td>114</td><td>Тыква</td><td class="cat">Овощи</td><td>г</td><td class="num">8</td><td class="num">22</td><td class="num">1.0</td><td class="num">0.1</td><td class="num">4.4</td></tr>
+    <tr><td>115</td><td>Свёкла</td><td class="cat">Овощи</td><td>г</td><td class="num">7</td><td class="num">43</td><td class="num">1.5</td><td class="num">0.0</td><td class="num">8.8</td></tr>
+    <tr><td>116</td><td>Шпинат</td><td class="cat">Овощи</td><td>г</td><td class="num">15</td><td class="num">22</td><td class="num">2.9</td><td class="num">0.3</td><td class="num">2.0</td></tr>
+    <tr><td>117</td><td>Салат Айсберг</td><td class="cat">Овощи</td><td>г</td><td class="num">10</td><td class="num">14</td><td class="num">0.9</td><td class="num">0.1</td><td class="num">1.8</td></tr>
+    <tr><td>118</td><td>Руккола</td><td class="cat">Овощи</td><td>г</td><td class="num">14</td><td class="num">25</td><td class="num">2.6</td><td class="num">0.7</td><td class="num">2.0</td></tr>
+    <tr><td>119</td><td>Петрушка</td><td class="cat">Овощи</td><td>г</td><td class="num">10</td><td class="num">49</td><td class="num">3.7</td><td class="num">0.4</td><td class="num">6.5</td></tr>
+    <tr><td>120</td><td>Укроп</td><td class="cat">Овощи</td><td>г</td><td class="num">10</td><td class="num">38</td><td class="num">2.5</td><td class="num">0.5</td><td class="num">4.5</td></tr>
+    <tr><td>121</td><td>Горошек зелёный</td><td class="cat">Овощи</td><td>г</td><td class="num">11</td><td class="num">72</td><td class="num">5.0</td><td class="num">0.2</td><td class="num">13.3</td></tr>
+    <tr><td>122</td><td>Кукуруза</td><td class="cat">Овощи</td><td>г</td><td class="num">9</td><td class="num">123</td><td class="num">4.1</td><td class="num">2.3</td><td class="num">21.9</td></tr>
+    <tr><td>123</td><td>Грибы шампиньоны</td><td class="cat">Овощи</td><td>г</td><td class="num">14</td><td class="num">27</td><td class="num">4.3</td><td class="num">1.0</td><td class="num">1.0</td></tr>
+    <tr><td>124</td><td>Грибы вешенки</td><td class="cat">Овощи</td><td>г</td><td class="num">19</td><td class="num">38</td><td class="num">3.3</td><td class="num">0.4</td><td class="num">2.6</td></tr>
+    <tr><td>125</td><td>Имбирь корень</td><td class="cat">Овощи</td><td>г</td><td class="num">19</td><td class="num">80</td><td class="num">1.8</td><td class="num">0.8</td><td class="num">15.8</td></tr>
+    <tr><td>126</td><td>Перец чили</td><td class="cat">Овощи</td><td>г</td><td class="num">14</td><td class="num">40</td><td class="num">2.0</td><td class="num">0.2</td><td class="num">7.3</td></tr>
+    <tr><td>127</td><td>Спаржа</td><td class="cat">Овощи</td><td>г</td><td class="num">49</td><td class="num">20</td><td class="num">2.2</td><td class="num">0.1</td><td class="num">1.9</td></tr>
+    <tr><td>128</td><td>Яблоко</td><td class="cat">Фрукты</td><td>г</td><td class="num">7</td><td class="num">52</td><td class="num">0.4</td><td class="num">0.4</td><td class="num">11.8</td></tr>
+    <tr><td>129</td><td>Груша</td><td class="cat">Фрукты</td><td>г</td><td class="num">9</td><td class="num">42</td><td class="num">0.4</td><td class="num">0.3</td><td class="num">9.5</td></tr>
+    <tr><td>130</td><td>Банан</td><td class="cat">Фрукты</td><td>г</td><td class="num">8</td><td class="num">89</td><td class="num">1.1</td><td class="num">0.4</td><td class="num">22.4</td></tr>
+    <tr><td>131</td><td>Апельсин</td><td class="cat">Фрукты</td><td>г</td><td class="num">9</td><td class="num">47</td><td class="num">0.9</td><td class="num">0.2</td><td class="num">11.1</td></tr>
+    <tr><td>132</td><td>Лимон</td><td class="cat">Фрукты</td><td>г</td><td class="num">12</td><td class="num">34</td><td class="num">0.9</td><td class="num">0.1</td><td class="num">3.0</td></tr>
+    <tr><td>133</td><td>Грейпфрут</td><td class="cat">Фрукты</td><td>г</td><td class="num">10</td><td class="num">42</td><td class="num">0.7</td><td class="num">0.2</td><td class="num">6.5</td></tr>
+    <tr><td>134</td><td>Виноград</td><td class="cat">Фрукты</td><td>г</td><td class="num">14</td><td class="num">69</td><td class="num">0.6</td><td class="num">0.2</td><td class="num">16.8</td></tr>
+    <tr><td>135</td><td>Персик</td><td class="cat">Фрукты</td><td>г</td><td class="num">14</td><td class="num">39</td><td class="num">0.9</td><td class="num">0.1</td><td class="num">9.5</td></tr>
+    <tr><td>136</td><td>Абрикос</td><td class="cat">Фрукты</td><td>г</td><td class="num">12</td><td class="num">44</td><td class="num">0.9</td><td class="num">0.1</td><td class="num">9.0</td></tr>
+    <tr><td>137</td><td>Слива</td><td class="cat">Фрукты</td><td>г</td><td class="num">10</td><td class="num">49</td><td class="num">0.8</td><td class="num">0.3</td><td class="num">11.4</td></tr>
+    <tr><td>138</td><td>Клубника</td><td class="cat">Фрукты</td><td>г</td><td class="num">14</td><td class="num">32</td><td class="num">0.8</td><td class="num">0.4</td><td class="num">6.9</td></tr>
+    <tr><td>139</td><td>Малина</td><td class="cat">Фрукты</td><td>г</td><td class="num">19</td><td class="num">52</td><td class="num">1.2</td><td class="num">0.6</td><td class="num">11.9</td></tr>
+    <tr><td>140</td><td>Черника</td><td class="cat">Фрукты</td><td>г</td><td class="num">24</td><td class="num">44</td><td class="num">0.7</td><td class="num">0.5</td><td class="num">7.6</td></tr>
+    <tr><td>141</td><td>Смородина чёрная</td><td class="cat">Фрукты</td><td>г</td><td class="num">14</td><td class="num">44</td><td class="num">1.0</td><td class="num">0.4</td><td class="num">7.3</td></tr>
+    <tr><td>142</td><td>Арбуз</td><td class="cat">Фрукты</td><td>г</td><td class="num">6</td><td class="num">27</td><td class="num">0.7</td><td class="num">0.1</td><td class="num">6.2</td></tr>
+    <tr><td>143</td><td>Дыня</td><td class="cat">Фрукты</td><td>г</td><td class="num">8</td><td class="num">33</td><td class="num">0.6</td><td class="num">0.3</td><td class="num">7.4</td></tr>
+    <tr><td>144</td><td>Ананас</td><td class="cat">Фрукты</td><td>г</td><td class="num">15</td><td class="num">49</td><td class="num">0.4</td><td class="num">0.1</td><td class="num">11.8</td></tr>
+    <tr><td>145</td><td>Манго</td><td class="cat">Фрукты</td><td>г</td><td class="num">24</td><td class="num">60</td><td class="num">0.8</td><td class="num">0.4</td><td class="num">15.0</td></tr>
+    <tr><td>146</td><td>Киви</td><td class="cat">Фрукты</td><td>г</td><td class="num">19</td><td class="num">61</td><td class="num">1.1</td><td class="num">0.6</td><td class="num">14.7</td></tr>
+    <tr><td>147</td><td>Авокадо</td><td class="cat">Фрукты</td><td>г</td><td class="num">29</td><td class="num">160</td><td class="num">2.0</td><td class="num">14.7</td><td class="num">8.5</td></tr>
+    <tr><td>148</td><td>Хурма</td><td class="cat">Фрукты</td><td>г</td><td class="num">14</td><td class="num">53</td><td class="num">0.5</td><td class="num">0.4</td><td class="num">13.2</td></tr>
+    <tr><td>149</td><td>Гранат</td><td class="cat">Фрукты</td><td>г</td><td class="num">19</td><td class="num">83</td><td class="num">1.7</td><td class="num">1.2</td><td class="num">18.7</td></tr>
+    <tr><td>150</td><td>Масло подсолнечное</td><td class="cat">Масла</td><td>мл</td><td class="num">12</td><td class="num">884</td><td class="num">0.0</td><td class="num">99.9</td><td class="num">0.0</td></tr>
+    <tr><td>151</td><td>Масло оливковое</td><td class="cat">Масла</td><td>мл</td><td class="num">29</td><td class="num">884</td><td class="num">0.0</td><td class="num">99.6</td><td class="num">0.0</td></tr>
+    <tr><td>152</td><td>Масло кокосовое</td><td class="cat">Масла</td><td>мл</td><td class="num">49</td><td class="num">892</td><td class="num">0.0</td><td class="num">99.1</td><td class="num">0.0</td></tr>
+    <tr><td>153</td><td>Майонез классический</td><td class="cat">Масла</td><td>г</td><td class="num">14</td><td class="num">680</td><td class="num">2.8</td><td class="num">73.1</td><td class="num">2.6</td></tr>
+    <tr><td>154</td><td>Грецкий орех</td><td class="cat">Орехи</td><td>г</td><td class="num">49</td><td class="num">654</td><td class="num">15.2</td><td class="num">65.2</td><td class="num">7.0</td></tr>
+    <tr><td>155</td><td>Миндаль</td><td class="cat">Орехи</td><td>г</td><td class="num">59</td><td class="num">575</td><td class="num">21.2</td><td class="num">52.8</td><td class="num">5.7</td></tr>
+    <tr><td>156</td><td>Кешью</td><td class="cat">Орехи</td><td>г</td><td class="num">54</td><td class="num">553</td><td class="num">18.5</td><td class="num">43.9</td><td class="num">22.5</td></tr>
+    <tr><td>157</td><td>Арахис</td><td class="cat">Орехи</td><td>г</td><td class="num">29</td><td class="num">552</td><td class="num">26.3</td><td class="num">45.2</td><td class="num">9.9</td></tr>
+    <tr><td>158</td><td>Фундук</td><td class="cat">Орехи</td><td>г</td><td class="num">59</td><td class="num">628</td><td class="num">15.0</td><td class="num">61.5</td><td class="num">9.4</td></tr>
+    <tr><td>159</td><td>Фисташки</td><td class="cat">Орехи</td><td>г</td><td class="num">69</td><td class="num">560</td><td class="num">20.6</td><td class="num">50.3</td><td class="num">16.6</td></tr>
+    <tr><td>160</td><td>Семечки подсолнечника</td><td class="cat">Орехи</td><td>г</td><td class="num">19</td><td class="num">601</td><td class="num">20.7</td><td class="num">52.9</td><td class="num">10.5</td></tr>
+    <tr><td>161</td><td>Семена тыквы</td><td class="cat">Орехи</td><td>г</td><td class="num">29</td><td class="num">556</td><td class="num">24.5</td><td class="num">45.8</td><td class="num">14.0</td></tr>
+    <tr><td>162</td><td>Семена льна</td><td class="cat">Орехи</td><td>г</td><td class="num">19</td><td class="num">534</td><td class="num">18.3</td><td class="num">42.2</td><td class="num">28.9</td></tr>
+    <tr><td>163</td><td>Семена чиа</td><td class="cat">Орехи</td><td>г</td><td class="num">49</td><td class="num">486</td><td class="num">15.6</td><td class="num">30.7</td><td class="num">42.1</td></tr>
+    <tr><td>164</td><td>Кунжут</td><td class="cat">Орехи</td><td>г</td><td class="num">24</td><td class="num">573</td><td class="num">19.4</td><td class="num">48.7</td><td class="num">12.2</td></tr>
+    <tr><td>165</td><td>Арахисовая паста</td><td class="cat">Орехи</td><td>г</td><td class="num">39</td><td class="num">588</td><td class="num">25.1</td><td class="num">50.4</td><td class="num">16.1</td></tr>
+    <tr><td>166</td><td>Сахар белый</td><td class="cat">Сладкое</td><td>г</td><td class="num">5</td><td class="num">399</td><td class="num">0.0</td><td class="num">0.0</td><td class="num">99.7</td></tr>
+    <tr><td>167</td><td>Мёд</td><td class="cat">Сладкое</td><td>г</td><td class="num">19</td><td class="num">328</td><td class="num">0.8</td><td class="num">0.0</td><td class="num">81.5</td></tr>
+    <tr><td>168</td><td>Шоколад тёмный 70%</td><td class="cat">Сладкое</td><td>г</td><td class="num">29</td><td class="num">539</td><td class="num">6.5</td><td class="num">39.7</td><td class="num">48.0</td></tr>
+    <tr><td>169</td><td>Шоколад молочный</td><td class="cat">Сладкое</td><td>г</td><td class="num">24</td><td class="num">535</td><td class="num">6.9</td><td class="num">29.7</td><td class="num">59.4</td></tr>
+    <tr><td>170</td><td>Какао-порошок</td><td class="cat">Сладкое</td><td>г</td><td class="num">19</td><td class="num">289</td><td class="num">24.3</td><td class="num">15.0</td><td class="num">10.2</td></tr>
+    <tr><td>171</td><td>Сгущённое молоко</td><td class="cat">Сладкое</td><td>г</td><td class="num">15</td><td class="num">321</td><td class="num">7.2</td><td class="num">8.5</td><td class="num">55.5</td></tr>
+    <tr><td>172</td><td>Варенье клубничное</td><td class="cat">Сладкое</td><td>г</td><td class="num">14</td><td class="num">285</td><td class="num">0.3</td><td class="num">0.1</td><td class="num">73.6</td></tr>
+    <tr><td>173</td><td>Зефир</td><td class="cat">Сладкое</td><td>г</td><td class="num">14</td><td class="num">299</td><td class="num">0.8</td><td class="num">0.0</td><td class="num">78.3</td></tr>
+    <tr><td>174</td><td>Мармелад</td><td class="cat">Сладкое</td><td>г</td><td class="num">12</td><td class="num">321</td><td class="num">1.0</td><td class="num">0.1</td><td class="num">79.4</td></tr>
+    <tr><td>175</td><td>Халва подсолнечная</td><td class="cat">Сладкое</td><td>г</td><td class="num">14</td><td class="num">523</td><td class="num">12.7</td><td class="num">29.9</td><td class="num">54.3</td></tr>
+    <tr><td>176</td><td>Соль поваренная</td><td class="cat">Специи</td><td>г</td><td class="num">2</td><td class="num">0</td><td class="num">0.0</td><td class="num">0.0</td><td class="num">0.0</td></tr>
+    <tr><td>177</td><td>Перец чёрный молотый</td><td class="cat">Специи</td><td>г</td><td class="num">19</td><td class="num">255</td><td class="num">10.4</td><td class="num">3.3</td><td class="num">38.7</td></tr>
+    <tr><td>178</td><td>Куркума</td><td class="cat">Специи</td><td>г</td><td class="num">24</td><td class="num">354</td><td class="num">7.8</td><td class="num">9.9</td><td class="num">64.9</td></tr>
+    <tr><td>179</td><td>Паприка</td><td class="cat">Специи</td><td>г</td><td class="num">19</td><td class="num">282</td><td class="num">3.7</td><td class="num">17.0</td><td class="num">34.0</td></tr>
+    <tr><td>180</td><td>Корица</td><td class="cat">Специи</td><td>г</td><td class="num">14</td><td class="num">261</td><td class="num">3.9</td><td class="num">3.2</td><td class="num">79.8</td></tr>
+    <tr><td>181</td><td>Соевый соус</td><td class="cat">Специи</td><td>мл</td><td class="num">10</td><td class="num">73</td><td class="num">10.5</td><td class="num">0.0</td><td class="num">4.9</td></tr>
+    <tr><td>182</td><td>Горчица</td><td class="cat">Специи</td><td>г</td><td class="num">10</td><td class="num">162</td><td class="num">5.7</td><td class="num">10.9</td><td class="num">11.0</td></tr>
+    <tr><td>183</td><td>Кетчуп томатный</td><td class="cat">Специи</td><td>г</td><td class="num">7</td><td class="num">93</td><td class="num">1.8</td><td class="num">0.1</td><td class="num">22.2</td></tr>
+    <tr><td>184</td><td>Томатная паста</td><td class="cat">Специи</td><td>г</td><td class="num">8</td><td class="num">99</td><td class="num">5.0</td><td class="num">0.5</td><td class="num">18.6</td></tr>
+    <tr><td>185</td><td>Крахмал картофельный</td><td class="cat">Специи</td><td>г</td><td class="num">7</td><td class="num">313</td><td class="num">0.1</td><td class="num">0.0</td><td class="num">79.6</td></tr>
+    <tr><td>186</td><td>Уксус столовый 9%</td><td class="cat">Специи</td><td>мл</td><td class="num">3</td><td class="num">11</td><td class="num">0.0</td><td class="num">0.0</td><td class="num">3.0</td></tr>
+    <tr><td>187</td><td>Дрожжи сухие</td><td class="cat">Специи</td><td>г</td><td class="num">19</td><td class="num">325</td><td class="num">40.4</td><td class="num">7.6</td><td class="num">14.9</td></tr>
+    <tr><td>188</td><td>Желатин</td><td class="cat">Специи</td><td>г</td><td class="num">14</td><td class="num">355</td><td class="num">87.2</td><td class="num">0.4</td><td class="num">0.7</td></tr>
+    <tr><td>189</td><td>Фасоль консервированная</td><td class="cat">Консервы</td><td>г</td><td class="num">8</td><td class="num">99</td><td class="num">7.0</td><td class="num">0.5</td><td class="num">17.5</td></tr>
+    <tr><td>190</td><td>Нут консервированный</td><td class="cat">Консервы</td><td>г</td><td class="num">10</td><td class="num">139</td><td class="num">8.9</td><td class="num">2.6</td><td class="num">20.1</td></tr>
+    <tr><td>191</td><td>Кукуруза консервированная</td><td class="cat">Консервы</td><td>г</td><td class="num">6</td><td class="num">57</td><td class="num">2.2</td><td class="num">0.4</td><td class="num">11.8</td></tr>
+    <tr><td>192</td><td>Горошек консервированный</td><td class="cat">Консервы</td><td>г</td><td class="num">6</td><td class="num">55</td><td class="num">3.6</td><td class="num">0.2</td><td class="num">9.9</td></tr>
+    <tr><td>193</td><td>Томаты в собственном соку</td><td class="cat">Консервы</td><td>г</td><td class="num">6</td><td class="num">24</td><td class="num">1.1</td><td class="num">0.1</td><td class="num">3.5</td></tr>
+    <tr><td>194</td><td>Оливки зелёные</td><td class="cat">Консервы</td><td>г</td><td class="num">14</td><td class="num">145</td><td class="num">1.0</td><td class="num">15.0</td><td class="num">3.8</td></tr>
+    <tr><td>195</td><td>Маслины</td><td class="cat">Консервы</td><td>г</td><td class="num">14</td><td class="num">166</td><td class="num">1.6</td><td class="num">17.3</td><td class="num">3.1</td></tr>
+    <tr><td>196</td><td>Сардины консервы</td><td class="cat">Консервы</td><td>г</td><td class="num">10</td><td class="num">208</td><td class="num">17.9</td><td class="num">15.0</td><td class="num">0.0</td></tr>
+    <tr><td>197</td><td>Бекон</td><td class="cat">Деликатесы</td><td>г</td><td class="num">89</td><td class="num">541</td><td class="num">8.4</td><td class="num">57.1</td><td class="num">0.0</td></tr>
+    <tr><td>198</td><td>Ветчина</td><td class="cat">Деликатесы</td><td>г</td><td class="num">79</td><td class="num">278</td><td class="num">15.6</td><td class="num">24.0</td><td class="num">0.0</td></tr>
+    <tr><td>199</td><td>Буженина</td><td class="cat">Деликатесы</td><td>г</td><td class="num">99</td><td class="num">510</td><td class="num">8.4</td><td class="num">53.0</td><td class="num">0.0</td></tr>
+    <tr><td>200</td><td>Карбонат</td><td class="cat">Деликатесы</td><td>г</td><td class="num">99</td><td class="num">142</td><td class="num">16.0</td><td class="num">8.6</td><td class="num">0.0</td></tr>
+    <tr><td>201</td><td>Пельмени</td><td class="cat">Полуфабрикаты</td><td>г</td><td class="num">19</td><td class="num">275</td><td class="num">11.4</td><td class="num">13.6</td><td class="num">28.6</td></tr>
+    <tr><td>202</td><td>Вареники с картофелем</td><td class="cat">Полуфабрикаты</td><td>г</td><td class="num">15</td><td class="num">196</td><td class="num">6.8</td><td class="num">3.2</td><td class="num">35.1</td></tr>
+    <tr><td>203</td><td>Вареники с творогом</td><td class="cat">Полуфабрикаты</td><td>г</td><td class="num">17</td><td class="num">198</td><td class="num">8.3</td><td class="num">4.0</td><td class="num">34.0</td></tr>
+    <tr><td>204</td><td>Котлеты куриные замороженные</td><td class="cat">Полуфабрикаты</td><td>г</td><td class="num">29</td><td class="num">175</td><td class="num">14.0</td><td class="num">9.7</td><td class="num">9.7</td></tr>
+    <tr><td>205</td><td>Наггетсы куриные</td><td class="cat">Полуфабрикаты</td><td>г</td><td class="num">24</td><td class="num">260</td><td class="num">15.0</td><td class="num">16.0</td><td class="num">14.0</td></tr>
+    <tr><td>206</td><td>Смесь овощная замороженная</td><td class="cat">Полуфабрикаты</td><td>г</td><td class="num">12</td><td class="num">55</td><td class="num">3.0</td><td class="num">0.3</td><td class="num">10.0</td></tr>
+    <tr><td>207</td><td>Тофу</td><td class="cat">Соевые</td><td>г</td><td class="num">29</td><td class="num">76</td><td class="num">8.0</td><td class="num">4.8</td><td class="num">1.9</td></tr>
+    <tr><td>208</td><td>Темпе</td><td class="cat">Соевые</td><td>г</td><td class="num">49</td><td class="num">193</td><td class="num">20.3</td><td class="num">10.8</td><td class="num">9.4</td></tr>
+    <tr><td>209</td><td>Соевое молоко</td><td class="cat">Соевые</td><td>мл</td><td class="num">14</td><td class="num">33</td><td class="num">3.0</td><td class="num">2.0</td><td class="num">2.0</td></tr>
+    <tr><td>210</td><td>Кофе молотый</td><td class="cat">Напитки</td><td>г</td><td class="num">59</td><td class="num">2</td><td class="num">0.2</td><td class="num">0.0</td><td class="num">0.3</td></tr>
+    <tr><td>211</td><td>Кофе растворимый</td><td class="cat">Напитки</td><td>г</td><td class="num">89</td><td class="num">2</td><td class="num">0.2</td><td class="num">0.0</td><td class="num">0.5</td></tr>
+    <tr><td>212</td><td>Чай чёрный</td><td class="cat">Напитки</td><td>г</td><td class="num">19</td><td class="num">152</td><td class="num">20.0</td><td class="num">5.1</td><td class="num">6.9</td></tr>
+    <tr><td>213</td><td>Чай зелёный</td><td class="cat">Напитки</td><td>г</td><td class="num">24</td><td class="num">140</td><td class="num">20.0</td><td class="num">5.1</td><td class="num">4.0</td></tr>
+    <tr><td>214</td><td>Сок апельсиновый</td><td class="cat">Напитки</td><td>мл</td><td class="num">6</td><td class="num">45</td><td class="num">0.7</td><td class="num">0.2</td><td class="num">10.4</td></tr>
+    <tr><td>215</td><td>Сок яблочный</td><td class="cat">Напитки</td><td>мл</td><td class="num">5</td><td class="num">46</td><td class="num">0.5</td><td class="num">0.1</td><td class="num">11.7</td></tr>
+    <tr><td>216</td><td>Томатный сок</td><td class="cat">Напитки</td><td>мл</td><td class="num">4</td><td class="num">18</td><td class="num">1.0</td><td class="num">0.1</td><td class="num">3.5</td></tr>
+    <tr><td>217</td><td>Лосось копчёный</td><td class="cat">Рыба</td><td>г</td><td class="num">320</td><td class="num">172</td><td class="num">25.4</td><td class="num">8.1</td><td class="num">0.0</td></tr>
+    <tr><td>218</td><td>Окунь морской</td><td class="cat">Рыба</td><td>г</td><td class="num">139</td><td class="num">103</td><td class="num">18.2</td><td class="num">3.3</td><td class="num">0.0</td></tr>
+    <tr><td>219</td><td>Щука</td><td class="cat">Рыба</td><td>г</td><td class="num">109</td><td class="num">84</td><td class="num">18.4</td><td class="num">1.1</td><td class="num">0.0</td></tr>
+    <tr><td>220</td><td>Карась</td><td class="cat">Рыба</td><td>г</td><td class="num">89</td><td class="num">87</td><td class="num">17.7</td><td class="num">1.8</td><td class="num">0.0</td></tr>
+    <tr><td>221</td><td>Лещ</td><td class="cat">Рыба</td><td>г</td><td class="num">99</td><td class="num">105</td><td class="num">17.1</td><td class="num">4.1</td><td class="num">0.0</td></tr>
+    <tr><td>222</td><td>Кета</td><td class="cat">Рыба</td><td>г</td><td class="num">219</td><td class="num">138</td><td class="num">21.3</td><td class="num">5.6</td><td class="num">0.0</td></tr>
+    <tr><td>223</td><td>Нерка</td><td class="cat">Рыба</td><td>г</td><td class="num">259</td><td class="num">157</td><td class="num">21.6</td><td class="num">8.0</td><td class="num">0.0</td></tr>
+    <tr><td>224</td><td>Палтус</td><td class="cat">Рыба</td><td>г</td><td class="num">249</td><td class="num">103</td><td class="num">18.9</td><td class="num">3.0</td><td class="num">0.0</td></tr>
+    <tr><td>225</td><td>Краб варёный</td><td class="cat">Рыба</td><td>г</td><td class="num">349</td><td class="num">97</td><td class="num">18.5</td><td class="num">1.5</td><td class="num">0.0</td></tr>
+    <tr><td>226</td><td>Осьминог</td><td class="cat">Рыба</td><td>г</td><td class="num">189</td><td class="num">82</td><td class="num">14.9</td><td class="num">1.0</td><td class="num">2.2</td></tr>
+    <tr><td>227</td><td>Гусь</td><td class="cat">Птица</td><td>г</td><td class="num">139</td><td class="num">317</td><td class="num">16.1</td><td class="num">28.1</td><td class="num">0.0</td></tr>
+    <tr><td>228</td><td>Куропатка</td><td class="cat">Птица</td><td>г</td><td class="num">169</td><td class="num">254</td><td class="num">26.0</td><td class="num">15.6</td><td class="num">0.0</td></tr>
+    <tr><td>229</td><td>Фазан</td><td class="cat">Птица</td><td>г</td><td class="num">189</td><td class="num">244</td><td class="num">30.0</td><td class="num">12.1</td><td class="num">0.0</td></tr>
+    <tr><td>230</td><td>Почки говяжьи</td><td class="cat">Мясо</td><td>г</td><td class="num">79</td><td class="num">86</td><td class="num">15.2</td><td class="num">2.8</td><td class="num">1.9</td></tr>
+    <tr><td>231</td><td>Лёгкое говяжье</td><td class="cat">Мясо</td><td>г</td><td class="num">59</td><td class="num">92</td><td class="num">15.2</td><td class="num">2.5</td><td class="num">0.0</td></tr>
+    <tr><td>232</td><td>Свиные рёбра</td><td class="cat">Мясо</td><td>г</td><td class="num">119</td><td class="num">321</td><td class="num">15.2</td><td class="num">29.3</td><td class="num">0.0</td></tr>
+    <tr><td>233</td><td>Говяжьи рёбра</td><td class="cat">Мясо</td><td>г</td><td class="num">139</td><td class="num">283</td><td class="num">16.8</td><td class="num">24.0</td><td class="num">0.0</td></tr>
+    <tr><td>234</td><td>Паштет печёночный</td><td class="cat">Деликатесы</td><td>г</td><td class="num">49</td><td class="num">301</td><td class="num">14.0</td><td class="num">26.0</td><td class="num">3.5</td></tr>
+    <tr><td>235</td><td>Пастрами говяжья</td><td class="cat">Деликатесы</td><td>г</td><td class="num">149</td><td class="num">140</td><td class="num">22.0</td><td class="num">6.0</td><td class="num">0.0</td></tr>
+    <tr><td>236</td><td>Мисо паста</td><td class="cat">Соевые</td><td>г</td><td class="num">39</td><td class="num">198</td><td class="num">12.0</td><td class="num">6.0</td><td class="num">26.0</td></tr>
+    <tr><td>237</td><td>Сыр плавленый</td><td class="cat">Молочное</td><td>г</td><td class="num">59</td><td class="num">271</td><td class="num">15.4</td><td class="num">22.8</td><td class="num">2.5</td></tr>
+    <tr><td>238</td><td>Топлёное масло</td><td class="cat">Молочное</td><td>г</td><td class="num">89</td><td class="num">892</td><td class="num">0.2</td><td class="num">99.5</td><td class="num">0.6</td></tr>
+    <tr><td>239</td><td>Мороженое пломбир</td><td class="cat">Молочное</td><td>г</td><td class="num">25</td><td class="num">227</td><td class="num">3.7</td><td class="num">15.0</td><td class="num">20.0</td></tr>
+    <tr><td>240</td><td>Молоко 6%</td><td class="cat">Молочное</td><td>мл</td><td class="num">10</td><td class="num">84</td><td class="num">3.2</td><td class="num">6.0</td><td class="num">4.7</td></tr>
+    <tr><td>241</td><td>Простокваша</td><td class="cat">Молочное</td><td>г</td><td class="num">6</td><td class="num">58</td><td class="num">2.7</td><td class="num">3.2</td><td class="num">4.1</td></tr>
+    <tr><td>242</td><td>Масло сливочное 72.5%</td><td class="cat">Молочное</td><td>г</td><td class="num">69</td><td class="num">665</td><td class="num">0.8</td><td class="num">72.5</td><td class="num">1.3</td></tr>
+    <tr><td>243</td><td>Кедровый орех</td><td class="cat">Орехи</td><td>г</td><td class="num">99</td><td class="num">673</td><td class="num">13.7</td><td class="num">68.4</td><td class="num">13.1</td></tr>
+    <tr><td>244</td><td>Масло кунжутное</td><td class="cat">Масла</td><td>мл</td><td class="num">29</td><td class="num">884</td><td class="num">0.0</td><td class="num">99.9</td><td class="num">0.0</td></tr>
+    <tr><td>245</td><td>Масло льняное</td><td class="cat">Масла</td><td>мл</td><td class="num">29</td><td class="num">884</td><td class="num">0.0</td><td class="num">99.8</td><td class="num">0.0</td></tr>
+    <tr><td>246</td><td>Маргарин</td><td class="cat">Масла</td><td>г</td><td class="num">14</td><td class="num">720</td><td class="num">0.3</td><td class="num">82.0</td><td class="num">1.0</td></tr>
+    <tr><td>247</td><td>Масло кукурузное</td><td class="cat">Масла</td><td>мл</td><td class="num">15</td><td class="num">884</td><td class="num">0.0</td><td class="num">99.9</td><td class="num">0.0</td></tr>
+    <tr><td>248</td><td>Лук зелёный</td><td class="cat">Овощи</td><td>г</td><td class="num">9</td><td class="num">19</td><td class="num">1.3</td><td class="num">0.0</td><td class="num">3.2</td></tr>
+    <tr><td>249</td><td>Капуста пекинская</td><td class="cat">Овощи</td><td>г</td><td class="num">8</td><td class="num">16</td><td class="num">1.2</td><td class="num">0.1</td><td class="num">2.0</td></tr>
+    <tr><td>250</td><td>Брюссельская капуста</td><td class="cat">Овощи</td><td>г</td><td class="num">19</td><td class="num">43</td><td class="num">4.8</td><td class="num">0.0</td><td class="num">3.1</td></tr>
+    <tr><td>251</td><td>Томаты черри</td><td class="cat">Овощи</td><td>г</td><td class="num">14</td><td class="num">23</td><td class="num">1.1</td><td class="num">0.2</td><td class="num">3.9</td></tr>
+    <tr><td>252</td><td>Болгарский перец жёлтый</td><td class="cat">Овощи</td><td>г</td><td class="num">15</td><td class="num">27</td><td class="num">1.0</td><td class="num">0.2</td><td class="num">5.3</td></tr>
+    <tr><td>253</td><td>Редис</td><td class="cat">Овощи</td><td>г</td><td class="num">8</td><td class="num">19</td><td class="num">1.2</td><td class="num">0.1</td><td class="num">3.4</td></tr>
+    <tr><td>254</td><td>Сельдерей стебли</td><td class="cat">Овощи</td><td>г</td><td class="num">12</td><td class="num">13</td><td class="num">0.9</td><td class="num">0.1</td><td class="num">2.1</td></tr>
+    <tr><td>255</td><td>Кинза</td><td class="cat">Овощи</td><td>г</td><td class="num">12</td><td class="num">23</td><td class="num">2.1</td><td class="num">0.5</td><td class="num">0.9</td></tr>
+    <tr><td>256</td><td>Базилик</td><td class="cat">Овощи</td><td>г</td><td class="num">14</td><td class="num">27</td><td class="num">3.2</td><td class="num">0.6</td><td class="num">2.6</td></tr>
+    <tr><td>257</td><td>Грибы белые свежие</td><td class="cat">Овощи</td><td>г</td><td class="num">29</td><td class="num">34</td><td class="num">3.7</td><td class="num">1.7</td><td class="num">1.1</td></tr>
+    <tr><td>258</td><td>Грибы белые сушёные</td><td class="cat">Овощи</td><td>г</td><td class="num">99</td><td class="num">282</td><td class="num">30.3</td><td class="num">3.8</td><td class="num">31.8</td></tr>
+    <tr><td>259</td><td>Артишок</td><td class="cat">Овощи</td><td>г</td><td class="num">29</td><td class="num">47</td><td class="num">3.3</td><td class="num">0.2</td><td class="num">6.5</td></tr>
+    <tr><td>260</td><td>Репа</td><td class="cat">Овощи</td><td>г</td><td class="num">6</td><td class="num">28</td><td class="num">0.9</td><td class="num">0.1</td><td class="num">5.9</td></tr>
+    <tr><td>261</td><td>Салат Романо</td><td class="cat">Овощи</td><td>г</td><td class="num">12</td><td class="num">17</td><td class="num">1.4</td><td class="num">0.3</td><td class="num">1.4</td></tr>
+    <tr><td>262</td><td>Сельдерей корень</td><td class="cat">Овощи</td><td>г</td><td class="num">14</td><td class="num">32</td><td class="num">1.3</td><td class="num">0.3</td><td class="num">6.5</td></tr>
+    <tr><td>263</td><td>Вишня</td><td class="cat">Фрукты</td><td>г</td><td class="num">15</td><td class="num">52</td><td class="num">0.8</td><td class="num">0.5</td><td class="num">11.3</td></tr>
+    <tr><td>264</td><td>Черешня</td><td class="cat">Фрукты</td><td>г</td><td class="num">19</td><td class="num">52</td><td class="num">1.1</td><td class="num">0.4</td><td class="num">11.5</td></tr>
+    <tr><td>265</td><td>Голубика</td><td class="cat">Фрукты</td><td>г</td><td class="num">29</td><td class="num">57</td><td class="num">0.7</td><td class="num">0.3</td><td class="num">14.5</td></tr>
+    <tr><td>266</td><td>Смородина красная</td><td class="cat">Фрукты</td><td>г</td><td class="num">14</td><td class="num">43</td><td class="num">0.6</td><td class="num">0.2</td><td class="num">8.0</td></tr>
+    <tr><td>267</td><td>Крыжовник</td><td class="cat">Фрукты</td><td>г</td><td class="num">12</td><td class="num">43</td><td class="num">0.7</td><td class="num">0.2</td><td class="num">9.9</td></tr>
+    <tr><td>268</td><td>Лайм</td><td class="cat">Фрукты</td><td>г</td><td class="num">19</td><td class="num">30</td><td class="num">0.7</td><td class="num">0.2</td><td class="num">7.2</td></tr>
+    <tr><td>269</td><td>Мандарин</td><td class="cat">Фрукты</td><td>г</td><td class="num">10</td><td class="num">38</td><td class="num">0.8</td><td class="num">0.2</td><td class="num">7.5</td></tr>
+    <tr><td>270</td><td>Кокос мякоть</td><td class="cat">Фрукты</td><td>г</td><td class="num">29</td><td class="num">354</td><td class="num">3.3</td><td class="num">33.5</td><td class="num">15.2</td></tr>
+    <tr><td>271</td><td>Сахар коричневый</td><td class="cat">Сладкое</td><td>г</td><td class="num">9</td><td class="num">377</td><td class="num">0.0</td><td class="num">0.0</td><td class="num">96.2</td></tr>
+    <tr><td>272</td><td>Шоколад белый</td><td class="cat">Сладкое</td><td>г</td><td class="num">24</td><td class="num">541</td><td class="num">5.9</td><td class="num">30.9</td><td class="num">59.3</td></tr>
+    <tr><td>273</td><td>Печенье сахарное</td><td class="cat">Сладкое</td><td>г</td><td class="num">15</td><td class="num">437</td><td class="num">7.5</td><td class="num">13.8</td><td class="num">70.9</td></tr>
+    <tr><td>274</td><td>Карамель</td><td class="cat">Сладкое</td><td>г</td><td class="num">10</td><td class="num">382</td><td class="num">0.0</td><td class="num">0.1</td><td class="num">96.6</td></tr>
+    <tr><td>275</td><td>Вафли</td><td class="cat">Сладкое</td><td>г</td><td class="num">14</td><td class="num">530</td><td class="num">6.0</td><td class="num">30.2</td><td class="num">63.8</td></tr>
+    <tr><td>276</td><td>Квас хлебный</td><td class="cat">Напитки</td><td>мл</td><td class="num">3</td><td class="num">27</td><td class="num">0.2</td><td class="num">0.0</td><td class="num">5.2</td></tr>
+    <tr><td>277</td><td>Кориандр молотый</td><td class="cat">Специи</td><td>г</td><td class="num">19</td><td class="num">298</td><td class="num">2.1</td><td class="num">17.8</td><td class="num">54.9</td></tr>
+    <tr><td>278</td><td>Лавровый лист</td><td class="cat">Специи</td><td>г</td><td class="num">10</td><td class="num">313</td><td class="num">7.6</td><td class="num">8.4</td><td class="num">74.9</td></tr>
+    <tr><td>279</td><td>Тмин</td><td class="cat">Специи</td><td>г</td><td class="num">14</td><td class="num">375</td><td class="num">17.8</td><td class="num">22.3</td><td class="num">44.2</td></tr>
+    <tr><td>280</td><td>Разрыхлитель</td><td class="cat">Специи</td><td>г</td><td class="num">14</td><td class="num">53</td><td class="num">0.0</td><td class="num">0.0</td><td class="num">27.7</td></tr>
+    <tr><td>281</td><td>Ваниль</td><td class="cat">Специи</td><td>г</td><td class="num">29</td><td class="num">288</td><td class="num">0.1</td><td class="num">0.1</td><td class="num">12.7</td></tr>
+    <tr><td>282</td><td>Перец красный молотый</td><td class="cat">Специи</td><td>г</td><td class="num">19</td><td class="num">282</td><td class="num">3.7</td><td class="num">17.0</td><td class="num">34.0</td></tr>
+    <tr><td>283</td><td>Хлебцы рисовые</td><td class="cat">Хлеб и макароны</td><td>г</td><td class="num">15</td><td class="num">390</td><td class="num">7.9</td><td class="num">3.5</td><td class="num">82.2</td></tr>
+    <tr><td>284</td><td>Мука цельнозерновая</td><td class="cat">Хлеб и макароны</td><td>г</td><td class="num">9</td><td class="num">310</td><td class="num">13.2</td><td class="num">2.5</td><td class="num">59.4</td></tr>
+    <tr><td>285</td><td>Батон нарезной</td><td class="cat">Хлеб и макароны</td><td>г</td><td class="num">5</td><td class="num">266</td><td class="num">8.1</td><td class="num">3.2</td><td class="num">50.9</td></tr>
+    <tr><td>286</td><td>Кускус</td><td class="cat">Крупы</td><td>г</td><td class="num">14</td><td class="num">376</td><td class="num">3.8</td><td class="num">0.6</td><td class="num">72.4</td></tr>
+    <tr><td>287</td><td>Соя зерно</td><td class="cat">Крупы</td><td>г</td><td class="num">19</td><td class="num">364</td><td class="num">34.9</td><td class="num">17.3</td><td class="num">17.3</td></tr>
+    <tr><td>288</td><td>Белок яичный</td><td class="cat">Яйца</td><td>г</td><td class="num">3</td><td class="num">44</td><td class="num">11.1</td><td class="num">0.0</td><td class="num">0.0</td></tr>
+    <tr><td>289</td><td>Желток яичный</td><td class="cat">Яйца</td><td>г</td><td class="num">5</td><td class="num">352</td><td class="num">16.2</td><td class="num">31.9</td><td class="num">1.0</td></tr>
+    <tr><td>290</td><td>Блины замороженные</td><td class="cat">Полуфабрикаты</td><td>г</td><td class="num">14</td><td class="num">186</td><td class="num">6.7</td><td class="num">6.2</td><td class="num">28.0</td></tr>
+    <tr><td>291</td><td>Рыбные палочки</td><td class="cat">Полуфабрикаты</td><td>г</td><td class="num">19</td><td class="num">214</td><td class="num">11.7</td><td class="num">10.5</td><td class="num">19.5</td></tr>
+    <tr><td>292</td><td>Патока</td><td class="cat">Сладкое</td><td>г</td><td class="num">9</td><td class="num">296</td><td class="num">0.0</td><td class="num">0.0</td><td class="num">78.3</td></tr>
+    <tr><td>293</td><td>Макароны пенне</td><td class="cat">Хлеб и макароны</td><td>г</td><td class="num">9</td><td class="num">344</td><td class="num">10.4</td><td class="num">1.1</td><td class="num">71.5</td></tr>
+    <tr><td>294</td><td>Какао напиток сухой</td><td class="cat">Напитки</td><td>г</td><td class="num">14</td><td class="num">289</td><td class="num">24.3</td><td class="num">15.0</td><td class="num">10.2</td></tr>
+    <tr><td>295</td><td>Свинина карбонат</td><td class="cat">Мясо</td><td>г</td><td class="num">139</td><td class="num">142</td><td class="num">16.0</td><td class="num">8.6</td><td class="num">0.0</td></tr>
+    <tr><td>296</td><td>Говяжий стейк рибай</td><td class="cat">Мясо</td><td>г</td><td class="num">199</td><td class="num">291</td><td class="num">15.9</td><td class="num">25.5</td><td class="num">0.0</td></tr>
+    <tr><td>297</td><td>Свиная рулька</td><td class="cat">Мясо</td><td>г</td><td class="num">119</td><td class="num">294</td><td class="num">19.0</td><td class="num">24.0</td><td class="num">0.0</td></tr>
+    <tr><td>298</td><td>Куриные потрошки</td><td class="cat">Птица</td><td>г</td><td class="num">59</td><td class="num">130</td><td class="num">17.5</td><td class="num">5.8</td><td class="num">4.2</td></tr>
+    <tr><td>299</td><td>Индюшиный фарш</td><td class="cat">Птица</td><td>г</td><td class="num">99</td><td class="num">128</td><td class="num">17.5</td><td class="num">7.0</td><td class="num">0.0</td></tr>
+    <tr><td>300</td><td>Утиная грудка</td><td class="cat">Птица</td><td>г</td><td class="num">149</td><td class="num">218</td><td class="num">19.0</td><td class="num">15.2</td><td class="num">0.0</td></tr>
+    <tr><td>301</td><td>Осётр</td><td class="cat">Рыба</td><td>г</td><td class="num">299</td><td class="num">163</td><td class="num">16.4</td><td class="num">10.9</td><td class="num">0.0</td></tr>
+    <tr><td>302</td><td>Белуга</td><td class="cat">Рыба</td><td>г</td><td class="num">349</td><td class="num">131</td><td class="num">24.7</td><td class="num">4.1</td><td class="num">0.0</td></tr>
+    <tr><td>303</td><td>Сом</td><td class="cat">Рыба</td><td>г</td><td class="num">119</td><td class="num">144</td><td class="num">17.2</td><td class="num">8.5</td><td class="num">0.0</td></tr>
+    <tr><td>304</td><td>Налим</td><td class="cat">Рыба</td><td>г</td><td class="num">109</td><td class="num">81</td><td class="num">18.8</td><td class="num">0.6</td><td class="num">0.0</td></tr>
+    <tr><td>305</td><td>Пангасиус</td><td class="cat">Рыба</td><td>г</td><td class="num">89</td><td class="num">89</td><td class="num">15.4</td><td class="num">2.9</td><td class="num">0.0</td></tr>
+    <tr><td>306</td><td>Морской язык</td><td class="cat">Рыба</td><td>г</td><td class="num">149</td><td class="num">88</td><td class="num">18.0</td><td class="num">1.2</td><td class="num">0.0</td></tr>
+    <tr><td>307</td><td>Гребешок морской</td><td class="cat">Рыба</td><td>г</td><td class="num">349</td><td class="num">88</td><td class="num">17.1</td><td class="num">0.8</td><td class="num">3.3</td></tr>
+    <tr><td>308</td><td>Устрицы</td><td class="cat">Рыба</td><td>г</td><td class="num">499</td><td class="num">59</td><td class="num">9.0</td><td class="num">2.0</td><td class="num">3.3</td></tr>
+    <tr><td>309</td><td>Спирулина</td><td class="cat">Специи</td><td>г</td><td class="num">99</td><td class="num">290</td><td class="num">57.5</td><td class="num">7.7</td><td class="num">23.9</td></tr>
+    <tr><td>310</td><td>Льняное семя</td><td class="cat">Орехи</td><td>г</td><td class="num">19</td><td class="num">534</td><td class="num">18.3</td><td class="num">42.2</td><td class="num">28.9</td></tr>
+    <tr><td>311</td><td>Протеин сывороточный</td><td class="cat">Специи</td><td>г</td><td class="num">79</td><td class="num">370</td><td class="num">80.0</td><td class="num">3.0</td><td class="num">7.0</td></tr>
+    <tr><td>312</td><td>Соевый белок</td><td class="cat">Соевые</td><td>г</td><td class="num">59</td><td class="num">338</td><td class="num">88.3</td><td class="num">0.5</td><td class="num">0.0</td></tr>
+    <tr><td>313</td><td>Овсяные отруби</td><td class="cat">Крупы</td><td>г</td><td class="num">19</td><td class="num">246</td><td class="num">17.3</td><td class="num">7.0</td><td class="num">66.2</td></tr>
+    <tr><td>314</td><td>Пшеничные отруби</td><td class="cat">Крупы</td><td>г</td><td class="num">14</td><td class="num">165</td><td class="num">15.1</td><td class="num">3.8</td><td class="num">53.8</td></tr>
+    <tr><td>315</td><td>Амарант</td><td class="cat">Крупы</td><td>г</td><td class="num">24</td><td class="num">374</td><td class="num">13.6</td><td class="num">7.0</td><td class="num">65.3</td></tr>
+    <tr><td>316</td><td>Теф</td><td class="cat">Крупы</td><td>г</td><td class="num">29</td><td class="num">367</td><td class="num">13.3</td><td class="num">2.4</td><td class="num">73.1</td></tr>
+    <tr><td>317</td><td>Хумус</td><td class="cat">Соевые</td><td>г</td><td class="num">29</td><td class="num">177</td><td class="num">7.9</td><td class="num">8.6</td><td class="num">20.1</td></tr>
+    <tr><td>318</td><td>Пита хлеб</td><td class="cat">Хлеб и макароны</td><td>г</td><td class="num">8</td><td class="num">275</td><td class="num">9.1</td><td class="num">1.2</td><td class="num">55.7</td></tr>
+    <tr><td>319</td><td>Фокачча</td><td class="cat">Хлеб и макароны</td><td>г</td><td class="num">14</td><td class="num">249</td><td class="num">7.8</td><td class="num">5.3</td><td class="num">42.1</td></tr>
+    <tr><td>320</td><td>Чиабатта</td><td class="cat">Хлеб и макароны</td><td>г</td><td class="num">12</td><td class="num">271</td><td class="num">8.5</td><td class="num">2.7</td><td class="num">52.7</td></tr>
+    <tr><td>321</td><td>Бородинский хлеб</td><td class="cat">Хлеб и макароны</td><td>г</td><td class="num">6</td><td class="num">200</td><td class="num">6.8</td><td class="num">1.3</td><td class="num">40.7</td></tr>
+    <tr><td>322</td><td>Ржаные хлебцы</td><td class="cat">Хлеб и макароны</td><td>г</td><td class="num">15</td><td class="num">335</td><td class="num">10.1</td><td class="num">2.4</td><td class="num">70.6</td></tr>
+    <tr><td>323</td><td>Рисовая лапша</td><td class="cat">Хлеб и макароны</td><td>г</td><td class="num">12</td><td class="num">364</td><td class="num">0.8</td><td class="num">0.1</td><td class="num">80.0</td></tr>
+    <tr><td>324</td><td>Гречневая лапша соба</td><td class="cat">Хлеб и макароны</td><td>г</td><td class="num">19</td><td class="num">348</td><td class="num">14.7</td><td class="num">1.0</td><td class="num">74.0</td></tr>
+    <tr><td>325</td><td>Стекловидная лапша</td><td class="cat">Хлеб и макароны</td><td>г</td><td class="num">14</td><td class="num">351</td><td class="num">0.2</td><td class="num">0.1</td><td class="num">86.1</td></tr>
+    <tr><td>326</td><td>Кукурузная мука</td><td class="cat">Хлеб и макароны</td><td>г</td><td class="num">7</td><td class="num">361</td><td class="num">6.9</td><td class="num">3.9</td><td class="num">76.8</td></tr>
+    <tr><td>327</td><td>Миндальная мука</td><td class="cat">Хлеб и макароны</td><td>г</td><td class="num">49</td><td class="num">571</td><td class="num">21.9</td><td class="num">52.2</td><td class="num">5.4</td></tr>
+    <tr><td>328</td><td>Кокосовая мука</td><td class="cat">Хлеб и макароны</td><td>г</td><td class="num">39</td><td class="num">400</td><td class="num">19.3</td><td class="num">14.9</td><td class="num">64.0</td></tr>
+    <tr><td>329</td><td>Нори листы</td><td class="cat">Специи</td><td>г</td><td class="num">29</td><td class="num">35</td><td class="num">5.8</td><td class="num">0.3</td><td class="num">5.1</td></tr>
+    <tr><td>330</td><td>Васаби</td><td class="cat">Специи</td><td>г</td><td class="num">49</td><td class="num">109</td><td class="num">4.8</td><td class="num">0.6</td><td class="num">23.5</td></tr>
+    <tr><td>331</td><td>Рыбный соус</td><td class="cat">Специи</td><td>мл</td><td class="num">19</td><td class="num">35</td><td class="num">5.1</td><td class="num">0.0</td><td class="num">3.6</td></tr>
+    <tr><td>332</td><td>Устричный соус</td><td class="cat">Специи</td><td>мл</td><td class="num">24</td><td class="num">51</td><td class="num">1.2</td><td class="num">0.3</td><td class="num">11.0</td></tr>
+    <tr><td>333</td><td>Хойсин соус</td><td class="cat">Специи</td><td>г</td><td class="num">19</td><td class="num">220</td><td class="num">3.9</td><td class="num">3.3</td><td class="num">42.0</td></tr>
+    <tr><td>334</td><td>Тахини кунжутная паста</td><td class="cat">Специи</td><td>г</td><td class="num">39</td><td class="num">592</td><td class="num">17.0</td><td class="num">53.8</td><td class="num">21.2</td></tr>
+    <tr><td>335</td><td>Кокосовое молоко</td><td class="cat">Напитки</td><td>мл</td><td class="num">19</td><td class="num">197</td><td class="num">2.0</td><td class="num">21.3</td><td class="num">2.8</td></tr>
+    <tr><td>336</td><td>Миндальное молоко</td><td class="cat">Напитки</td><td>мл</td><td class="num">14</td><td class="num">17</td><td class="num">0.6</td><td class="num">1.1</td><td class="num">0.6</td></tr>
+    <tr><td>337</td><td>Овсяное молоко</td><td class="cat">Напитки</td><td>мл</td><td class="num">12</td><td class="num">40</td><td class="num">1.0</td><td class="num">0.7</td><td class="num">6.6</td></tr>
+    <tr><td>338</td><td>Энергетик без сахара</td><td class="cat">Напитки</td><td>мл</td><td class="num">6</td><td class="num">3</td><td class="num">0.0</td><td class="num">0.0</td><td class="num">0.7</td></tr>
+    <tr><td>339</td><td>Протеиновый батончик</td><td class="cat">Сладкое</td><td>г</td><td class="num">39</td><td class="num">370</td><td class="num">35.0</td><td class="num">9.0</td><td class="num">42.0</td></tr>
+    <tr><td>340</td><td>Мюсли без сахара</td><td class="cat">Крупы</td><td>г</td><td class="num">19</td><td class="num">368</td><td class="num">10.6</td><td class="num">6.9</td><td class="num">67.5</td></tr>
+    <tr><td>341</td><td>Гранола</td><td class="cat">Крупы</td><td>г</td><td class="num">24</td><td class="num">471</td><td class="num">8.7</td><td class="num">20.3</td><td class="num">64.4</td></tr>
+    <tr><td>342</td><td>Кукурузные хлопья</td><td class="cat">Крупы</td><td>г</td><td class="num">14</td><td class="num">357</td><td class="num">7.3</td><td class="num">0.8</td><td class="num">84.1</td></tr>
+    <tr><td>343</td><td>Рисовые хлопья</td><td class="cat">Крупы</td><td>г</td><td class="num">14</td><td class="num">382</td><td class="num">7.0</td><td class="num">1.0</td><td class="num">87.8</td></tr>
+    <tr><td>344</td><td>Полба</td><td class="cat">Крупы</td><td>г</td><td class="num">19</td><td class="num">338</td><td class="num">14.6</td><td class="num">2.4</td><td class="num">70.2</td></tr>
+    <tr><td>345</td><td>Фрике обжаренная пшеница</td><td class="cat">Крупы</td><td>г</td><td class="num">24</td><td class="num">351</td><td class="num">12.6</td><td class="num">2.7</td><td class="num">72.6</td></tr>
+    <tr><td>346</td><td>Пармская ветчина</td><td class="cat">Деликатесы</td><td>г</td><td class="num">199</td><td class="num">269</td><td class="num">25.9</td><td class="num">18.4</td><td class="num">0.3</td></tr>
+    <tr><td>347</td><td>Хамон иберико</td><td class="cat">Деликатесы</td><td>г</td><td class="num">499</td><td class="num">324</td><td class="num">30.7</td><td class="num">22.9</td><td class="num">0.0</td></tr>
+    <tr><td>348</td><td>Сервелат</td><td class="cat">Деликатесы</td><td>г</td><td class="num">119</td><td class="num">461</td><td class="num">24.0</td><td class="num">40.5</td><td class="num">0.0</td></tr>
+    <tr><td>349</td><td>Чоризо</td><td class="cat">Деликатесы</td><td>г</td><td class="num">149</td><td class="num">455</td><td class="num">24.1</td><td class="num">38.3</td><td class="num">1.9</td></tr>
+    <tr><td>350</td><td>Пепперони</td><td class="cat">Деликатесы</td><td>г</td><td class="num">129</td><td class="num">494</td><td class="num">21.3</td><td class="num">44.1</td><td class="num">1.2</td></tr>
+    <tr><td>351</td><td>Лангуст</td><td class="cat">Рыба</td><td>г</td><td class="num">449</td><td class="num">90</td><td class="num">19.9</td><td class="num">0.9</td><td class="num">0.3</td></tr>
+    <tr><td>352</td><td>Омар</td><td class="cat">Рыба</td><td>г</td><td class="num">549</td><td class="num">90</td><td class="num">18.8</td><td class="num">0.9</td><td class="num">0.5</td></tr>
+    <tr><td>353</td><td>Морской ёж</td><td class="cat">Рыба</td><td>г</td><td class="num">699</td><td class="num">110</td><td class="num">13.0</td><td class="num">2.0</td><td class="num">9.0</td></tr>
+    <tr><td>354</td><td>Трепанг</td><td class="cat">Рыба</td><td>г</td><td class="num">299</td><td class="num">35</td><td class="num">7.3</td><td class="num">0.6</td><td class="num">0.0</td></tr>
+    <tr><td>355</td><td>Нектарин</td><td class="cat">Фрукты</td><td>г</td><td class="num">19</td><td class="num">44</td><td class="num">1.1</td><td class="num">0.3</td><td class="num">10.6</td></tr>
+    <tr><td>356</td><td>Фейхоа</td><td class="cat">Фрукты</td><td>г</td><td class="num">24</td><td class="num">49</td><td class="num">1.3</td><td class="num">0.8</td><td class="num">10.6</td></tr>
+    <tr><td>357</td><td>Папайя</td><td class="cat">Фрукты</td><td>г</td><td class="num">29</td><td class="num">43</td><td class="num">0.5</td><td class="num">0.3</td><td class="num">10.8</td></tr>
+    <tr><td>358</td><td>Питайя дракон</td><td class="cat">Фрукты</td><td>г</td><td class="num">49</td><td class="num">60</td><td class="num">1.2</td><td class="num">0.4</td><td class="num">13.0</td></tr>
+    <tr><td>359</td><td>Карамбола</td><td class="cat">Фрукты</td><td>г</td><td class="num">39</td><td class="num">31</td><td class="num">1.0</td><td class="num">0.3</td><td class="num">6.7</td></tr>
+    <tr><td>360</td><td>Личи</td><td class="cat">Фрукты</td><td>г</td><td class="num">39</td><td class="num">66</td><td class="num">0.8</td><td class="num">0.4</td><td class="num">16.5</td></tr>
+    <tr><td>361</td><td>Рамбутан</td><td class="cat">Фрукты</td><td>г</td><td class="num">44</td><td class="num">75</td><td class="num">0.9</td><td class="num">0.2</td><td class="num">20.0</td></tr>
+    <tr><td>362</td><td>Дуриан</td><td class="cat">Фрукты</td><td>г</td><td class="num">79</td><td class="num">147</td><td class="num">1.5</td><td class="num">5.3</td><td class="num">27.1</td></tr>
+    <tr><td>363</td><td>Айва</td><td class="cat">Фрукты</td><td>г</td><td class="num">12</td><td class="num">40</td><td class="num">0.6</td><td class="num">0.1</td><td class="num">8.9</td></tr>
+    <tr><td>364</td><td>Финики сушёные</td><td class="cat">Фрукты</td><td>г</td><td class="num">24</td><td class="num">282</td><td class="num">2.5</td><td class="num">0.4</td><td class="num">74.9</td></tr>
+    <tr><td>365</td><td>Изюм</td><td class="cat">Фрукты</td><td>г</td><td class="num">14</td><td class="num">299</td><td class="num">2.3</td><td class="num">0.5</td><td class="num">79.0</td></tr>
+    <tr><td>366</td><td>Курага</td><td class="cat">Фрукты</td><td>г</td><td class="num">19</td><td class="num">241</td><td class="num">5.2</td><td class="num">0.3</td><td class="num">62.6</td></tr>
+    <tr><td>367</td><td>Чернослив</td><td class="cat">Фрукты</td><td>г</td><td class="num">19</td><td class="num">240</td><td class="num">2.3</td><td class="num">0.7</td><td class="num">63.9</td></tr>
+    <tr><td>368</td><td>Инжир сушёный</td><td class="cat">Фрукты</td><td>г</td><td class="num">24</td><td class="num">249</td><td class="num">3.1</td><td class="num">0.9</td><td class="num">63.9</td></tr>
+    <tr><td>369</td><td>Клюква</td><td class="cat">Фрукты</td><td>г</td><td class="num">14</td><td class="num">46</td><td class="num">0.5</td><td class="num">0.2</td><td class="num">12.0</td></tr>
+    <tr><td>370</td><td>Земляника</td><td class="cat">Фрукты</td><td>г</td><td class="num">19</td><td class="num">34</td><td class="num">0.8</td><td class="num">0.4</td><td class="num">6.2</td></tr>
+    <tr><td>371</td><td>Ежевика</td><td class="cat">Фрукты</td><td>г</td><td class="num">19</td><td class="num">43</td><td class="num">1.5</td><td class="num">0.5</td><td class="num">9.6</td></tr>
+    <tr><td>372</td><td>Брусника</td><td class="cat">Фрукты</td><td>г</td><td class="num">12</td><td class="num">46</td><td class="num">0.7</td><td class="num">0.5</td><td class="num">9.6</td></tr>
+    <tr><td>373</td><td>Морошка</td><td class="cat">Фрукты</td><td>г</td><td class="num">24</td><td class="num">40</td><td class="num">0.8</td><td class="num">0.9</td><td class="num">6.8</td></tr>
+    <tr><td>374</td><td>Рябина красная</td><td class="cat">Фрукты</td><td>г</td><td class="num">14</td><td class="num">50</td><td class="num">1.4</td><td class="num">0.2</td><td class="num">8.9</td></tr>
+    <tr><td>375</td><td>Облепиха</td><td class="cat">Фрукты</td><td>г</td><td class="num">14</td><td class="num">82</td><td class="num">1.2</td><td class="num">5.4</td><td class="num">5.7</td></tr>
+    <tr><td>376</td><td>Шиповник свежий</td><td class="cat">Фрукты</td><td>г</td><td class="num">9</td><td class="num">51</td><td class="num">1.6</td><td class="num">0.7</td><td class="num">24.0</td></tr>
+    <tr><td>377</td><td>Чеснок сушёный</td><td class="cat">Специи</td><td>г</td><td class="num">19</td><td class="num">331</td><td class="num">16.8</td><td class="num">0.7</td><td class="num">72.7</td></tr>
+    <tr><td>378</td><td>Лук сушёный</td><td class="cat">Специи</td><td>г</td><td class="num">14</td><td class="num">349</td><td class="num">10.1</td><td class="num">1.1</td><td class="num">83.4</td></tr>
+    <tr><td>379</td><td>Имбирь сухой</td><td class="cat">Специи</td><td>г</td><td class="num">24</td><td class="num">347</td><td class="num">8.8</td><td class="num">6.0</td><td class="num">79.3</td></tr>
+    <tr><td>380</td><td>Мускатный орех</td><td class="cat">Специи</td><td>г</td><td class="num">29</td><td class="num">525</td><td class="num">5.8</td><td class="num">36.3</td><td class="num">49.3</td></tr>
+    <tr><td>381</td><td>Гвоздика</td><td class="cat">Специи</td><td>г</td><td class="num">24</td><td class="num">323</td><td class="num">5.9</td><td class="num">13.0</td><td class="num">65.5</td></tr>
+    <tr><td>382</td><td>Кардамон</td><td class="cat">Специи</td><td>г</td><td class="num">49</td><td class="num">311</td><td class="num">10.8</td><td class="num">6.7</td><td class="num">68.5</td></tr>
+    <tr><td>383</td><td>Шафран</td><td class="cat">Специи</td><td>г</td><td class="num">299</td><td class="num">310</td><td class="num">11.4</td><td class="num">5.9</td><td class="num">65.4</td></tr>
+    <tr><td>384</td><td>Анис</td><td class="cat">Специи</td><td>г</td><td class="num">29</td><td class="num">337</td><td class="num">17.6</td><td class="num">15.9</td><td class="num">50.0</td></tr>
+    <tr><td>385</td><td>Розмарин сухой</td><td class="cat">Специи</td><td>г</td><td class="num">19</td><td class="num">331</td><td class="num">4.9</td><td class="num">15.2</td><td class="num">64.1</td></tr>
+    <tr><td>386</td><td>Тимьян сухой</td><td class="cat">Специи</td><td>г</td><td class="num">19</td><td class="num">276</td><td class="num">9.1</td><td class="num">7.4</td><td class="num">63.9</td></tr>
+    <tr><td>387</td><td>Орегано сухой</td><td class="cat">Специи</td><td>г</td><td class="num">19</td><td class="num">265</td><td class="num">9.0</td><td class="num">4.3</td><td class="num">68.9</td></tr>
+    <tr><td>388</td><td>Базилик сухой</td><td class="cat">Специи</td><td>г</td><td class="num">19</td><td class="num">233</td><td class="num">22.9</td><td class="num">4.1</td><td class="num">47.8</td></tr>
+    <tr><td>389</td><td>Мята сухая</td><td class="cat">Специи</td><td>г</td><td class="num">24</td><td class="num">285</td><td class="num">19.9</td><td class="num">6.0</td><td class="num">52.6</td></tr>
+    <tr><td>390</td><td>Укроп сухой</td><td class="cat">Специи</td><td>г</td><td class="num">14</td><td class="num">253</td><td class="num">20.0</td><td class="num">4.4</td><td class="num">55.8</td></tr>
+    <tr><td>391</td><td>Петрушка сухая</td><td class="cat">Специи</td><td>г</td><td class="num">14</td><td class="num">292</td><td class="num">26.6</td><td class="num">5.5</td><td class="num">50.6</td></tr>
+    <tr><td>392</td><td>Эстрагон тархун</td><td class="cat">Специи</td><td>г</td><td class="num">24</td><td class="num">295</td><td class="num">22.8</td><td class="num">7.2</td><td class="num">50.2</td></tr>
+    <tr><td>393</td><td>Хрен</td><td class="cat">Специи</td><td>г</td><td class="num">14</td><td class="num">59</td><td class="num">3.2</td><td class="num">0.4</td><td class="num">10.5</td></tr>
+    <tr><td>394</td><td>Аджика</td><td class="cat">Специи</td><td>г</td><td class="num">14</td><td class="num">59</td><td class="num">1.5</td><td class="num">3.6</td><td class="num">5.6</td></tr>
+    <tr><td>395</td><td>Ткемали</td><td class="cat">Специи</td><td>г</td><td class="num">12</td><td class="num">56</td><td class="num">0.6</td><td class="num">0.4</td><td class="num">12.1</td></tr>
+    <tr><td>396</td><td>Сахарная пудра</td><td class="cat">Сладкое</td><td>г</td><td class="num">5</td><td class="num">399</td><td class="num">0.0</td><td class="num">0.0</td><td class="num">99.7</td></tr>
+    <tr><td>397</td><td>Кленовый сироп</td><td class="cat">Сладкое</td><td>мл</td><td class="num">49</td><td class="num">260</td><td class="num">0.0</td><td class="num">0.1</td><td class="num">67.0</td></tr>
+    <tr><td>398</td><td>Агава сироп</td><td class="cat">Сладкое</td><td>мл</td><td class="num">39</td><td class="num">310</td><td class="num">0.1</td><td class="num">0.3</td><td class="num">76.0</td></tr>
+    <tr><td>399</td><td>Стевия</td><td class="cat">Сладкое</td><td>г</td><td class="num">29</td><td class="num">252</td><td class="num">9.8</td><td class="num">0.0</td><td class="num">91.8</td></tr>
+    <tr><td>400</td><td>Нутелла</td><td class="cat">Сладкое</td><td>г</td><td class="num">29</td><td class="num">539</td><td class="num">6.3</td><td class="num">30.9</td><td class="num">57.5</td></tr>
+    <tr><td>401</td><td>Джем малиновый</td><td class="cat">Сладкое</td><td>г</td><td class="num">14</td><td class="num">273</td><td class="num">0.6</td><td class="num">0.1</td><td class="num">70.0</td></tr>
+    <tr><td>402</td><td>Мармелад жевательный</td><td class="cat">Сладкое</td><td>г</td><td class="num">14</td><td class="num">330</td><td class="num">6.0</td><td class="num">0.1</td><td class="num">77.0</td></tr>
+    <tr><td>403</td><td>Пастила</td><td class="cat">Сладкое</td><td>г</td><td class="num">14</td><td class="num">324</td><td class="num">0.5</td><td class="num">0.1</td><td class="num">80.4</td></tr>
+    <tr><td>404</td><td>Козинак</td><td class="cat">Сладкое</td><td>г</td><td class="num">19</td><td class="num">552</td><td class="num">16.6</td><td class="num">30.3</td><td class="num">55.2</td></tr>
+    <tr><td>405</td><td>Рахат лукум</td><td class="cat">Сладкое</td><td>г</td><td class="num">14</td><td class="num">348</td><td class="num">1.0</td><td class="num">0.1</td><td class="num">87.2</td></tr>
+    <tr><td>406</td><td>Чурчхела</td><td class="cat">Сладкое</td><td>г</td><td class="num">24</td><td class="num">407</td><td class="num">7.3</td><td class="num">8.4</td><td class="num">78.5</td></tr>
+    <tr><td>407</td><td>Горький шоколад 85%</td><td class="cat">Сладкое</td><td>г</td><td class="num">34</td><td class="num">598</td><td class="num">11.0</td><td class="num">43.0</td><td class="num">46.0</td></tr>
+    <tr><td>408</td><td>Трюфель шоколадный</td><td class="cat">Сладкое</td><td>г</td><td class="num">29</td><td class="num">476</td><td class="num">4.5</td><td class="num">28.0</td><td class="num">59.0</td></tr>
+    <tr><td>409</td><td>Батончик Сникерс</td><td class="cat">Сладкое</td><td>г</td><td class="num">19</td><td class="num">488</td><td class="num">7.9</td><td class="num">24.4</td><td class="num">58.9</td></tr>
+    <tr><td>410</td><td>Зелёный горошек свежий</td><td class="cat">Овощи</td><td>г</td><td class="num">11</td><td class="num">73</td><td class="num">5.4</td><td class="num">0.4</td><td class="num">13.8</td></tr>
+    <tr><td>411</td><td>Фенхель</td><td class="cat">Овощи</td><td>г</td><td class="num">19</td><td class="num">31</td><td class="num">1.2</td><td class="num">0.2</td><td class="num">7.3</td></tr>
+    <tr><td>412</td><td>Пастернак</td><td class="cat">Овощи</td><td>г</td><td class="num">14</td><td class="num">75</td><td class="num">1.4</td><td class="num">0.5</td><td class="num">17.9</td></tr>
+    <tr><td>413</td><td>Топинамбур</td><td class="cat">Овощи</td><td>г</td><td class="num">12</td><td class="num">61</td><td class="num">2.1</td><td class="num">0.0</td><td class="num">12.8</td></tr>
+    <tr><td>414</td><td>Батат сладкий картофель</td><td class="cat">Овощи</td><td>г</td><td class="num">12</td><td class="num">86</td><td class="num">1.6</td><td class="num">0.1</td><td class="num">20.1</td></tr>
+    <tr><td>415</td><td>Маниока юкка</td><td class="cat">Овощи</td><td>г</td><td class="num">14</td><td class="num">160</td><td class="num">1.4</td><td class="num">0.3</td><td class="num">38.1</td></tr>
+    <tr><td>416</td><td>Бамбуковые побеги</td><td class="cat">Овощи</td><td>г</td><td class="num">29</td><td class="num">27</td><td class="num">2.6</td><td class="num">0.3</td><td class="num">5.2</td></tr>
+    <tr><td>417</td><td>Водоросли ламинария</td><td class="cat">Овощи</td><td>г</td><td class="num">14</td><td class="num">49</td><td class="num">0.9</td><td class="num">0.2</td><td class="num">3.0</td></tr>
+    <tr><td>418</td><td>Хрен корень</td><td class="cat">Овощи</td><td>г</td><td class="num">14</td><td class="num">59</td><td class="num">3.2</td><td class="num">0.4</td><td class="num">10.5</td></tr>
+    <tr><td>419</td><td>Мангольд</td><td class="cat">Овощи</td><td>г</td><td class="num">14</td><td class="num">19</td><td class="num">1.8</td><td class="num">0.2</td><td class="num">3.7</td></tr>
+    <tr><td>420</td><td>Щавель</td><td class="cat">Овощи</td><td>г</td><td class="num">9</td><td class="num">22</td><td class="num">1.5</td><td class="num">0.3</td><td class="num">5.3</td></tr>
+    <tr><td>421</td><td>Пак-чой</td><td class="cat">Овощи</td><td>г</td><td class="num">14</td><td class="num">13</td><td class="num">1.5</td><td class="num">0.2</td><td class="num">2.2</td></tr>
+    <tr><td>422</td><td>Эндивий</td><td class="cat">Овощи</td><td>г</td><td class="num">19</td><td class="num">17</td><td class="num">1.3</td><td class="num">0.2</td><td class="num">3.4</td></tr>
+    <tr><td>423</td><td>Радиккио</td><td class="cat">Овощи</td><td>г</td><td class="num">19</td><td class="num">23</td><td class="num">1.4</td><td class="num">0.2</td><td class="num">4.5</td></tr>
+    <tr><td>424</td><td>Чечевичная паста</td><td class="cat">Хлеб и макароны</td><td>г</td><td class="num">19</td><td class="num">340</td><td class="num">23.0</td><td class="num">1.5</td><td class="num">58.5</td></tr>
+    <tr><td>425</td><td>Гороховая паста</td><td class="cat">Хлеб и макароны</td><td>г</td><td class="num">19</td><td class="num">340</td><td class="num">23.0</td><td class="num">1.5</td><td class="num">58.5</td></tr>
+    <tr><td>426</td><td>Нутовая паста</td><td class="cat">Хлеб и макароны</td><td>г</td><td class="num">19</td><td class="num">362</td><td class="num">22.0</td><td class="num">5.5</td><td class="num">56.0</td></tr>
+    <tr><td>427</td><td>Соевая паста</td><td class="cat">Хлеб и макароны</td><td>г</td><td class="num">19</td><td class="num">356</td><td class="num">30.0</td><td class="num">6.0</td><td class="num">42.0</td></tr>
+    <tr><td>428</td><td>Протеиновая паста</td><td class="cat">Хлеб и макароны</td><td>г</td><td class="num">29</td><td class="num">338</td><td class="num">35.0</td><td class="num">2.0</td><td class="num">43.0</td></tr>
+    <tr><td>429</td><td>Яблочный уксус</td><td class="cat">Специи</td><td>мл</td><td class="num">9</td><td class="num">22</td><td class="num">0.0</td><td class="num">0.0</td><td class="num">0.9</td></tr>
+    <tr><td>430</td><td>Бальзамический уксус</td><td class="cat">Специи</td><td>мл</td><td class="num">19</td><td class="num">88</td><td class="num">0.5</td><td class="num">0.0</td><td class="num">17.0</td></tr>
+    <tr><td>431</td><td>Вустерский соус</td><td class="cat">Специи</td><td>мл</td><td class="num">24</td><td class="num">78</td><td class="num">1.2</td><td class="num">0.1</td><td class="num">18.0</td></tr>
+    <tr><td>432</td><td>Табаско</td><td class="cat">Специи</td><td>мл</td><td class="num">29</td><td class="num">12</td><td class="num">0.3</td><td class="num">0.3</td><td class="num">0.5</td></tr>
+    <tr><td>433</td><td>Терияки соус</td><td class="cat">Специи</td><td>мл</td><td class="num">14</td><td class="num">89</td><td class="num">5.1</td><td class="num">0.0</td><td class="num">16.7</td></tr>
+    <tr><td>434</td><td>Барбекю соус</td><td class="cat">Специи</td><td>мл</td><td class="num">12</td><td class="num">172</td><td class="num">1.5</td><td class="num">0.7</td><td class="num">40.4</td></tr>
+    <tr><td>435</td><td>Карри паста</td><td class="cat">Специи</td><td>г</td><td class="num">29</td><td class="num">155</td><td class="num">4.5</td><td class="num">10.8</td><td class="num">13.1</td></tr>
+    <tr><td>436</td><td>Зелёное карри</td><td class="cat">Специи</td><td>г</td><td class="num">29</td><td class="num">148</td><td class="num">4.2</td><td class="num">9.5</td><td class="num">16.0</td></tr>
+    <tr><td>437</td><td>Красное карри</td><td class="cat">Специи</td><td>г</td><td class="num">29</td><td class="num">160</td><td class="num">5.5</td><td class="num">11.0</td><td class="num">13.5</td></tr>
+    <tr><td>438</td><td>Песто зелёный</td><td class="cat">Специи</td><td>г</td><td class="num">34</td><td class="num">460</td><td class="num">6.0</td><td class="num">46.0</td><td class="num">7.0</td></tr>
+    <tr><td>439</td><td>Томатный соус болоньезе</td><td class="cat">Консервы</td><td>г</td><td class="num">19</td><td class="num">98</td><td class="num">6.1</td><td class="num">4.3</td><td class="num">9.5</td></tr>
+    <tr><td>440</td><td>Соус карбонара</td><td class="cat">Консервы</td><td>г</td><td class="num">24</td><td class="num">186</td><td class="num">4.7</td><td class="num">15.8</td><td class="num">9.0</td></tr>
+    <tr><td>441</td><td>Тунец в масле</td><td class="cat">Консервы</td><td>г</td><td class="num">99</td><td class="num">198</td><td class="num">26.0</td><td class="num">10.0</td><td class="num">0.0</td></tr>
+    <tr><td>442</td><td>Сайра консервы</td><td class="cat">Консервы</td><td>г</td><td class="num">59</td><td class="num">283</td><td class="num">18.3</td><td class="num">23.2</td><td class="num">0.0</td></tr>
+    <tr><td>443</td><td>Килька пряного посола</td><td class="cat">Консервы</td><td>г</td><td class="num">49</td><td class="num">137</td><td class="num">17.1</td><td class="num">7.6</td><td class="num">0.0</td></tr>
+    <tr><td>444</td><td>Морская капуста консервы</td><td class="cat">Консервы</td><td>г</td><td class="num">14</td><td class="num">49</td><td class="num">0.9</td><td class="num">0.2</td><td class="num">3.0</td></tr>
+    <tr><td>445</td><td>Икра кабачковая</td><td class="cat">Консервы</td><td>г</td><td class="num">9</td><td class="num">97</td><td class="num">2.0</td><td class="num">7.0</td><td class="num">8.5</td></tr>
+    <tr><td>446</td><td>Икра баклажанная</td><td class="cat">Консервы</td><td>г</td><td class="num">9</td><td class="num">148</td><td class="num">1.7</td><td class="num">13.3</td><td class="num">4.5</td></tr>
+    <tr><td>447</td><td>Лечо</td><td class="cat">Консервы</td><td>г</td><td class="num">9</td><td class="num">99</td><td class="num">1.8</td><td class="num">7.4</td><td class="num">6.3</td></tr>
+    <tr><td>448</td><td>Консервированные персики</td><td class="cat">Консервы</td><td>г</td><td class="num">9</td><td class="num">55</td><td class="num">0.5</td><td class="num">0.1</td><td class="num">14.0</td></tr>
+    <tr><td>449</td><td>Консервированные ананасы</td><td class="cat">Консервы</td><td>г</td><td class="num">9</td><td class="num">55</td><td class="num">0.4</td><td class="num">0.1</td><td class="num">14.2</td></tr>
+    <tr><td>450</td><td>Бобы эдамаме</td><td class="cat">Соевые</td><td>г</td><td class="num">29</td><td class="num">122</td><td class="num">11.9</td><td class="num">5.2</td><td class="num">8.9</td></tr>
+    <tr><td>451</td><td>Натто ферментированная соя</td><td class="cat">Соевые</td><td>г</td><td class="num">49</td><td class="num">212</td><td class="num">18.0</td><td class="num">11.0</td><td class="num">14.4</td></tr>
+    <tr><td>452</td><td>Рисовое молоко</td><td class="cat">Напитки</td><td>мл</td><td class="num">14</td><td class="num">47</td><td class="num">0.3</td><td class="num">1.0</td><td class="num">9.2</td></tr>
+    <tr><td>453</td><td>Гречневое молоко</td><td class="cat">Напитки</td><td>мл</td><td class="num">14</td><td class="num">40</td><td class="num">0.5</td><td class="num">0.5</td><td class="num">8.3</td></tr>
+    <tr><td>454</td><td>Кефир из кокосового молока</td><td class="cat">Напитки</td><td>мл</td><td class="num">24</td><td class="num">62</td><td class="num">0.5</td><td class="num">4.5</td><td class="num">4.0</td></tr>
+    <tr><td>455</td><td>Чай матча</td><td class="cat">Напитки</td><td>г</td><td class="num">89</td><td class="num">324</td><td class="num">29.6</td><td class="num">5.3</td><td class="num">38.6</td></tr>
+    <tr><td>456</td><td>Куркума напиток</td><td class="cat">Напитки</td><td>г</td><td class="num">24</td><td class="num">354</td><td class="num">7.8</td><td class="num">9.9</td><td class="num">64.9</td></tr>
+    <tr><td>457</td><td>Компот вишнёвый</td><td class="cat">Напитки</td><td>мл</td><td class="num">4</td><td class="num">52</td><td class="num">0.5</td><td class="num">0.0</td><td class="num">13.4</td></tr>
+    <tr><td>458</td><td>Компот яблочный</td><td class="cat">Напитки</td><td>мл</td><td class="num">4</td><td class="num">48</td><td class="num">0.5</td><td class="num">0.0</td><td class="num">12.4</td></tr>
+    <tr><td>459</td><td>Морс клюквенный</td><td class="cat">Напитки</td><td>мл</td><td class="num">5</td><td class="num">40</td><td class="num">0.1</td><td class="num">0.0</td><td class="num">10.5</td></tr>
+    <tr><td>460</td><td>Кисель ягодный</td><td class="cat">Напитки</td><td>мл</td><td class="num">5</td><td class="num">53</td><td class="num">0.2</td><td class="num">0.1</td><td class="num">13.5</td></tr>
+    <tr><td>461</td><td>Мясо лося</td><td class="cat">Мясо</td><td>г</td><td class="num">249</td><td class="num">110</td><td class="num">21.4</td><td class="num">1.7</td><td class="num">0.0</td></tr>
+    <tr><td>462</td><td>Мясо оленя</td><td class="cat">Мясо</td><td>г</td><td class="num">299</td><td class="num">154</td><td class="num">26.1</td><td class="num">4.2</td><td class="num">0.0</td></tr>
+    <tr><td>463</td><td>Мясо кабана</td><td class="cat">Мясо</td><td>г</td><td class="num">199</td><td class="num">122</td><td class="num">21.3</td><td class="num">3.3</td><td class="num">0.0</td></tr>
+    <tr><td>464</td><td>Конина</td><td class="cat">Мясо</td><td>г</td><td class="num">219</td><td class="num">187</td><td class="num">20.2</td><td class="num">12.0</td><td class="num">0.0</td></tr>
+    <tr><td>465</td><td>Верблюжатина</td><td class="cat">Мясо</td><td>г</td><td class="num">249</td><td class="num">160</td><td class="num">18.9</td><td class="num">9.4</td><td class="num">0.0</td></tr>
+    <tr><td>466</td><td>Страусятина</td><td class="cat">Птица</td><td>г</td><td class="num">299</td><td class="num">97</td><td class="num">22.0</td><td class="num">0.9</td><td class="num">0.0</td></tr>
+    <tr><td>467</td><td>Цесарка</td><td class="cat">Птица</td><td>г</td><td class="num">179</td><td class="num">181</td><td class="num">26.9</td><td class="num">6.6</td><td class="num">0.8</td></tr>
+    <tr><td>468</td><td>Мясо бобра</td><td class="cat">Мясо</td><td>г</td><td class="num">219</td><td class="num">146</td><td class="num">24.1</td><td class="num">5.0</td><td class="num">0.0</td></tr>
+    <tr><td>469</td><td>Нежирный кефир</td><td class="cat">Молочное</td><td>г</td><td class="num">5</td><td class="num">30</td><td class="num">3.0</td><td class="num">0.1</td><td class="num">3.8</td></tr>
+    <tr><td>470</td><td>Пахта</td><td class="cat">Молочное</td><td>мл</td><td class="num">6</td><td class="num">40</td><td class="num">3.3</td><td class="num">1.0</td><td class="num">4.8</td></tr>
+    <tr><td>471</td><td>Айран</td><td class="cat">Молочное</td><td>мл</td><td class="num">6</td><td class="num">27</td><td class="num">1.1</td><td class="num">1.5</td><td class="num">2.7</td></tr>
+    <tr><td>472</td><td>Тан</td><td class="cat">Молочное</td><td>мл</td><td class="num">6</td><td class="num">24</td><td class="num">1.5</td><td class="num">0.5</td><td class="num">3.4</td></tr>
+    <tr><td>473</td><td>Сыр Бри</td><td class="cat">Молочное</td><td>г</td><td class="num">149</td><td class="num">334</td><td class="num">20.8</td><td class="num">27.7</td><td class="num">0.5</td></tr>
+    <tr><td>474</td><td>Сыр Камамбер</td><td class="cat">Молочное</td><td>г</td><td class="num">159</td><td class="num">300</td><td class="num">19.8</td><td class="num">24.3</td><td class="num">0.5</td></tr>
+    <tr><td>475</td><td>Сыр Чеддер</td><td class="cat">Молочное</td><td>г</td><td class="num">139</td><td class="num">402</td><td class="num">24.9</td><td class="num">33.1</td><td class="num">1.3</td></tr>
+    <tr><td>476</td><td>Сыр Маасдам</td><td class="cat">Молочное</td><td>г</td><td class="num">129</td><td class="num">350</td><td class="num">24.9</td><td class="num">27.8</td><td class="num">0.0</td></tr>
+    <tr><td>477</td><td>Сыр Рикотта</td><td class="cat">Молочное</td><td>г</td><td class="num">119</td><td class="num">174</td><td class="num">11.3</td><td class="num">13.0</td><td class="num">3.0</td></tr>
+    <tr><td>478</td><td>Сыр Маскарпоне</td><td class="cat">Молочное</td><td>г</td><td class="num">149</td><td class="num">429</td><td class="num">4.5</td><td class="num">44.1</td><td class="num">2.5</td></tr>
+    <tr><td>479</td><td>Сыр Пекорино</td><td class="cat">Молочное</td><td>г</td><td class="num">199</td><td class="num">387</td><td class="num">26.0</td><td class="num">32.5</td><td class="num">0.5</td></tr>
+    <tr><td>480</td><td>Кварк творожный сыр</td><td class="cat">Молочное</td><td>г</td><td class="num">29</td><td class="num">60</td><td class="num">11.1</td><td class="num">0.2</td><td class="num">3.4</td></tr>
+    <tr><td>481</td><td>Яйцо гусиное</td><td class="cat">Яйца</td><td>шт</td><td class="num">29</td><td class="num">185</td><td class="num">13.9</td><td class="num">13.3</td><td class="num">1.4</td></tr>
+    <tr><td>482</td><td>Яйцо индюшиное</td><td class="cat">Яйца</td><td>шт</td><td class="num">19</td><td class="num">171</td><td class="num">13.1</td><td class="num">11.8</td><td class="num">1.7</td></tr>
+    <tr><td>483</td><td>Яйцо утиное</td><td class="cat">Яйца</td><td>шт</td><td class="num">14</td><td class="num">185</td><td class="num">12.8</td><td class="num">13.8</td><td class="num">1.4</td></tr>
+    <tr><td>484</td><td>Жидкий яичный белок</td><td class="cat">Яйца</td><td>мл</td><td class="num">4</td><td class="num">44</td><td class="num">11.0</td><td class="num">0.0</td><td class="num">0.0</td></tr>
+    <tr><td>485</td><td>Растительный протеин гороховый</td><td class="cat">Специи</td><td>г</td><td class="num">69</td><td class="num">354</td><td class="num">80.0</td><td class="num">5.5</td><td class="num">3.5</td></tr>
+    <tr><td>486</td><td>Конопляный протеин</td><td class="cat">Специи</td><td>г</td><td class="num">79</td><td class="num">373</td><td class="num">50.0</td><td class="num">11.0</td><td class="num">26.0</td></tr>
+    <tr><td>487</td><td>Отруби рисовые</td><td class="cat">Крупы</td><td>г</td><td class="num">14</td><td class="num">316</td><td class="num">13.3</td><td class="num">20.9</td><td class="num">50.0</td></tr>
+    <tr><td>488</td><td>Саго крупа</td><td class="cat">Крупы</td><td>г</td><td class="num">19</td><td class="num">335</td><td class="num">0.2</td><td class="num">0.2</td><td class="num">84.0</td></tr>
+    <tr><td>489</td><td>Лагман лапша</td><td class="cat">Хлеб и макароны</td><td>г</td><td class="num">14</td><td class="num">348</td><td class="num">11.0</td><td class="num">1.5</td><td class="num">72.3</td></tr>
+    <tr><td>490</td><td>Тортилья кукурузная</td><td class="cat">Хлеб и макароны</td><td>г</td><td class="num">9</td><td class="num">218</td><td class="num">5.7</td><td class="num">2.5</td><td class="num">45.9</td></tr>
+    <tr><td>491</td><td>Тортилья пшеничная</td><td class="cat">Хлеб и макароны</td><td>г</td><td class="num">8</td><td class="num">306</td><td class="num">8.0</td><td class="num">8.0</td><td class="num">49.6</td></tr>
+    <tr><td>492</td><td>Наан хлеб</td><td class="cat">Хлеб и макароны</td><td>г</td><td class="num">10</td><td class="num">317</td><td class="num">10.8</td><td class="num">4.5</td><td class="num">56.3</td></tr>
+    <tr><td>493</td><td>Фокачча с оливками</td><td class="cat">Хлеб и макароны</td><td>г</td><td class="num">18</td><td class="num">258</td><td class="num">7.8</td><td class="num">7.3</td><td class="num">42.1</td></tr>
+    <tr><td>494</td><td>Ржаной багет</td><td class="cat">Хлеб и макароны</td><td>г</td><td class="num">8</td><td class="num">250</td><td class="num">8.5</td><td class="num">1.0</td><td class="num">53.4</td></tr>
+    <tr><td>495</td><td>Бублик</td><td class="cat">Хлеб и макароны</td><td>г</td><td class="num">9</td><td class="num">270</td><td class="num">9.8</td><td class="num">1.6</td><td class="num">53.5</td></tr>
+    <tr><td>496</td><td>Крекер ржаной</td><td class="cat">Хлеб и макароны</td><td>г</td><td class="num">14</td><td class="num">388</td><td class="num">9.5</td><td class="num">10.0</td><td class="num">71.2</td></tr>
+    <tr><td>497</td><td>Слоёное тесто</td><td class="cat">Хлеб и макароны</td><td>г</td><td class="num">14</td><td class="num">400</td><td class="num">6.8</td><td class="num">25.4</td><td class="num">39.0</td></tr>
+    <tr><td>498</td><td>Дрожжевое тесто</td><td class="cat">Хлеб и макароны</td><td>г</td><td class="num">9</td><td class="num">229</td><td class="num">6.0</td><td class="num">5.5</td><td class="num">43.0</td></tr>
+    <tr><td>499</td><td>Бездрожжевое тесто</td><td class="cat">Хлеб и макароны</td><td>г</td><td class="num">8</td><td class="num">226</td><td class="num">7.0</td><td class="num">3.0</td><td class="num">46.5</td></tr>
+    <tr><td>500</td><td>Песочное тесто</td><td class="cat">Хлеб и макароны</td><td>г</td><td class="num">14</td><td class="num">453</td><td class="num">6.5</td><td class="num">24.0</td><td class="num">56.0</td></tr>
+  </tbody>
+</table>
+</body>
+</html>

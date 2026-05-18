@@ -1,4 +1,5 @@
-﻿using AutoMapper;
+﻿using System.Security.Claims;
+using AutoMapper;
 using Domain.Entities;
 using Microsoft.AspNetCore.Mvc;
 using Presentation.Models;
@@ -24,27 +25,29 @@ namespace Presentation.Controllers
             _recipeService = recipeService;
             _mapper = mapper;
         }
+        
+        private Guid? CurrentUserId =>
+            Guid.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out var id) ? id : null;
 
         // GET: /MealPlan/Week — детальная неделя
         public async Task<IActionResult> Week()
         {
-            var plan = await _mealPlanService.GetCurrentWeekPlanAsync();
+            if (!CurrentUserId.HasValue) return RedirectToAction("AuthPage", "Account");
 
-            if (plan == null)
-            {
-                return View("EmptyWeek");
-            }
+            var plan = await _mealPlanService.GetCurrentWeekPlanAsync(CurrentUserId.Value);
+
+            if (plan == null) return View("EmptyWeek");
 
             var model = new WeekPlanViewModel
             {
                 MealPlanId = plan.Id,
-                StartDate = plan.StartDate,
-                Days = new List<DayPlanViewModel>()
+                StartDate  = plan.StartDate,
+                Days       = new List<DayPlanViewModel>()
             };
 
             for (int offset = 0; offset < 7; offset++)
             {
-                var date = plan.StartDate.AddDays(offset);
+                var date     = plan.StartDate.AddDays(offset);
                 var dayMeals = plan.Meals
                     .Where(m => m.DayOffset == offset)
                     .OrderBy(m => m.MealType.Order)
@@ -52,14 +55,36 @@ namespace Presentation.Controllers
 
                 model.Days.Add(new DayPlanViewModel
                 {
-                    Date = date,
+                    Date  = date,
                     Meals = _mapper.Map<List<PlannedMealViewModel>>(dayMeals)
                 });
             }
 
+            // Список покупок прямо здесь
+            var rawIngredients = await _mealPlanService.GenerateShoppingListAsync(plan.Id);
+            if (rawIngredients?.Any() == true)
+            {
+                model.ShoppingList = rawIngredients
+                    .GroupBy(i => new { i.ProductId, i.Unit })
+                    .Select(g => new ShoppingIngredientViewModel
+                    {
+                        Product  = g.First().Product,
+                        Amount   = g.Sum(x => x.Amount),
+                        Unit     = g.Key.Unit,
+                        Comment  = string.Join("; ", g
+                            .Where(x => !string.IsNullOrWhiteSpace(x.Comment))
+                            .Select(x => x.Comment)
+                            .Distinct()),
+                        Category = g.First().Product?.Category.ToString() // или отдельный маппинг
+                    })
+                    .OrderBy(i => i.Category)
+                    .ThenBy(i => i.Product?.Name)
+                    .ToList();
+            }
+
             return View(model);
         }
-
+        
         // GET: /MealPlan/GenerateWeek — форма генерации
         public IActionResult GenerateWeek()
         {
@@ -71,6 +96,8 @@ namespace Presentation.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> GenerateWeek(GenerateWeekViewModel model)
         {
+            if (!CurrentUserId.HasValue) return RedirectToAction("AuthPage", "Account");
+
             if (!ModelState.IsValid)
             {
                 return View(model);
@@ -141,20 +168,19 @@ namespace Presentation.Controllers
             var monday = today.AddDays(-(int)today.DayOfWeek + (int)DayOfWeek.Monday);
 
             // Удаляем старый план, если был
-            var existingPlan = await _mealPlanService.GetCurrentWeekPlanAsync();
+            var existingPlan = await _mealPlanService.GetCurrentWeekPlanAsync(CurrentUserId.Value);
             if (existingPlan != null)
-            {
                 await _mealPlanService.DeleteAsync(existingPlan.Id);
-            }
-            
+
             var planName = $"Меню на неделю с {monday:dd MMMM yyyy}";
 
-            var newPlan = new MealPlan 
-            { 
-                Id = Guid.NewGuid(),
-                Name = planName,
+            var newPlan = new MealPlan
+            {
+                Id        = Guid.NewGuid(),
+                Name      = planName,
                 StartDate = monday,
-                Meals = new List<PlannedMeal>()
+                UserId    = CurrentUserId.Value, 
+                Meals     = new List<PlannedMeal>()
             };
 
             var usedRecipes = new HashSet<Guid>();
@@ -226,34 +252,50 @@ namespace Presentation.Controllers
                 Servings = servings
             });
         }
-
-        // GET: /MealPlan/ShoppingList/{id}
-        public async Task<IActionResult> ShoppingList(Guid id)
+        
+        // POST /MealPlan/ReplaceMeal
+        [HttpPost]
+        public async Task<IActionResult> ReplaceMeal(Guid plannedMealId)
         {
-            var ingredients = await _mealPlanService.GenerateShoppingListAsync(id);
+            if (!CurrentUserId.HasValue) return Unauthorized();
 
-            if (ingredients == null || !ingredients.Any())
-            {
-                return View("EmptyShoppingList");
-            }
+            var meal = await _mealPlanService.GetPlannedMealByIdAsync(plannedMealId);
+            if (meal == null) return NotFound();
 
-            var model = new ShoppingListViewModel
-            {
-                MealPlanId = id,
-                Ingredients = ingredients
-                    .GroupBy(i => new { i.ProductId, i.Unit })
-                    .Select(g => new ShoppingIngredientViewModel
-                    {
-                        Product = g.First().Product,
-                        Amount = g.Sum(x => x.Amount),
-                        Unit = g.Key.Unit,
-                        Comment = string.Join("; ", g.Where(x => !string.IsNullOrWhiteSpace(x.Comment)).Select(x => x.Comment).Distinct())
-                    })
-                    .OrderBy(i => i.Product?.Name)
-                    .ToList()
-            };
+            var allRecipes = await _recipeService.GetAllRecipesAsync();
+            var currentKcal = meal.Recipe?.CaloriesPerServing ?? 0;
+            var currentId = meal.RecipeId;
 
-            return View(model);
+            // Получаем текущий план недели
+            var plan = await _mealPlanService.GetCurrentWeekPlanAsync(CurrentUserId.Value);
+
+            var usedIds = plan?.Meals
+                              .Select(m => m.RecipeId)
+                              .OfType<Guid>()
+                              .ToHashSet() 
+                          ?? new HashSet<Guid>();
+
+            var replacement = allRecipes
+                .Where(r => r.Id != currentId && !usedIds.Contains(r.Id))
+                .OrderBy(r => Math.Abs(r.CaloriesPerServing - currentKcal))
+                .ThenBy(_ => Guid.NewGuid())
+                .FirstOrDefault();
+
+            if (replacement == null)
+                return Json(new { error = "Нет подходящего рецепта для замены" });
+
+            await _mealPlanService.ReplaceMealRecipeAsync(plannedMealId, replacement.Id);
+
+            return Json(new {
+                success   = true,
+                recipeId  = replacement.Id,
+                name      = replacement.Name,
+                imageUrl  = replacement.ImageUrl ?? "",
+                calories  = (int)Math.Round(replacement.CaloriesPerServing),
+                protein   = (int)Math.Round(replacement.ProteinPerServing),
+                fat       = (int)Math.Round(replacement.FatPerServing),
+                carbs     = (int)Math.Round(replacement.CarbsPerServing)
+            });
         }
     }
 }

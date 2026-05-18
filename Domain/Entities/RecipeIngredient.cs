@@ -9,7 +9,7 @@
         public Recipe Recipe { get; set; } = null!;
 
         public Guid ProductId { get; set; }
-        public Product Product { get; set; } = null!; // Это будет группа (ParentId == null)
+        public Product Product { get; set; } = null!; 
 
         public decimal Amount { get; set; }
         public string Unit { get; set; } = null!;

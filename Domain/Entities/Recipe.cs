@@ -6,9 +6,8 @@
         public string Name { get; set; } = null!;
         public string? Description { get; set; }
         public int DefaultServings { get; set; } = 1;
-        public decimal TotalCost { get; set; } = 0;
         public string? ImageUrl { get; set; }
-        public bool IsPublic { get; set; } = true; // публичный или только для автора
+        public bool IsPublic { get; set; } = true; 
 
         // Автор рецепта (null = системный рецепт)
         public Guid? AuthorId { get; set; }
@@ -21,6 +20,8 @@
         public ICollection<PlannedMeal> PlannedMeals { get; set; } = [];
         public ICollection<FavoriteRecipe> FavoritedBy { get; set; } = [];
 
+        public decimal TotalCost => Ingredients
+            .Sum(i => (i.Product?.PricePerUnit ?? 0) * i.Amount / 100);
         public decimal TotalCalories => Ingredients.Sum(i => i.Calories ?? 0);
         public decimal TotalProtein  => Ingredients.Sum(i => i.Protein ?? 0);
         public decimal TotalFat      => Ingredients.Sum(i => i.Fat ?? 0);

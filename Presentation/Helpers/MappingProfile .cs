@@ -198,7 +198,7 @@ namespace Presentation.Helpers
             // ←←← Добавь эти два маппинга:
             CreateMap<Recipe, RecipeCreateViewModel>()
                 .ForMember(dest => dest.Ingredients, opt => opt.MapFrom(src => src.Ingredients))
-                .ForMember(dest => dest.Steps, opt => opt.MapFrom(src => src.Steps));
+                .ForMember(d => d.Steps, o => o.MapFrom(s => s.Steps.OrderBy(x => x.Order)));
 
             CreateMap<RecipeCreateViewModel, Recipe>()
                 .ForMember(dest => dest.Ingredients, opt => opt.Ignore())

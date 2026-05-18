@@ -1,5 +1,7 @@
 ﻿using Domain.Entities;
+using Domain.Enums;
 using Infrastructure.Interfaces;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Services.Helpers;
 using Services.Interfaces;
@@ -27,49 +29,39 @@ namespace Services.Services
             int page, 
             int pageSize, 
             string? searchTerm = null, 
-            Guid? categoryId = null,
+            ProductCategory? category = null,        // ← Enum
             decimal? minCalories = null,
             decimal? maxCalories = null,
             decimal? minPrice = null,
             decimal? maxPrice = null)
         {
-            IQueryable<Product> query = _products.Query()
-                .Include(p => p.Parent);
+            IQueryable<Product> query = _products.Query();
 
-            // Фильтр: исключаем категории
-            query = query.Where(p => p.Unit != "категория" && p.CaloriesPer100 != null);
+            // Фильтр по категории (Enum)
+            if (category.HasValue && category.Value != ProductCategory.Other)
+            {
+                query = query.Where(p => p.Category == category.Value);
+            }
 
-            // Фильтр по поиску
+            // Поиск по названию
             if (!string.IsNullOrWhiteSpace(searchTerm))
             {
-                query = query.Where(p => p.Name.Contains(searchTerm));
+                query = query.Where(p => p.Name.ToLower().Contains(searchTerm.ToLower()));
             }
 
-            // Фильтр по категории
-            if (categoryId.HasValue && categoryId != Guid.Empty)
-            {
-                query = query.Where(p => p.ParentId == categoryId);
-            }
-
-            // Фильтр по калорийности
+            // Калорийность
             if (minCalories.HasValue)
-            {
                 query = query.Where(p => p.CaloriesPer100 >= minCalories.Value);
-            }
-            if (maxCalories.HasValue && maxCalories.Value < 900)
-            {
-                query = query.Where(p => p.CaloriesPer100 <= maxCalories.Value);
-            }
 
-            // Фильтр по цене
+            if (maxCalories.HasValue)
+                query = query.Where(p => p.CaloriesPer100 <= maxCalories.Value);
+
+            // Цена
             if (minPrice.HasValue)
-            {
                 query = query.Where(p => p.PricePerUnit >= minPrice.Value);
-            }
+
             if (maxPrice.HasValue)
-            {
                 query = query.Where(p => p.PricePerUnit <= maxPrice.Value);
-            }
 
             var totalCount = await query.CountAsync();
 
@@ -124,118 +116,42 @@ namespace Services.Services
                 .ToListAsync();
         }
         
-        /// <summary>
-        /// Импорт продуктов из Calorizator.ru (БЖУ база)
-        /// </summary>
-        public async Task ImportProductsAsync()
+        public async Task<List<SelectListItem>> GetCategorySelectListAsync()
         {
-            Console.WriteLine("🔄 Запуск импорта из Calorizator...");
-            
-            var parser = new ProductParser();
-            var products = await parser.ParseCalorizatorAsync();
-
-            int added = 0;
-            int updated = 0;
-
-            foreach (var p in products)
-            {
-                var existing = await _products.Query()
-                    .FirstOrDefaultAsync(x => x.Name.ToLower() == p.Name.ToLower());
-                
-                if (existing == null)
+            return Enum.GetValues<ProductCategory>()
+                .Where(c => c != ProductCategory.Other)
+                .Select(c => new SelectListItem
                 {
-                    p.Unit = "г"; // Calorizator даёт данные на 100г
-                    await _products.AddAsync(p);
-                    added++;
-                }
-                else
-                {
-                    // Обновляем только БЖУ, оставляем цену и другие поля
-                    existing.CaloriesPer100 = p.CaloriesPer100;
-                    existing.ProteinPer100 = p.ProteinPer100;
-                    existing.FatPer100 = p.FatPer100;
-                    existing.CarbsPer100 = p.CarbsPer100;
-                    await _products.UpdateAsync(existing);
-                    updated++;
-                }
-            }
-
-            await _products.SaveChangesAsync();
-            
-            Console.WriteLine($"✅ Импорт завершен: добавлено {added}, обновлено {updated}");
+                    Value = ((int)c).ToString(),
+                    Text = GetCategoryDisplayName(c)
+                })
+                .ToList();
         }
 
-        /// <summary>
-        /// Импорт продуктов из Пятёрочки (полный парсинг сайта)
-        /// </summary>
-        // public async Task ImportFromPyaterochkaAsync()
-        // {
-        //     Console.WriteLine("🔄 Запуск импорта из Пятёрочки (полный парсинг)...");
-        //     
-        //     using var parser = new VkusvillParser(maxConcurrentCategories: 3, maxConcurrentDetailPages: 15);
-        //     var products = await parser.ParseAllProductsAsync(enrichDetails: true);
-        //
-        //
-        //     int added = 0;
-        //     int updated = 0;
-        //
-        //     foreach (var p in products)
-        //     {
-        //         try
-        //         {
-        //             // Нормализуем название для поиска
-        //             var normalizedName = NormalizeName(p.Name);
-        //             
-        //             var existing = await _products.Query()
-        //                 .FirstOrDefaultAsync(x => NormalizeName(x.Name) == normalizedName);
-        //             
-        //             if (existing == null)
-        //             {
-        //                 await _products.AddAsync(p);
-        //                 added++;
-        //             }
-        //             else
-        //             {
-        //                 // Обновляем все поля
-        //                 existing.PricePerUnit = p.PricePerUnit > 0 ? p.PricePerUnit : existing.PricePerUnit;
-        //                 existing.ImageUrl = !string.IsNullOrEmpty(p.ImageUrl) ? p.ImageUrl : existing.ImageUrl;
-        //                 existing.CaloriesPer100 = p.CaloriesPer100 ?? existing.CaloriesPer100;
-        //                 existing.ProteinPer100 = p.ProteinPer100 ?? existing.ProteinPer100;
-        //                 existing.FatPer100 = p.FatPer100 ?? existing.FatPer100;
-        //                 existing.CarbsPer100 = p.CarbsPer100 ?? existing.CarbsPer100;
-        //                 
-        //                 await _products.UpdateAsync(existing);
-        //                 updated++;
-        //             }
-        //             
-        //             // Сохраняем периодически
-        //             if ((added + updated) % 50 == 0)
-        //             {
-        //                 await _products.SaveChangesAsync();
-        //                 Console.WriteLine($"   💾 Сохранено: {added + updated} продуктов");
-        //             }
-        //         }
-        //         catch (Exception ex)
-        //         {
-        //             Console.WriteLine($"⚠️ Ошибка при обработке {p.Name}: {ex.Message}");
-        //         }
-        //     }
-        //
-        //     await _products.SaveChangesAsync();
-        //     
-        //     Console.WriteLine($"✅ Импорт из Пятёрочки завершен:");
-        //     Console.WriteLine($"   • Добавлено: {added}");
-        //     Console.WriteLine($"   • Обновлено: {updated}");
-        // }
-
-        /// <summary>
-        /// Комбинированный импорт - УДАЛЕНО, используем только Пятёрочку
-        /// </summary>
-        // public async Task ImportCombinedAsync()
-        // {
-        //     // Теперь используем только Пятёрочку
-        //     await ImportFromPyaterochkaAsync();
-        // }
+        private string GetCategoryDisplayName(ProductCategory category)
+        {
+            return category switch
+            {
+                ProductCategory.Meat => "Мясо",
+                ProductCategory.Poultry => "Птица",
+                ProductCategory.Fish => "Рыба и морепродукты",
+                ProductCategory.Dairy => "Молочное",
+                ProductCategory.Eggs => "Яйца",
+                ProductCategory.Grains => "Крупы и зерновые",
+                ProductCategory.Bread => "Хлеб и макароны",
+                ProductCategory.Vegetables => "Овощи",
+                ProductCategory.Fruits => "Фрукты",
+                ProductCategory.Nuts => "Орехи и семена",
+                ProductCategory.Oils => "Масла и жиры",
+                ProductCategory.Spices => "Специи и приправы",
+                ProductCategory.Sweets => "Сладкое",
+                ProductCategory.Canned => "Консервы",
+                ProductCategory.SemiFinished => "Полуфабрикаты",
+                ProductCategory.Soy => "Соевые продукты",
+                ProductCategory.Beverages => "Напитки",
+                _ => category.ToString()
+            };
+        }
 
         /// <summary>
         /// Нормализация названия для сопоставления

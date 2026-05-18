@@ -31,13 +31,18 @@ namespace Services.Services
                 .ToListAsync();
         }
 
-        public async Task<Recipe?> GetByIdAsync(Guid id, bool includeIngredients = false, bool includeSteps = false)
+        public async Task<Recipe?> GetByIdAsync(Guid id, bool includeIngredients = true, bool includeSteps = true)
         {
-            return await _recipes.Query()
-                .Include(r => r.Ingredients)
-                .ThenInclude(i => i.Product)
-                .Include(r => r.Steps)
-                .FirstOrDefaultAsync(r => r.Id == id);
+            var query = _recipes.Query().AsNoTracking();
+
+            if (includeIngredients)
+                query = query.Include(r => r.Ingredients)
+                    .ThenInclude(i => i.Product);   // ← Важно!
+
+            if (includeSteps)
+                query = query.Include(r => r.Steps);
+
+            return await query.FirstOrDefaultAsync(r => r.Id == id);
         }
 
         public async Task<Recipe> CreateAsync(Recipe recipe)

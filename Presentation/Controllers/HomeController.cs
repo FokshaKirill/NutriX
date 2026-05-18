@@ -1,74 +1,54 @@
+using System.Security.Claims;
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using Presentation.Models;
 using Services.Interfaces;
+using Services.UserService.Services.Interfaces;
 
 namespace Presentation.Controllers
 {
     public class HomeController : Controller
     {
-        private readonly IMealService _mealService;
-        private readonly IMealPlanService _mealPlanService;
-        private readonly IMapper _mapper;
-
+        private readonly IRecipeService  _recipeService;
+        private readonly IMealPlanService  _mealPlanService;
+        private readonly IUserService    _userService;
+        private readonly IMapper         _mapper;
+ 
         public HomeController(
-            IMealService mealService,
-            IMealPlanService mealPlanService,
-            IMapper mapper)
+            IRecipeService  recipeService,
+            IMealPlanService  mealPlanService,
+            IUserService    userService,
+            IMapper         mapper)
         {
-            _mealService = mealService;
-            _mealPlanService = mealPlanService;
-            _mapper = mapper;
+            _recipeService  = recipeService;
+            _mealPlanService  = mealPlanService;
+            _userService    = userService;
+            _mapper         = mapper;
         }
-
+ 
+        private Guid? CurrentUserId =>
+            Guid.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out var id) ? id : null;
+ 
         public async Task<IActionResult> Index()
         {
-            var today = DateTime.Today;
-            var monday = today.AddDays(-(int)today.DayOfWeek + (int)DayOfWeek.Monday);
+            var allRecipes = await _recipeService.GetAllRecipesAsync();
+            var latest = allRecipes.OrderByDescending(r => r.CreatedAt).Take(8).ToList();
+            ViewBag.LatestRecipes = _mapper.Map<List<RecipeListViewModel>>(latest);
 
-            var todayMeals = await _mealService.GetMealsByDateAsync(today);
-
-            var todayCalories = await _mealService.GetTotalCaloriesAsync(today);
-            var todayProtein = await _mealService.GetTotalProteinAsync(today);
-            var todayFat = await _mealService.GetTotalFatAsync(today);
-            var todayCarbs = await _mealService.GetTotalCarbsAsync(today);
-
-            var currentPlan = await _mealPlanService.GetCurrentWeekPlanAsync();
-
-            var weekDays = new List<DayPlanViewModel>();
-            if (currentPlan != null)
+            if (CurrentUserId.HasValue)
             {
-                for (int i = 0; i < 7; i++)
-                {
-                    var date = monday.AddDays(i);
-                    var dayMeals = currentPlan.Meals
-                        .Where(m => m.DayOffset == i)
-                        .OrderBy(m => m.MealType.Order)
-                        .ToList();
+                var user = await _userService.GetByIdAsync(CurrentUserId.Value);
+                ViewBag.CurrentUser = user;
 
-                    weekDays.Add(new DayPlanViewModel
-                    {
-                        Date = date,
-                        Meals = _mapper.Map<List<PlannedMealViewModel>>(dayMeals)
-                    });
-                }
+                // Загружаем сегодняшние блюда из плана
+                var todayMeals = await _mealPlanService.GetTodayMealsAsync(CurrentUserId.Value);
+                ViewBag.TodayMeals = todayMeals; // ← передаём во вьюху
             }
 
-            var model = new HomeViewModel
-            {
-                TodayDate = today,
-                TodayMeals = _mapper.Map<List<MealViewModel>>(todayMeals),
-                TodayTotalCalories = todayCalories,
-                TodayTotalProtein = todayProtein,
-                TodayTotalFat = todayFat,
-                TodayTotalCarbs = todayCarbs,
-                WeekStart = monday,
-                WeekEnd = monday.AddDays(6),
-                WeekDays = weekDays
-            };
-
-            return View(model);
+            return View();
         }
+ 
+        public IActionResult Error() => View();
         
         public IActionResult Contact()
         {

@@ -15,13 +15,21 @@ namespace Presentation.Controllers;
 [Route("api/auth")]
 public class AuthController : ControllerBase
 {
-    private readonly IUserService _userService;
-    private readonly IJwtService  _jwtService;
+    private readonly IUserService              _userService;
+    private readonly IJwtService               _jwtService;
+    private readonly IConfiguration            _config;      // ← NEW
+    private readonly ILogger<AuthController>   _log;         // ← NEW
 
-    public AuthController(IUserService userService, IJwtService jwtService)
+    public AuthController(
+        IUserService            userService,
+        IJwtService             jwtService,
+        IConfiguration          config,
+        ILogger<AuthController> log)
     {
         _userService = userService;
         _jwtService  = jwtService;
+        _config      = config;
+        _log         = log;
     }
 
     // ── Регистрация ───────────────────────────────────────────────────────
@@ -65,7 +73,7 @@ public class AuthController : ControllerBase
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"[Register] {ex}");
+            _log.LogError(ex, "[Register]");
             return StatusCode(500, new { message = "Ошибка при регистрации" });
         }
     }
@@ -95,67 +103,43 @@ public class AuthController : ControllerBase
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"[Login] {ex}");
+            _log.LogError(ex, "[Login]");
             return StatusCode(500, new { message = "Ошибка при входе" });
         }
     }
 
-    // ── Google: шаг 1 — редирект на Google ───────────────────────────────
-    // ВАЖНО: используем промежуточную cookie-схему "External" для хранения
-    // данных от Google до момента когда мы их обработаем в callback.
+    // ── Google OAuth ──────────────────────────────────────────────────────
     [HttpGet("google")]
     public IActionResult GoogleLogin()
     {
-        // redirectUri — куда Google вернёт пользователя после согласия
         var redirectUrl = Url.Action("GoogleCallback", "Auth", null, Request.Scheme);
-
-        var properties = new AuthenticationProperties { RedirectUri = redirectUrl };
-
-        // Challenge запускает Google OIDC flow
+        var properties  = new AuthenticationProperties { RedirectUri = redirectUrl };
         return Challenge(properties, GoogleDefaults.AuthenticationScheme);
     }
 
-    // ── Google: шаг 2 — callback от Google ───────────────────────────────
-    // Google сюда вернёт code, ASP.NET его обменяет на токены.
-    // Данные временно лежат в схеме "Identity.External" (или в cookie).
     [HttpGet("google/callback")]
     public async Task<IActionResult> GoogleCallback()
     {
         try
         {
-            // Читаем результат внешней аутентификации.
-            // Схема "Identity.External" — стандартная временная cookie ASP.NET
-            // которую Google middleware записывает после успешного callback.
             var result = await HttpContext.AuthenticateAsync("Identity.External");
-
-            // Если не сработало — пробуем прочитать напрямую из Google-схемы.
-            // Это нужно если в Program.cs не настроена отдельная External схема.
             if (!result.Succeeded)
-            {
-                // Fallback: читаем external info иначе
                 result = await HttpContext.AuthenticateAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-            }
 
             if (!result.Succeeded || result.Principal == null)
             {
-                Console.WriteLine($"[GoogleCallback] Auth failed: {result.Failure?.Message}");
+                _log.LogWarning("[GoogleCallback] Auth failed: {Err}", result.Failure?.Message);
                 return Redirect("/account/authpage?error=google_auth_failed");
             }
 
-            var claims = result.Principal.Claims.ToList();
-
-            // Google кладёт email в стандартный ClaimTypes.Email
+            var claims   = result.Principal.Claims.ToList();
             var email    = claims.FirstOrDefault(x => x.Type == ClaimTypes.Email)?.Value;
             var name     = claims.FirstOrDefault(x => x.Type == ClaimTypes.Name)?.Value;
-            // Google ID — в NameIdentifier
             var googleId = claims.FirstOrDefault(x => x.Type == ClaimTypes.NameIdentifier)?.Value;
-
-            Console.WriteLine($"[GoogleCallback] email={email}, name={name}, googleId={googleId}");
 
             if (string.IsNullOrWhiteSpace(email))
                 return Redirect("/account/authpage?error=no_email");
 
-            // Найти или создать пользователя
             var user = await _userService.GetByEmailAsync(email);
             if (user == null)
             {
@@ -172,7 +156,6 @@ public class AuthController : ControllerBase
                     LastLoginAt      = DateTime.UtcNow
                 };
                 await _userService.CreateAsync(user);
-                Console.WriteLine($"[GoogleCallback] Создан новый пользователь: {user.Id}");
             }
             else
             {
@@ -183,21 +166,68 @@ public class AuthController : ControllerBase
                     user.IsGoogleUser = true;
                 }
                 await _userService.UpdateAsync(user);
-                Console.WriteLine($"[GoogleCallback] Обновлён: {user.Id}");
             }
 
-            // Записываем нашу Cookie с правильным GUID в NameIdentifier
             await SignInUserAsync(user);
-
-            // Удаляем временную external cookie если она была
             await HttpContext.SignOutAsync("Identity.External");
 
             return Redirect("/account");
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"[GoogleCallback] Exception: {ex}");
+            _log.LogError(ex, "[GoogleCallback]");
             return Redirect("/account/authpage?error=server_error");
+        }
+    }
+
+    // ── Активация Admin-роли ──────────────────────────────────────────────
+    // Секретный код хранится в appsettings.json: "AdminSecret": "ВашКод"
+    [HttpPost("activate-admin")]
+    public async Task<IActionResult> ActivateAdmin([FromBody] ActivateAdminRequest request)
+    {
+        if (User.Identity?.IsAuthenticated != true)
+            return Unauthorized(new { message = "Войдите в аккаунт" });
+        
+        try
+        {
+            var expected = _config["AdminSecret"];
+
+            if (string.IsNullOrWhiteSpace(expected))
+            {
+                _log.LogError("[ActivateAdmin] AdminSecret не задан в конфиге!");
+                return StatusCode(500, new { message = "Сервер не настроен" });
+            }
+
+            if (request.SecretCode != expected)
+            {
+                _log.LogWarning("[ActivateAdmin] Неверный код. UserId={Id}", GetUserIdFromClaims());
+                return BadRequest(new { message = "Неверный код активации" });
+            }
+
+            var userId = GetUserIdFromClaims();
+            var user   = await _userService.GetByIdAsync(userId);
+
+            if (user == null)
+                return NotFound(new { message = "Пользователь не найден" });
+
+            if (user.Role == UserRole.Admin)
+                return Ok(new { message = "Вы уже администратор", alreadyAdmin = true });
+
+            // Роль в БД — навсегда
+            user.Role = UserRole.Admin;
+            await _userService.UpdateAsync(user);
+
+            _log.LogInformation("[ActivateAdmin] Admin выдан: {Id} ({Email})", user.Id, user.Email);
+
+            // Перевыписываем cookie — чтобы сразу работало без перелогина
+            await SignInUserAsync(user);
+
+            return Ok(new { message = "Добро пожаловать, администратор!", success = true });
+        }
+        catch (Exception ex)
+        {
+            _log.LogError(ex, "[ActivateAdmin]");
+            return StatusCode(500, new { message = "Внутренняя ошибка сервера" });
         }
     }
 
@@ -210,7 +240,7 @@ public class AuthController : ControllerBase
         return Ok(new { message = "Выход выполнен" });
     }
 
-    // ── Текущий пользователь ─────────────────────────────────────────────
+    // ── /api/auth/me ──────────────────────────────────────────────────────
     [HttpGet("me")]
     [Authorize]
     public async Task<IActionResult> GetCurrentUser()
@@ -236,8 +266,8 @@ public class AuthController : ControllerBase
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"[GetCurrentUser] {ex}");
-            return StatusCode(500, new { message = "Ошибка получения данных пользователя" });
+            _log.LogError(ex, "[GetCurrentUser]");
+            return StatusCode(500, new { message = "Ошибка получения данных" });
         }
     }
 
@@ -272,7 +302,7 @@ public class AuthController : ControllerBase
         var user = await _userService.GetByIdAsync(id);
         if (user == null) return NotFound(new { message = "Пользователь не найден" });
         await _userService.DeleteAsync(id);
-        return Ok(new { message = "Пользователь успешно удалён" });
+        return Ok(new { message = "Пользователь удалён" });
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────
@@ -280,11 +310,10 @@ public class AuthController : ControllerBase
     {
         var claims = new List<Claim>
         {
-            // ВАЖНО: NameIdentifier содержит наш GUID, не Google ID
             new(ClaimTypes.NameIdentifier, user.Id.ToString()),
             new(ClaimTypes.Name,           user.Username),
             new(ClaimTypes.Email,          user.Email),
-            new(ClaimTypes.Role,           user.Role.ToString())
+            new(ClaimTypes.Role,           user.Role.ToString())   // "User" или "Admin"
         };
 
         var identity  = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);

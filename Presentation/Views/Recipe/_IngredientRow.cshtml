@@ -1,46 +1,36 @@
 ﻿@model Tuple<int, Presentation.Models.RecipeIngredientViewModel>
 
-<div class="row g-3 mb-3 ingredient-row align-items-center">
-    <div class="col-md-5">
-        <select name="Ingredients[@Model.Item1].ProductId" class="form-select form-select-lg product-select" required>
-            <option value="">Выберите продукт</option>
-            @foreach (var product in ViewBag.Products as List<Domain.Entities.Product>)
+<div class="ing-row" data-index="@Model.Item1">
+    <select name="Ingredients[@Model.Item1].ProductId" class="ing-select product-select" required>
+        <option value="">— продукт —</option>
+        @foreach (var p in ViewBag.Products as List<Domain.Entities.Product>)
+        {
+            if (p.Id == Model.Item2.ProductId)
             {
-                var selected = product.Id == Model.Item2.ProductId;
-                @if (selected)
-                {
-                    <option value="@product.Id" selected data-price="@product.PricePerUnit" data-name="@product.Name">
-                        @product.Name (@product.PricePerUnit ₽ / @product.Unit)
-                    </option>
-                }
-                else
-                {
-                    <option value="@product.Id" data-price="@product.PricePerUnit" data-name="@product.Name">
-                        @product.Name (@product.PricePerUnit ₽ / @product.Unit)
-                    </option>
-                }
+                <option value="@p.Id" selected
+                        data-price="@p.PricePerUnit"
+                        data-name="@p.Name">
+                    @p.Name (@p.PricePerUnit ₽/@p.Unit)
+                </option>
             }
-        </select>
-        <input type="hidden" name="Ingredients[@Model.Item1].ProductName" value="@Model.Item2.ProductName" class="product-name-hidden" />
-    </div>
-    <div class="col-md-2">
-        <input name="Ingredients[@Model.Item1].Amount" type="number" step="0.01" class="form-control form-control-lg amount-input" 
-               placeholder="Кол-во" value="@Model.Item2.Amount" required />
-    </div>
-    @* <div class="col-md-2"> *@
-    @*     <input name="Ingredients[@Model.Item1].Unit" class="form-control form-control-lg"  *@
-    @*            placeholder="г/мл/шт" value="@Model.Item2.Unit" required /> *@
-    @* </div> *@
-    <div class="col-md-1" style="width: 2rem !important; height: 24px">
-        <p class="text-start justify-content-start align-content-center">г</p>
-    </div>
-    <div class="col-md-3">
-        <input name="Ingredients[@Model.Item1].Comment" class="form-control form-control-lg" 
-               placeholder="Комментарий" value="@Model.Item2.Comment" />
-    </div>
-    <div class="col-md-1">
-        <button type="button" class="btn btn-outline-danger btn-lg remove-ingredient">
-            <i class="fas fa-trash"></i>
-        </button>
-    </div>
+            else
+            {
+                <option value="@p.Id"
+                        data-price="@p.PricePerUnit"
+                        data-name="@p.Name">
+                    @p.Name (@p.PricePerUnit ₽/@p.Unit)
+                </option>
+            }
+        }
+    </select>
+    <input type="hidden" name="Ingredients[@Model.Item1].ProductName"
+           value="@Model.Item2.ProductName" class="product-name-hidden" />
+
+    <input name="Ingredients[@Model.Item1].Amount" type="number" step="0.01"
+           class="ing-amount-input amount-input" placeholder="г" value="@Model.Item2.Amount" required />
+
+    <input name="Ingredients[@Model.Item1].Comment" class="ing-comment-input"
+           placeholder="комментарий" value="@Model.Item2.Comment" />
+
+    <button type="button" class="ing-remove remove-ingredient" title="Удалить">×</button>
 </div>

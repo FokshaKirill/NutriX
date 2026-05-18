@@ -40,13 +40,14 @@ public class FavoriteService : IFavoriteService
         var exists = await IsFavoriteAsync(userId, recipeId);
         if (exists) return;
 
-        await _favRepo.AddAsync(new FavoriteRecipe
+        var fav = new FavoriteRecipe
         {
             UserId   = userId,
             RecipeId = recipeId,
             AddedAt  = DateTime.UtcNow
-        });
-        
+        };
+
+        await _favRepo.AddAsync(fav);
         await _favRepo.SaveChangesAsync();
     }
 

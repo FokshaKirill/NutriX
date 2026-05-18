@@ -1,20 +1,11 @@
 ﻿@model Tuple<int, Presentation.Models.RecipeStepViewModel>
 
-<div class="mb-4 step-row p-4 rounded-4" style="background: var(--primary-light);">
-    <div class="row g-3 align-items-center">
-        <div class="col-auto">
-            <div class="fs-3 fw-bold step-number" style="color: var(--primary);">@(Model.Item1 + 1)</div>
-        </div>
-        <div class="col">
-            <textarea name="Steps[@Model.Item1].Description" class="form-control form-control-lg" rows="3" placeholder="Опишите шаг..." required>@Model.Item2.Description</textarea>
-        </div>
-        <div class="col-md-2">
-            <input name="Steps[@Model.Item1].TimerSeconds" type="number" class="form-control form-control-lg" placeholder="Таймер (сек)" value="@Model.Item2.TimerSeconds" />
-        </div>
-        <div class="col-auto">
-            <button type="button" class="btn btn-outline-danger btn-lg remove-step">
-                <i class="fas fa-trash"></i>
-            </button>
-        </div>
-    </div>
+<div class="step-row-edit" data-index="@Model.Item1">
+    <div class="step-row-num">@(Model.Item1 + 1)</div>
+    <textarea name="Steps[@Model.Item1].Description"
+              class="step-row-text" rows="2"
+              placeholder="Описание шага...">@Model.Item2.Description</textarea>
+    <input name="Steps[@Model.Item1].TimerSeconds" type="number"
+           class="step-row-timer" placeholder="сек" value="@Model.Item2.TimerSeconds" />
+    <button type="button" class="ing-remove remove-step" title="Удалить">×</button>
 </div>

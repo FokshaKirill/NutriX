@@ -1,0 +1,32 @@
+﻿@model List<Presentation.Models.PlannedMealViewModel>
+
+@if (Model == null || !Model.Any())
+{
+    <span class="day-empty">—</span>
+}
+else
+{
+    <div class="meal-cell">
+        @foreach (var meal in Model)
+        {
+            <div class="meal-entry">
+                @if (!string.IsNullOrEmpty(meal.RecipeImageUrl))
+                {
+                    <img src="@meal.RecipeImageUrl" alt="@meal.RecipeName" class="meal-thumb" />
+                }
+                else
+                {
+                    <div class="meal-thumb-placeholder">🍽</div>
+                }
+                <div class="meal-info">
+                    <a asp-controller="Recipe" asp-action="Details" asp-route-id="@meal.RecipeId" class="meal-name" title="@meal.RecipeName">
+                        @meal.RecipeName
+                    </a>
+                    <div class="meal-macros">
+                        @meal.Servings п. · @meal.Calories ккал
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}

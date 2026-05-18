@@ -5,4 +5,5 @@ public class WeekPlanViewModel
     public Guid MealPlanId { get; set; }
     public DateTime StartDate { get; set; }
     public List<DayPlanViewModel> Days { get; set; } = [];
+    public List<ShoppingIngredientViewModel> ShoppingList { get; set; } = []; // ← добавить
 }
