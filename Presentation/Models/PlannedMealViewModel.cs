@@ -10,7 +10,13 @@ public class PlannedMealViewModel
     public int Servings { get; set; }
 
     public int Calories { get; set; }
-    public int Protein { get; set; }
-    public int Fat { get; set; }
-    public int Carbs { get; set; }
+    public int Protein  { get; set; }
+    public int Fat      { get; set; }
+    public int Carbs    { get; set; }
+
+    /// <summary>
+    /// Стоимость блюда = TotalCost рецепта × Servings.
+    /// Заполняется в AutoMapper-профиле из Recipe.TotalCost * PlannedMeal.Servings.
+    /// </summary>
+    public decimal Cost { get; set; }
 }

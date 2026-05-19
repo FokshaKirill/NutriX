@@ -1,6 +1,20 @@
 ﻿/* Основные цвета */
 :root {
-    --border-color: #198754;    /* Очень светлый фон для акцентов */
+    --shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    --shadow-lg:  0 8px 40px rgba(92,74,58,.14);
+    --radius: 16px;
+
+    /* COLORS */
+    --primary: #86bf92;
+    --primary-dark: #5f9e6e;
+    --primary-light: #f0f7f2;
+    --sage-mid:   #b4cbb6;
+    --sage-pale: #eef7f0;
+    --brown:      #5c4a3a;
+    --brown-lt:   #8b6f5e;
+    --accent:     #c97d4e;
+    --accent-lt:  #f5e3d3;
+    --border-color: #198754; 
     --sage: #86bf92;
     --sage-dark: #5a9668;
     --sage-light: #c8e6cc;
@@ -11,13 +25,6 @@
     --card: #ffffff;
     --muted: #6b7280;
     --input-bg: #f9fafb;
-    --shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-    --radius: 16px;
-
-    /* COLORS */
-    --primary: #86bf92;
-    --primary-dark: #5f9e6e;
-    --primary-light: #f0f7f2;
 
     --text: #1a1a1a;
     --text-muted: #666666;
@@ -27,9 +34,6 @@
 
     --border: #e8ecef;
     --danger: #e24b4a;
-
-    /* EXTRA */
-    --sage-pale: #eef7f0;
 
     /* SHADOWS */
     --shadow-sm: 0 4px 14px rgba(0,0,0,.06);
@@ -1201,7 +1205,6 @@ hr {
     display: flex;
     gap: 1rem;
     flex-wrap: wrap;
-    margin-bottom: 1.5rem;
 }
 .day-total-item {
     flex: 1;

@@ -1,4 +1,4 @@
-﻿@model List<Presentation.Models.PlannedMealViewModel>
+@model List<Presentation.Models.PlannedMealViewModel>
 
 @if (Model == null || !Model.Any())
 {
@@ -19,12 +19,20 @@ else
                     <div class="meal-thumb-placeholder">🍽</div>
                 }
                 <div class="meal-info">
-                    <a asp-controller="Recipe" asp-action="Details" asp-route-id="@meal.RecipeId" class="meal-name" title="@meal.RecipeName">
+                    <a asp-controller="Recipe" asp-action="Details"
+                       asp-route-id="@meal.RecipeId"
+                       class="meal-name" title="@meal.RecipeName">
                         @meal.RecipeName
                     </a>
                     <div class="meal-macros">
                         @meal.Servings п. · @meal.Calories ккал
                     </div>
+                    @if (meal.Cost > 0)
+                    {
+                        <div class="meal-cost">
+                            @meal.Cost.ToString("F2") ₽
+                        </div>
+                    }
                 </div>
             </div>
         }

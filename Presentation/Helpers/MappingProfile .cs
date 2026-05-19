@@ -24,20 +24,18 @@ namespace Presentation.Helpers
                 .ForMember(d => d.Carbs, opt => opt.MapFrom(s => s.Recipe != null 
                     ? (int)Math.Round(s.Recipe.CarbsPerServing * s.Servings) : 0));
 
-            // PlannedMeal → PlannedMealViewModel (страница недели)
+            
             CreateMap<PlannedMeal, PlannedMealViewModel>()
-                .ForMember(d => d.MealTypeName, opt => opt.MapFrom(s => s.MealType.Name))
-                .ForMember(d => d.RecipeId, opt => opt.MapFrom(s => s.RecipeId))
-                .ForMember(d => d.RecipeName, opt => opt.MapFrom(s => s.Recipe != null ? s.Recipe.Name : null))
-                .ForMember(d => d.RecipeImageUrl, opt => opt.MapFrom(s => s.Recipe != null ? s.Recipe.ImageUrl : null))
-                .ForMember(d => d.Calories, opt => opt.MapFrom(s => s.Recipe != null 
-                    ? (int)Math.Round(s.Recipe.CaloriesPerServing * s.Servings) : 0))
-                .ForMember(d => d.Protein, opt => opt.MapFrom(s => s.Recipe != null 
-                    ? (int)Math.Round(s.Recipe.ProteinPerServing * s.Servings) : 0))
-                .ForMember(d => d.Fat, opt => opt.MapFrom(s => s.Recipe != null 
-                    ? (int)Math.Round(s.Recipe.FatPerServing * s.Servings) : 0))
-                .ForMember(d => d.Carbs, opt => opt.MapFrom(s => s.Recipe != null 
-                    ? (int)Math.Round(s.Recipe.CarbsPerServing * s.Servings) : 0));
+                .ForMember(dst => dst.MealTypeName,    opt => opt.MapFrom(src => src.MealType.Name))
+                .ForMember(dst => dst.RecipeId,        opt => opt.MapFrom(src => src.Recipe.Id))
+                .ForMember(dst => dst.RecipeName,      opt => opt.MapFrom(src => src.Recipe.Name))
+                .ForMember(dst => dst.RecipeImageUrl,  opt => opt.MapFrom(src => src.Recipe.ImageUrl))
+                .ForMember(dst => dst.Calories,        opt => opt.MapFrom(src => (int)(src.Recipe.CaloriesPerServing * src.Servings)))
+                .ForMember(dst => dst.Protein,         opt => opt.MapFrom(src => (int)(src.Recipe.ProteinPerServing  * src.Servings)))
+                .ForMember(dst => dst.Fat,             opt => opt.MapFrom(src => (int)(src.Recipe.FatPerServing      * src.Servings)))
+                .ForMember(dst => dst.Carbs,           opt => opt.MapFrom(src => (int)(src.Recipe.CarbsPerServing    * src.Servings)))
+                // Cost = стоимость рецепта × количество порций
+                .ForMember(dst => dst.Cost,            opt => opt.MapFrom(src => src.Recipe.TotalCost * src.Servings));
 
             // Product → ProductViewModel
             CreateMap<Product, ProductViewModel>()

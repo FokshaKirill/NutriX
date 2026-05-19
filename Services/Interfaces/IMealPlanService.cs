@@ -53,5 +53,10 @@ namespace Services.Interfaces
         /// Сменить запланнированный рецепт
         /// </summary>
         Task ReplaceMealRecipeAsync(Guid plannedMealId, Guid newRecipeId);
+
+        /// <summary>
+        /// Добавляет новое блюдо в существующий план (ручное добавление)
+        /// </summary>
+        Task AddPlannedMealAsync(PlannedMeal meal);
     }
 }

@@ -1,0 +1,109 @@
+﻿@media print {
+    body, .wp-page {
+        margin: 0 !important;
+        padding: 10mm !important;
+        font-size: 10.5pt !important;
+        line-height: 1.25 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    .wp-tabs, .wp-actions, .no-print, header, footer, .btn-wp {
+        display: none !important;
+    }
+
+    .wp-section {
+        display: block !important;
+        page-break-inside: avoid;
+    }
+
+    .print-only {
+        display: block !important;
+        margin-bottom: 25px !important;
+        page-break-after: avoid;
+    }
+
+    @page {
+        margin: 0mm;
+    }
+
+    body {
+        zoom: 95%;
+    }
+
+    /* Таблица меню */
+    .week-table {
+        font-size: 9.5pt !important;
+        table-layout: fixed !important;
+        width: 100% !important;
+    }
+    .week-table th,
+    .week-table td {
+        padding: 4px 6px !important;
+        font-size: 9.5pt !important;
+        border: 1px solid #ccc !important;
+    }
+    .week-table th {
+        background: #4e7d58 !important;
+        color: white !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+        font-size: 10pt !important;
+    }
+
+    /* Ширины колонок */
+    .week-table td:first-child   { width: 10% !important; }
+    .week-table td:nth-child(2)  { width: 20% !important; }
+    .week-table td:nth-child(3)  { width: 20% !important; }
+    .week-table td:nth-child(4)  { width: 20% !important; }
+    .week-table td:nth-child(5)  { width: 16% !important; }
+    .week-table td:last-child    { width: 14% !important; }
+
+    .meal-name {
+        font-size: 9.5pt !important;
+        white-space: normal !important;
+        line-height: 1.2 !important;
+    }
+    .meal-macros,
+    .meal-cost,
+    .day-date { font-size: 8.5pt !important; }
+
+    /* Скрываем миниатюры — экономим место */
+    .meal-thumb,
+    .meal-thumb-placeholder { display: none !important; }
+
+    /* Цена дня */
+    .day-total-cost {
+        font-size: 9pt !important;
+        color: #4e7d58 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+    
+    .day-total {
+        align-items: center;
+        align-content: center;
+        justify-content: center;
+        justify-items: center;
+        display: flex;
+        max-height: -webkit-fill-available;
+        margin: 25% 0;
+    }
+
+    .wp-page {
+        max-width: none !important;
+        padding: 0 !important;
+    }
+    .day-label { font-size: 11pt !important; }
+
+    /* Список покупок */
+    .shop-table th,
+    .shop-table td {
+        font-size: 10pt !important;
+        padding: 5px 8px !important;
+    }
+
+    /* Печать только нужного раздела */
+    .print-meal-plan .shop-section { display: none !important; }
+    .print-shop-list .meal-section { display: none !important; }
+}

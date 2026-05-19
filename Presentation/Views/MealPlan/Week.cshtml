@@ -1,4 +1,4 @@
-﻿@using Presentation.Models
+@using Presentation.Models
 @model Presentation.Models.WeekPlanViewModel
 @{
     ViewData["Title"] = "План питания";
@@ -6,7 +6,6 @@
 }
 
 <link href="https://fonts.googleapis.com/css2?family=Lora:wght@500;600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
-
 
 <style>
 :root {
@@ -21,7 +20,7 @@
 body { font-family: 'DM Sans', sans-serif; }
 
 /* ── Page layout ── */
-.wp-page { padding: 2rem 1.5rem 5rem;margin: 0 auto; }
+.wp-page { padding: 2rem 1.5rem 5rem; margin: 0 auto; }
 
 .wp-tabs {
     display: flex;
@@ -92,10 +91,12 @@ body { font-family: 'DM Sans', sans-serif; }
     vertical-align: middle;
 }
 
+/* ── Meal cell (рендерится через _MealCell.cshtml) ── */
 .meal-cell { display: flex; flex-direction: column; gap: .35rem; }
+
 .meal-entry {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: .5rem;
     padding: .3rem .5rem;
     border-radius: 6px;
@@ -123,29 +124,43 @@ body { font-family: 'DM Sans', sans-serif; }
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 160px;
+    max-width: 260px;
+    display: block;
 }
-.meal-type { font-size: .7rem; color: var(--muted); }
+.meal-name:hover { text-decoration: underline; color: var(--sage-d); }
 .meal-macros { font-size: .68rem; color: var(--muted); white-space: nowrap; }
-.meal-link {
-    font-size: .7rem;
+
+/* Цена рецепта в ячейке */
+.meal-cost {
+    font-size: .68rem;
     color: var(--sage-d);
-    text-decoration: none;
+    font-weight: 600;
     white-space: nowrap;
-    flex-shrink: 0;
+    margin-top: .1rem;
 }
-.meal-link:hover { text-decoration: underline; }
 
 .day-empty { color: var(--muted); font-size: .8rem; font-style: italic; }
 
-/* day totals */
+/* Итоговая колонка дня */
 .day-total {
     font-size: .72rem;
     color: var(--muted);
     white-space: nowrap;
     padding-top: .25rem;
+    display: flex;
+    flex-direction: column;
+    gap: .15rem;
 }
 .day-total b { color: var(--bark); }
+/* Цена в итоговой колонке */
+.day-total-cost {
+    font-size: .75rem;
+    font-weight: 700;
+    color: var(--sage-d);
+    margin-top: .2rem;
+    padding-top: .2rem;
+    border-top: 1px solid var(--border);
+}
 
 /* ── Shopping list ── */
 .shop-header {
@@ -162,7 +177,12 @@ body { font-family: 'DM Sans', sans-serif; }
     font-weight: 600;
     color: var(--sage-d);
 }
-.shop-total span { font-size: .85rem; color: var(--muted); font-family: 'DM Sans', sans-serif; font-weight: 400; }
+.shop-total span {
+    font-size: .85rem;
+    color: var(--muted);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 400;
+}
 
 .shop-table {
     width: 100%;
@@ -230,110 +250,19 @@ body { font-family: 'DM Sans', sans-serif; }
 .btn-wp.primary:hover { background: var(--sage-d); }
 
 /* ── Print ── */
-/* ── Print Optimization ── */
-@@media print {
-    body, .wp-page {
-        margin: 0 !important;
-        padding: 10mm !important;
-        font-size: 10.5pt !important;
-        line-height: 1.25 !important;
-    }
-
-    .wp-tabs, .wp-actions, .no-print, header, footer, .btn-wp {
-        display: none !important;
-    }
-
-    .wp-section { 
-        display: block !important; 
-        page-break-inside: avoid;
-    }
-
-    .print-only {
-        display: block !important;
-        margin-bottom: 25px !important;
-        page-break-after: avoid;
-    }
-    
-    /* Альбомная ориентация + минимальные поля */
-    @@page {
-        margin: 8mm 10mm;
-    }
-
-    /* Таблица меню — главное */
-    .week-table {
-        font-size: 9.5pt !important;
-        table-layout: fixed !important;
-        width: 100% !important;
-    }
-
-    .week-table th,
-    .week-table td {
-        padding: 4px 6px !important;
-        font-size: 9.5pt !important;
-        border: 1px solid #ccc !important;
-    }
-
-    .week-table th {
-        background: #4e7d58 !important;
-        color: white !important;
-        -webkit-print-color-adjust: exact;
-        font-size: 10pt !important;
-    }
-
-    /* Уменьшаем ширину колонок */
-    .week-table td:first-child { width: 11% !important; }   /* День */
-    .week-table td:nth-child(2) { width: 22% !important; }  /* Завтрак */
-    .week-table td:nth-child(3) { width: 22% !important; }  /* Обед */
-    .week-table td:nth-child(4) { width: 22% !important; }  /* Ужин */
-    .week-table td:nth-child(5) { width: 15% !important; }  /* Перекус */
-    .week-table td:last-child  { width: 8% !important; }    /* Итого */
-
-    .meal-name {
-        font-size: 9.5pt !important;
-        white-space: normal !important;
-        line-height: 1.2 !important;
-    }
-
-    .meal-macros, .day-date {
-        font-size: 8.5pt !important;
-    }
-
-    /* Скрываем лишнее в ячейках */
-    .meal-thumb, .meal-thumb-placeholder {
-        display: none !important;
-    }
-
-    /* Убираем лишние отступы */
-    .wp-page {
-        max-width: none !important;
-        padding: 0 !important;
-    }
-
-    .day-label {
-        font-size: 11pt !important;
-    }
-
-    /* Для списка покупок */
-    .shop-table th, .shop-table td {
-        font-size: 10pt !important;
-        padding: 5px 8px !important;
-    }
-}
-
-/* Дополнительно — принудительно альбомная для всей страницы */
-@@media print {
-    .print-meal-plan .shop-section,
-    .print-shop-list .meal-section {
-        display: none !important;
-    }
-}
+@* Стили для печати вынесены в wwwroot/css/print-week.css чтобы избежать
+   проблем с @@ в Razor. Подключение ниже через <link>. *@
 </style>
 
-<link href="https://fonts.googleapis.com/css2?family=Lora:wght@500;600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<!--
+    Стили печати вынесены из <style> чтобы избежать ошибок Razor с @@media / @@page.
+    Файл: wwwroot/css/print-week.css
+-->
+<link rel="stylesheet" href="~/css/print-week.css" asp-append-version="true" />
 
-<div class="print-only" style="display: none; text-align: center; margin-bottom: 20px; font-size: 14pt; font-family: 'Lora', serif;">
+<div class="print-only" style="display:none;text-align:center;margin-bottom:20px;font-size:14pt;font-family:'Lora',serif;">
     <strong>План питания на неделю</strong><br>
-    <span style="font-size: 11pt; color: #555;">
+    <span style="font-size:11pt;color:#555;">
         @Model.StartDate.ToString("dd MMMM yyyy") — @Model.StartDate.AddDays(6).ToString("dd MMMM yyyy")
     </span>
 </div>
@@ -366,7 +295,7 @@ body { font-family: 'DM Sans', sans-serif; }
         <button class="wp-tab"        onclick="switchTab('shop', this)">🛒 Список покупок</button>
     </div>
 
-    <!-- Меню -->
+    <!-- ══ Меню ══════════════════════════════════════════════════════════════ -->
     <div class="wp-section meal-section active" id="tabMeal">
         <div style="overflow-x:auto">
             <table class="week-table">
@@ -383,18 +312,29 @@ body { font-family: 'DM Sans', sans-serif; }
                 <tbody>
                     @foreach (var day in Model.Days)
                     {
-                        var isToday  = day.Date.Date == DateTime.Today;
-                        var byType   = day.Meals.GroupBy(m => m.MealTypeName ?? "").ToDictionary(g => g.Key, g => g.ToList());
+                        var isToday = day.Date.Date == DateTime.Today;
+                        var byType  = day.Meals
+                            .GroupBy(m => m.MealTypeName ?? "")
+                            .ToDictionary(g => g.Key, g => g.ToList());
 
-                        Func<string, List<PlannedMealViewModel>> get = key =>
+                        List<PlannedMealViewModel> GetMeals(string key) =>
                             byType.TryGetValue(key, out var v) ? v : new();
 
-                        var breakfast = get("Завтрак");
-                        var lunch     = get("Обед");
-                        var dinner    = get("Ужин");
-                        var snack     = get("Перекус");
+                        var breakfast = GetMeals("Завтрак");
+                        var lunch     = GetMeals("Обед");
+                        var dinner    = GetMeals("Ужин");
+                        var snack     = GetMeals("Перекус");
+
+                        // Итоги дня
+                        var dayKcal  = day.Meals.Sum(m => m.Calories);
+                        var dayProt  = day.Meals.Sum(m => m.Protein);
+                        var dayFat   = day.Meals.Sum(m => m.Fat);
+                        var dayCarbs = day.Meals.Sum(m => m.Carbs);
+                        var dayCost  = day.Meals.Sum(m => m.Cost);   // ← сумма цен за день
 
                         <tr class="@(isToday ? "today" : "")">
+
+                            <!-- День -->
                             <td>
                                 <div class="day-label">
                                     @day.Date.ToString("ddd")
@@ -403,54 +343,38 @@ body { font-family: 'DM Sans', sans-serif; }
                                 <div class="day-date">@day.Date.ToString("d MMM")</div>
                             </td>
 
+                            <!-- Завтрак / Обед / Ужин / Перекус — рендерим через partial -->
                             @foreach (var group in new[] { breakfast, lunch, dinner, snack })
                             {
                                 <td>
-                                    @if (!group.Any())
-                                    {
-                                        <span class="day-empty">—</span>
-                                    }
-                                    else
-                                    {
-                                        <div class="meal-cell">
-                                            @foreach (var meal in group)
-                                            {
-                                                <div class="meal-entry">
-                                                    @if (!string.IsNullOrEmpty(meal.RecipeImageUrl))
-                                                    {
-                                                        <img src="@meal.RecipeImageUrl" class="meal-thumb" alt="@meal.RecipeName"/>
-                                                    }
-                                                    else
-                                                    {
-                                                        <div class="meal-thumb-placeholder">🍽</div>
-                                                    }
-                                                    <div class="meal-info">
-                                                        <a asp-controller="Recipe" asp-action="Details"
-                                                           asp-route-id="@meal.RecipeId" class="meal-name"
-                                                           title="@meal.RecipeName">@meal.RecipeName</a>
-                                                        <div class="meal-macros">
-                                                            @meal.Servings п. · @meal.Calories ккал
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            }
-                                        </div>
-                                    }
+                                    @await Html.PartialAsync("_MealCell", group)
                                 </td>
                             }
 
+                            <!-- Итоговая колонка дня -->
                             <td>
                                 @if (day.Meals.Any())
                                 {
                                     <div class="day-total">
-                                        <b>@day.Meals.Sum(m => m.Calories)</b> ккал
-                                        <b>@day.Meals.Sum(m => m.Protein)</b> Б
-                                        <b>@day.Meals.Sum(m => m.Fat)</b> Ж
-                                        <b>@day.Meals.Sum(m => m.Carbs)</b> У
+                                        <div><b>@dayKcal</b> ккал</div>
+                                        <div>
+                                            <b>@dayProt</b> Б ·
+                                            <b>@dayFat</b> Ж ·
+                                            <b>@dayCarbs</b> У
+                                        </div>
+                                        @if (dayCost > 0)
+                                        {
+                                            <!-- Стоимость дня — показывается только если рецепты имеют цены -->
+                                            <div class="day-total-cost">@dayCost.ToString("F2") ₽</div>
+                                        }
                                     </div>
                                 }
-                                else { <span class="day-empty">—</span> }
+                                else
+                                {
+                                    <span class="day-empty">—</span>
+                                }
                             </td>
+
                         </tr>
                     }
                 </tbody>
@@ -458,9 +382,9 @@ body { font-family: 'DM Sans', sans-serif; }
         </div>
     </div>
 
-    <!-- Список покупок -->
+    <!-- ══ Список покупок ═════════════════════════════════════════════════════ -->
     <div class="wp-section shop-section" id="tabShop">
-        <div class="shop-header">
+        <div class="shop-header no-print">
             <div>
                 <div class="shop-total">
                     @totalCost.ToString("F2") ₽ <span>общая стоимость</span>
@@ -530,7 +454,7 @@ function toggleChecked(cb) {
     cb.closest('tr').classList.toggle('checked', cb.checked);
 }
 
-document.getElementById('checkAll')?.addEventListener('change', function() {
+document.getElementById('checkAll')?.addEventListener('change', function () {
     document.querySelectorAll('.shop-check').forEach(cb => {
         cb.checked = this.checked;
         cb.closest('tr').classList.toggle('checked', this.checked);
@@ -540,9 +464,7 @@ document.getElementById('checkAll')?.addEventListener('change', function() {
 function printSection(section) {
     document.body.classList.add(section === 'meal' ? 'print-meal-plan' : 'print-shop-list');
     window.print();
-    setTimeout(() => {
-        document.body.classList.remove('print-meal-plan', 'print-shop-list');
-    }, 1000);
+    setTimeout(() => document.body.classList.remove('print-meal-plan', 'print-shop-list'), 1000);
 }
 </script>
 }

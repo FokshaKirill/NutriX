@@ -2,17 +2,24 @@
 @{
     ViewData["Title"] = "NutriX — Умное питание";
 
-    var recipes = ViewBag.LatestRecipes as List<Presentation.Models.RecipeListViewModel> ?? new();
-    var user = ViewBag.CurrentUser as Domain.Entities.User;
+    var recipes    = ViewBag.LatestRecipes as List<Presentation.Models.RecipeListViewModel> ?? new();
+    var user       = ViewBag.CurrentUser as Domain.Entities.User;
 
-    var calGoal  = (int)(ViewBag.CalGoal  ?? 2000);
-    var protGoal = (int)(ViewBag.ProtGoal ?? 120);
-    var fatGoal  = (int)(ViewBag.FatGoal  ?? 70);
-    var carbGoal = (int)(ViewBag.CarbGoal ?? 250);
+    // var calGoal  = (int)(ViewBag.CalGoal  ?? 2000);
+    // var protGoal = (int)(ViewBag.ProtGoal ?? 120);
+    // var fatGoal  = (int)(ViewBag.FatGoal  ?? 70);
+    // var carbGoal = (int)(ViewBag.CarbGoal ?? 250);
     
     var todayMeals = ViewBag.TodayMeals as List<Domain.Entities.PlannedMeal> ?? new();
-
+    
+    var calGoal  = (int)(todayMeals.Sum(m => (int)(m.Recipe?.CaloriesPerServing ?? 0)));
+    var protGoal = (int)(todayMeals.Sum(m => (int)(m.Recipe?.ProteinPerServing  ?? 0)));
+    var fatGoal  = (int)(todayMeals.Sum(m => (int)(m.Recipe?.FatPerServing      ?? 0)));
+    var carbGoal = (int)(todayMeals.Sum(m => (int)(m.Recipe?.CarbsPerServing    ?? 0)));
+    
     // JSON с нутриентами каждого блюда для JS-пересчёта при отметке "съедено"
+    // ВАЖНО: выносим в переменную на уровне View (не внутри @if),
+    // чтобы скрипт замены replaceMeal мог обратиться к MEAL_DATA в любом месте страницы.
     var mealsJson = System.Text.Json.JsonSerializer.Serialize(
         todayMeals.Select(m => new {
             id       = m.Id.ToString(),
@@ -25,6 +32,33 @@
 }
 
 <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+
+<!--
+    ИСПРАВЛЕНИЕ: GOALS и MEAL_DATA вынесены сюда — в самый верх страницы,
+    до любых if блоков. Иначе replaceMeal() (объявленный вне if) получал
+    ReferenceError при попытке прочитать MEAL_DATA на странице без блюд.
+    Пустой объект — безопасный fallback.
+-->
+<script>
+    const GOALS = {
+        kcal: @calGoal,
+        prot: @protGoal,
+        fat:  @fatGoal,
+        carb: @carbGoal
+    };
+
+    const MEAL_DATA = Object.fromEntries(
+        @Html.Raw(mealsJson)
+            .map(m => [m.id, {
+                calories: m.calories,
+                protein:  m.protein,
+                fat:      m.fat,
+                carbs:    m.carbs
+            }])
+    );
+    // Диетические настройки хранятся в MealPlan на сервере.
+    // ReplaceMeal читает их оттуда — JS передаёт только plannedMealId.
+</script>
 
 <!-- ── HERO ── -->
 <div class="home-hero">
@@ -40,20 +74,14 @@
     </p>
 
     <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap">
-        <a asp-action="Index"
-           asp-controller="Recipe"
-           class="hero-cta">
-            <i class="fas fa-utensils"></i>
-            Смотреть рецепты
+        <a asp-action="Index" asp-controller="Recipe" class="hero-cta">
+            <i class="fas fa-utensils"></i> Смотреть рецепты
         </a>
 
         @if (User.Identity?.IsAuthenticated != true)
         {
-            <a asp-action="AuthPage"
-               asp-controller="Account"
-               class="hero-cta-ghost">
-                Войти
-                <i class="fas fa-arrow-right"></i>
+            <a asp-action="AuthPage" asp-controller="Account" class="hero-cta-ghost">
+                Войти <i class="fas fa-arrow-right"></i>
             </a>
         }
     </div>
@@ -61,29 +89,19 @@
 
 <!-- ── ПОСЛЕДНИЕ РЕЦЕПТЫ ── -->
 <section class="home-recipes-section">
-
     <div class="sec-head">
         <h2 class="sec-title">Свежие рецепты</h2>
-
-        <a asp-action="Index"
-           asp-controller="Recipe"
-           class="sec-link">
-            Все рецепты →
-        </a>
+        <a asp-action="Index" asp-controller="Recipe" class="sec-link">Все рецепты →</a>
     </div>
 
     <div class="home-recipe-grid">
-
         @if (!recipes.Any())
         {
             <div class="recipes-empty-home">
                 <div style="font-size:3rem;margin-bottom:.75rem">🍽</div>
-
                 <p>
                     Рецептов пока нет.
-                    <a asp-action="Create" asp-controller="Recipe">
-                        Создайте первый!
-                    </a>
+                    <a asp-action="Create" asp-controller="Recipe">Создайте первый!</a>
                 </p>
             </div>
         }
@@ -92,69 +110,35 @@
             @foreach (var r in recipes)
             {
                 <div class="rc">
-
                     <div class="rc-thumb">
                         @if (!string.IsNullOrEmpty(r.ImageUrl))
                         {
-                            <img src="@r.ImageUrl"
-                                 alt="@r.Name"
-                                 loading="lazy"/>
+                            <img src="@r.ImageUrl" alt="@r.Name" loading="lazy" />
                         }
                         else
                         {
                             <div class="rc-thumb-ph">🥘</div>
                         }
                     </div>
-
                     <div class="rc-body">
-
-                        <a asp-action="Details"
-                           asp-controller="Recipe"
-                           asp-route-id="@r.Id"
-                           class="rc-name">
-                            @r.Name
-                        </a>
+                        <a asp-action="Details" asp-controller="Recipe"
+                           asp-route-id="@r.Id" class="rc-name">@r.Name</a>
 
                         <div class="rc-macros">
-
                             @if (r.CaloriesPerServing > 0)
-                            {
-                                <span class="rc-macro kcal">
-                                    🔥 @((int)r.CaloriesPerServing!) ккал
-                                </span>
-                            }
-
+                            { <span class="rc-macro kcal">🔥 @((int)r.CaloriesPerServing!) ккал</span> }
                             @if (r.ProteinPerServing > 0)
-                            {
-                                <span class="rc-macro p">
-                                    Б @((int)r.ProteinPerServing!)г
-                                </span>
-                            }
-
+                            { <span class="rc-macro p">Б @((int)r.ProteinPerServing!)г</span> }
                             @if (r.FatPerServing > 0)
-                            {
-                                <span class="rc-macro f">
-                                    Ж @((int)r.FatPerServing!)г
-                                </span>
-                            }
-
+                            { <span class="rc-macro f">Ж @((int)r.FatPerServing!)г</span> }
                             @if (r.CarbsPerServing > 0)
-                            {
-                                <span class="rc-macro c">
-                                    У @((int)r.CarbsPerServing!)г
-                                </span>
-                            }
-
+                            { <span class="rc-macro c">У @((int)r.CarbsPerServing!)г</span> }
                         </div>
 
-                        <a asp-action="Details"
-                           asp-controller="Recipe"
-                           asp-route-id="@r.Id"
-                           class="rc-open">
-                            Открыть
-                            <i class="fas fa-arrow-right" style="font-size:.7rem"></i>
+                        <a asp-action="Details" asp-controller="Recipe"
+                           asp-route-id="@r.Id" class="rc-open">
+                            Открыть <i class="fas fa-arrow-right" style="font-size:.7rem"></i>
                         </a>
-
                     </div>
                 </div>
             }
@@ -162,7 +146,7 @@
     </div>
 </section>
 
-@* ── МЕНЮ НА ДЕНЬ ── *@
+<!-- ── МЕНЮ НА ДЕНЬ ── -->
 <section class="day-section">
     <div class="day-inner">
 
@@ -178,180 +162,179 @@
                 чтобы видеть своё меню
             </div>
         }
+        else if (!todayMeals.Any())
+        {
+            <div style="text-align:center;padding:2rem;color:#9a9a94">
+                <div style="font-size:2.5rem;margin-bottom:.75rem">📋</div>
+                <p>На сегодня меню не запланировано.</p>
+                <a asp-controller="MealPlan" asp-action="GenerateWeek"
+                   class="hero-cta" style="margin-top:.75rem;display:inline-flex">
+                    <i class="fas fa-magic"></i> Сгенерировать меню
+                </a>
+            </div>
+        }
         else
         {
-            @if (!todayMeals.Any())
-            {
-                <div style="text-align:center;padding:2rem;color:#9a9a94">
-                    <div style="font-size:2.5rem;margin-bottom:.75rem">📋</div>
-                    <p>На сегодня меню не запланировано.</p>
-                    <a asp-controller="MealPlan" asp-action="GenerateWeek"
-                       class="hero-cta" style="margin-top:.75rem;display:inline-flex">
-                        <i class="fas fa-magic"></i> Сгенерировать меню
-                    </a>
+            var totalKcal = todayMeals.Sum(m => (int)(m.Recipe?.CaloriesPerServing ?? 0));
+            var totalProt = todayMeals.Sum(m => (int)(m.Recipe?.ProteinPerServing  ?? 0));
+            var totalFat  = todayMeals.Sum(m => (int)(m.Recipe?.FatPerServing      ?? 0));
+            var totalCarb = todayMeals.Sum(m => (int)(m.Recipe?.CarbsPerServing    ?? 0));
+
+            <div class="day-total">
+                <div class="day-total-item">
+                    <div class="day-total-val">@totalKcal</div>
+                    <div class="day-total-label">ккал план</div>
                 </div>
-            }
-            else
-            {
-                @* Итого по плану на день (не факт — просто информация) *@
-                var totalKcal = todayMeals.Sum(m => (int)(m.Recipe?.CaloriesPerServing ?? 0));
-                var totalProt = todayMeals.Sum(m => (int)(m.Recipe?.ProteinPerServing  ?? 0));
-                var totalFat  = todayMeals.Sum(m => (int)(m.Recipe?.FatPerServing      ?? 0));
-                var totalCarb = todayMeals.Sum(m => (int)(m.Recipe?.CarbsPerServing    ?? 0));
-
-                <div class="day-total">
-                    <div class="day-total-item">
-                        <div class="day-total-val">@totalKcal</div>
-                        <div class="day-total-label">ккал план</div>
-                    </div>
-                    <div class="day-total-item">
-                        <div class="day-total-val" style="color:#1d4ed8">@totalProt г</div>
-                        <div class="day-total-label">белки план</div>
-                    </div>
-                    <div class="day-total-item">
-                        <div class="day-total-val" style="color:#c2410c">@totalFat г</div>
-                        <div class="day-total-label">жиры план</div>
-                    </div>
-                    <div class="day-total-item">
-                        <div class="day-total-val" style="color:#a16207">@totalCarb г</div>
-                        <div class="day-total-label">углеводы план</div>
-                    </div>
+                <div class="day-total-item">
+                    <div class="day-total-val" style="color:#1d4ed8">@totalProt г</div>
+                    <div class="day-total-label">белки план</div>
                 </div>
+                <div class="day-total-item">
+                    <div class="day-total-val" style="color:#c2410c">@totalFat г</div>
+                    <div class="day-total-label">жиры план</div>
+                </div>
+                <div class="day-total-item">
+                    <div class="day-total-val" style="color:#a16207">@totalCarb г</div>
+                    <div class="day-total-label">углеводы план</div>
+                </div>
+            </div>
 
-                <div class="meals-list">
-                    @foreach (var meal in todayMeals.OrderBy(m => m.MealType!.Order))
-                    {
-                        <div class="meal-card" id="mealCard_@meal.Id">
-                            <div class="meal-header">
+            <div class="meals-list">
+                @foreach (var meal in todayMeals.OrderBy(m => m.MealType!.Order))
+                {
+                    <div class="meal-card" id="mealCard_@meal.Id">
+                        <div class="meal-header">
 
-                                <div class="meal-check" id="check_@meal.Id"
-                                     onclick="toggleDone('@meal.Id')" title="Отметить как съедено"></div>
+                            <div class="meal-check" id="check_@meal.Id"
+                                 onclick="toggleDone('@meal.Id')"
+                                 title="Отметить как съедено"></div>
 
-                                @if (!string.IsNullOrEmpty(meal.Recipe?.ImageUrl))
-                                {
-                                    <img src="@meal.Recipe.ImageUrl" class="meal-img" alt="@meal.Recipe.Name" />
-                                }
-                                else
-                                {
-                                    <div class="meal-img-ph">🍽</div>
-                                }
+                            @if (!string.IsNullOrEmpty(meal.Recipe?.ImageUrl))
+                            {
+                                <img src="@meal.Recipe.ImageUrl"
+                                     class="meal-img" alt="@meal.Recipe.Name" />
+                            }
+                            else
+                            {
+                                <div class="meal-img-ph">🍽</div>
+                            }
 
-                                <div class="meal-info">
-                                    <div class="meal-type">@meal.MealType?.Name</div>
-                                    <div class="meal-name" id="mealName_@meal.Id">@meal.Recipe?.Name</div>
-                                    <div class="meal-macros-inline">
-                                        Б @((int)(meal.Recipe?.ProteinPerServing ?? 0))г ·
-                                        Ж @((int)(meal.Recipe?.FatPerServing     ?? 0))г ·
-                                        У @((int)(meal.Recipe?.CarbsPerServing   ?? 0))г
-                                    </div>
+                            <div class="meal-info">
+                                <div class="meal-type">@meal.MealType?.Name</div>
+                                <div class="meal-name" id="mealName_@meal.Id">
+                                    @meal.Recipe?.Name
                                 </div>
-
-                                <div class="meal-kcal" id="mealKcal_@meal.Id">
-                                    @((int)(meal.Recipe?.CaloriesPerServing ?? 0)) ккал
+                                <!--
+                                    ИСПРАВЛЕНИЕ: добавлен id="mealMacros_@meal.Id"
+                                    чтобы replaceMeal мог обновить строку макросов
+                                    после замены рецепта (раньше текст не менялся).
+                                -->
+                                <div class="meal-macros-inline"
+                                     id="mealMacros_@meal.Id">
+                                    Б @((int)(meal.Recipe?.ProteinPerServing ?? 0))г ·
+                                    Ж @((int)(meal.Recipe?.FatPerServing     ?? 0))г ·
+                                    У @((int)(meal.Recipe?.CarbsPerServing   ?? 0))г
                                 </div>
-
-                                <button class="meal-replace-btn"
-                                        onclick="replaceMeal('@meal.Id', this)"
-                                        title="Заменить рецепт"
-                                        style="margin-left:.5rem;flex-shrink:0;background:none;border:1px solid #e4ede6;border-radius:8px;padding:.3rem .6rem;cursor:pointer;font-size:.75rem;color:#7a7168;transition:all .2s">
-                                    <i class="fas fa-sync-alt"></i>
-                                </button>
                             </div>
-                        </div>
-                    }
-                </div>
 
-                @* ── ПРОГРЕСС: факт (отмечено) vs цель из профиля ── *@
-                <div class="day-progress" style="margin-top:1.25rem">
-                    <div class="day-progress-title" style="font-size:.8rem;font-weight:600;color:#9a9a94;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.75rem">
-                        Съедено / цель на день
+                            <div class="meal-kcal" id="mealKcal_@meal.Id">
+                                @((int)(meal.Recipe?.CaloriesPerServing ?? 0)) ккал
+                            </div>
+
+                            <button class="meal-replace-btn"
+                                    onclick="replaceMeal('@meal.Id', this)"
+                                    title="Заменить рецепт"
+                                    style="margin-left:.5rem;flex-shrink:0;background:none;border:1px solid #e4ede6;border-radius:8px;padding:.3rem .6rem;cursor:pointer;font-size:.75rem;color:#7a7168;transition:all .2s">
+                                <i class="fas fa-sync-alt"></i>
+                            </button>
+                        </div>
                     </div>
-                    <div class="progress-rows">
+                }
+            </div>
 
-                        <div class="prog-row">
-                            <span class="prog-label">Калории</span>
-                            <div class="prog-bar-wrap">
-                                <div class="prog-bar" id="barKcal"
-                                     style="width:0%;background:#86bf92;transition:width .4s ease"></div>
-                            </div>
-                            <span class="prog-val">
-                                <span id="eatenKcal">0</span> / @calGoal ккал
-                            </span>
-                        </div>
-
-                        <div class="prog-row">
-                            <span class="prog-label">Белки</span>
-                            <div class="prog-bar-wrap">
-                                <div class="prog-bar" id="barProt"
-                                     style="width:0%;background:#3b82f6;transition:width .4s ease"></div>
-                            </div>
-                            <span class="prog-val">
-                                <span id="eatenProt">0</span> / @protGoal г
-                            </span>
-                        </div>
-
-                        <div class="prog-row">
-                            <span class="prog-label">Жиры</span>
-                            <div class="prog-bar-wrap">
-                                <div class="prog-bar" id="barFat"
-                                     style="width:0%;background:#f97316;transition:width .4s ease"></div>
-                            </div>
-                            <span class="prog-val">
-                                <span id="eatenFat">0</span> / @fatGoal г
-                            </span>
-                        </div>
-
-                        <div class="prog-row">
-                            <span class="prog-label">Углеводы</span>
-                            <div class="prog-bar-wrap">
-                                <div class="prog-bar" id="barCarb"
-                                     style="width:0%;background:#eab308;transition:width .4s ease"></div>
-                            </div>
-                            <span class="prog-val">
-                                <span id="eatenCarb">0</span> / @carbGoal г
-                            </span>
-                        </div>
-
-                    </div>
+            <!-- Прогресс: факт (отмечено) vs цель из профиля -->
+            <div class="day-progress" style="margin-top:1.25rem">
+                <div class="day-progress-title"
+                     style="font-size:.8rem;font-weight:600;color:#9a9a94;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.75rem">
+                    Съедено / цель на день
                 </div>
+                <div class="progress-rows">
 
-                @* Данные целей и блюд для JS *@
-                <script>
-                    // Цели пользователя (максимум на барах)
-                    const GOALS = { kcal: @calGoal, prot: @protGoal, fat: @fatGoal, carb: @carbGoal };
+                    <div class="prog-row">
+                        <span class="prog-label">Калории</span>
+                        <div class="prog-bar-wrap">
+                            <div class="prog-bar" id="barKcal"
+                                 style="width:0%;background:#86bf92;transition:width .4s ease"></div>
+                        </div>
+                        <span class="prog-val">
+                            <span id="eatenKcal">0</span> / @calGoal ккал
+                        </span>
+                    </div>
 
-                    // Нутриенты каждого блюда: { [mealId]: { calories, protein, fat, carbs } }
-                    const MEAL_DATA = Object.fromEntries(
-                        @Html.Raw(mealsJson)
-                            .map(m => [m.id, { calories: m.calories, protein: m.protein, fat: m.fat, carbs: m.carbs }])
-                    );
-                </script>
-            }
+                    <div class="prog-row">
+                        <span class="prog-label">Белки</span>
+                        <div class="prog-bar-wrap">
+                            <div class="prog-bar" id="barProt"
+                                 style="width:0%;background:#3b82f6;transition:width .4s ease"></div>
+                        </div>
+                        <span class="prog-val">
+                            <span id="eatenProt">0</span> / @protGoal г
+                        </span>
+                    </div>
+
+                    <div class="prog-row">
+                        <span class="prog-label">Жиры</span>
+                        <div class="prog-bar-wrap">
+                            <div class="prog-bar" id="barFat"
+                                 style="width:0%;background:#f97316;transition:width .4s ease"></div>
+                        </div>
+                        <span class="prog-val">
+                            <span id="eatenFat">0</span> / @fatGoal г
+                        </span>
+                    </div>
+
+                    <div class="prog-row">
+                        <span class="prog-label">Углеводы</span>
+                        <div class="prog-bar-wrap">
+                            <div class="prog-bar" id="barCarb"
+                                 style="width:0%;background:#eab308;transition:width .4s ease"></div>
+                        </div>
+                        <span class="prog-val">
+                            <span id="eatenCarb">0</span> / @carbGoal г
+                        </span>
+                    </div>
+
+                </div>
+            </div>
         }
     </div>
-    @if (User.Identity?.IsAuthenticated == true && (ViewBag.CurrentUser as Domain.Entities.User)?.DailyCalorieGoal == null)
+
+    @if (User.Identity?.IsAuthenticated == true
+         && (ViewBag.CurrentUser as Domain.Entities.User)?.DailyCalorieGoal == null)
     {
         <div style="background:#fff8ec;border:1px solid #f0ddb0;border-radius:12px;padding:.8rem 1.1rem;margin-bottom:1rem;font-size:.85rem;color:#7a5c1e;display:flex;align-items:center;gap:.6rem">
             <span>💡</span>
             <span>
                 Цели питания не заданы — прогресс показывается по умолчанию.
-                <a asp-controller="MealPlan" asp-action="GenerateWeek" style="color:#c97d4e;font-weight:600">
-                    Сгенерируйте план
-                </a> — цели сохранятся автоматически.
+                <a asp-controller="MealPlan" asp-action="GenerateWeek"
+                   style="color:#c97d4e;font-weight:600">Сгенерируйте план</a>
+                — цели сохранятся автоматически.
             </span>
         </div>
     }
-
 </section>
 
 <script>
-    // ── Дата ────────────────────────────────────────────────────────────
-    const today = new Date().toLocaleDateString('ru-RU', {
-        weekday: 'long', day: 'numeric', month: 'long'
-    });
-    const dayLabel = document.getElementById('dayDateLabel');
-    if (dayLabel) dayLabel.textContent = today.charAt(0).toUpperCase() + today.slice(1);
+    // ── Дата ────────────────────────────────────────────────────────────────
+    (function setDate() {
+        const s = new Date().toLocaleDateString('ru-RU', {
+            weekday: 'long', day: 'numeric', month: 'long'
+        });
+        const el = document.getElementById('dayDateLabel');
+        if (el) el.textContent = s.charAt(0).toUpperCase() + s.slice(1);
+    })();
 
+    // ── LocalStorage для "съедено" ───────────────────────────────────────────
     const DONE_KEY = 'nutrix_done_' + new Date().toISOString().slice(0, 10);
 
     function getDone() {
@@ -360,7 +343,7 @@
     }
     function saveDone(s) { localStorage.setItem(DONE_KEY, JSON.stringify([...s])); }
 
-    // ── Пересчёт прогресс-баров ─────────────────────────────────────────
+    // ── Пересчёт прогресс-баров ──────────────────────────────────────────────
     function recalcProgress() {
         const done = getDone();
         let kcal = 0, prot = 0, fat = 0, carb = 0;
@@ -368,33 +351,34 @@
         for (const id of done) {
             const m = MEAL_DATA[id];
             if (!m) continue;
-            kcal += m.calories; prot += m.protein;
-            fat  += m.fat;      carb += m.carbs;
+            kcal += m.calories;
+            prot += m.protein;
+            fat  += m.fat;
+            carb += m.carbs;
         }
 
-        const set = (barId, valId, val, goal) => {
+        function setBar(barId, valId, val, goal) {
             const pct = Math.min(val / Math.max(goal, 1) * 100, 100).toFixed(1);
             const bar = document.getElementById(barId);
             const el  = document.getElementById(valId);
             if (bar) {
                 bar.style.width      = pct + '%';
-                // Красный если превышена норма
                 bar.style.background = val > goal ? '#e85c5c' : null;
             }
             if (el) el.textContent = val;
-        };
+        }
 
-        set('barKcal', 'eatenKcal', kcal, GOALS.kcal);
-        set('barProt', 'eatenProt', prot, GOALS.prot);
-        set('barFat',  'eatenFat',  fat,  GOALS.fat);
-        set('barCarb', 'eatenCarb', carb, GOALS.carb);
+        setBar('barKcal', 'eatenKcal', kcal, GOALS.kcal);
+        setBar('barProt', 'eatenProt', prot, GOALS.prot);
+        setBar('barFat',  'eatenFat',  fat,  GOALS.fat);
+        setBar('barCarb', 'eatenCarb', carb, GOALS.carb);
     }
 
-    // ── Переключить "съедено" ────────────────────────────────────────────
+    // ── Переключить "съедено" ────────────────────────────────────────────────
     function toggleDone(mealId) {
         const done  = getDone();
         const card  = document.getElementById('mealCard_' + mealId);
-        const check = document.getElementById('check_' + mealId);
+        const check = document.getElementById('check_'    + mealId);
 
         if (done.has(mealId)) {
             done.delete(mealId);
@@ -410,7 +394,7 @@
         recalcProgress();
     }
 
-    // ── Восстановить состояние при загрузке ─────────────────────────────
+    // ── Восстановить состояние "съедено" при загрузке ────────────────────────
     (function restore() {
         for (const id of getDone()) {
             document.getElementById('mealCard_' + id)?.classList.add('done');
@@ -420,61 +404,74 @@
         recalcProgress();
     })();
 
-    // ── Дата ────────────────────────────────────────────────────────────
-    const todayStr = new Date().toLocaleDateString('ru-RU', {
-        weekday: 'long', day: 'numeric', month: 'long'
-    });
-    const lbl = document.getElementById('dayDateLabel');
-    if (lbl) lbl.textContent = todayStr.charAt(0).toUpperCase() + todayStr.slice(1);
-
-    // ── Замена рецепта ───────────────────────────────────────────────────
-    const planSettings = JSON.parse(localStorage.getItem('nutrix_plan_settings') || '{}');
+    // ── CSRF токен для POST запросов ─────────────────────────────────────────
     const CSRF = document.querySelector('input[name="__RequestVerificationToken"]')?.value ?? '';
 
+    // ── Замена рецепта ───────────────────────────────────────────────────────
+    // Диетические ограничения читаются на сервере из MealPlan — здесь
+    // достаточно передать только plannedMealId и CSRF-токен.
     async function replaceMeal(plannedMealId, btn) {
         btn.disabled = true;
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
 
         try {
-            const res = await fetch('/MealPlan/ReplaceMeal', {
-                method: 'POST',
-                body: new URLSearchParams({
-                    plannedMealId,
-                    considerBudget: planSettings.considerBudget ? 'true' : 'false',
-                    weeklyBudget:   planSettings.weeklyBudget ?? 3500,
-                    __RequestVerificationToken: CSRF
-                })
+            const params = new URLSearchParams({
+                plannedMealId,
+                __RequestVerificationToken: CSRF
             });
 
+            const res  = await fetch('/MealPlan/ReplaceMeal', { method: 'POST', body: params });
             const data = await res.json();
-            if (data.error) { alert(data.error); return; }
 
-            // Обновляем карточку
-            const nameEl = document.getElementById('mealName_' + plannedMealId);
-            const kcalEl = document.getElementById('mealKcal_' + plannedMealId);
-            const imgEl  = document.querySelector(`#mealCard_${plannedMealId} .meal-img`);
-            const phEl   = document.querySelector(`#mealCard_${plannedMealId} .meal-img-ph`);
-
-            if (nameEl) nameEl.textContent = data.name;
-            if (kcalEl) kcalEl.textContent = data.calories + ' ккал';
-            if (data.imageUrl) {
-                if (imgEl) imgEl.src = data.imageUrl;
-                else if (phEl) phEl.outerHTML = `<img src="${data.imageUrl}" class="meal-img" alt="${data.name}">`;
+            if (data.error) {
+                alert(data.error);
+                return;
             }
 
-            // Обновляем MEAL_DATA — важно для корректного пересчёта прогресса
+            // ── Обновляем название ──────────────────────────────────────────
+            const nameEl   = document.getElementById('mealName_'   + plannedMealId);
+            const kcalEl   = document.getElementById('mealKcal_'   + plannedMealId);
+            const macrosEl = document.getElementById('mealMacros_' + plannedMealId);
+
+            if (nameEl)   nameEl.textContent   = data.name;
+            if (kcalEl)   kcalEl.textContent   = data.calories + ' ккал';
+            if (macrosEl) macrosEl.textContent =
+                `Б ${data.protein}г · Ж ${data.fat}г · У ${data.carbs}г`;
+
+            // ── Обновляем изображение ───────────────────────────────────────
+            const card  = document.getElementById('mealCard_' + plannedMealId);
+            const imgEl = card?.querySelector('.meal-img');
+            const phEl  = card?.querySelector('.meal-img-ph');
+
+            if (data.imageUrl) {
+                if (imgEl) {
+                    imgEl.src = data.imageUrl;
+                    imgEl.alt = data.name;
+                } else if (phEl) {
+                    phEl.outerHTML =
+                        `<img src="${data.imageUrl}" class="meal-img" alt="${data.name}">`;
+                }
+            } else {
+                // Нет изображения — оставляем плейсхолдер или убираем битый img
+                if (imgEl) imgEl.outerHTML = `<div class="meal-img-ph">🍽</div>`;
+            }
+
+            // ── Обновляем MEAL_DATA для корректного пересчёта прогресса ────
             MEAL_DATA[plannedMealId] = {
-                calories: data.calories, protein: data.protein,
-                fat: data.fat,           carbs: data.carbs
+                calories: data.calories,
+                protein:  data.protein,
+                fat:      data.fat,
+                carbs:    data.carbs
             };
 
-            // Если блюдо было отмечено — пересчитать прогресс
+            // Если блюдо уже было отмечено как съеденное — пересчитываем прогресс
             if (getDone().has(plannedMealId)) recalcProgress();
 
             btn.innerHTML = '<i class="fas fa-check" style="color:#5a9668"></i>';
             setTimeout(() => btn.innerHTML = '<i class="fas fa-sync-alt"></i>', 1500);
 
-        } catch {
+        } catch (err) {
+            console.error('replaceMeal error:', err);
             alert('Ошибка соединения');
             btn.innerHTML = '<i class="fas fa-sync-alt"></i>';
         } finally {
