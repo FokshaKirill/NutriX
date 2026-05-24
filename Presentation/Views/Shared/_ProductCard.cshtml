@@ -1,0 +1,36 @@
+@model Presentation.Models.ProductViewModel
+@* _ProductCard.cshtml — карточка продукта в каталоге *@
+
+<div class="col-md-6 col-lg-4">
+    <div class="card text-center p-4" style="background: var(--primary-light);">
+        @if (!string.IsNullOrEmpty(Model.ImageUrl))
+        {
+            <img src="@Model.ImageUrl" alt="@Model.Name"
+                 class="rounded-4 mb-4"
+                 style="width: 100%; height: 220px; object-fit: cover;" />
+        }
+
+        <h5 class="mb-3" style="color: var(--primary);">@Model.Name</h5>
+
+        <p class="text-muted mb-4">
+            <strong>Единица:</strong> @Model.Unit<br />
+            <strong>Цена:</strong> @Model.PricePerUnit ₽ / @Model.Unit
+        </p>
+
+        <div class="d-flex justify-content-center gap-3 mb-4">
+            <div class="text-center">
+                <div class="fs-4 fw-bold" style="color: var(--primary);">@Model.CaloriesPer100</div>
+                <small class="text-muted">ккал/100г</small>
+            </div>
+            <div class="text-center">
+                <div class="fs-5">Б: @Model.ProteinPer100 г</div>
+                <div class="fs-5">Ж: @Model.FatPer100 г</div>
+                <div class="fs-5">У: @Model.CarbsPer100 г</div>
+            </div>
+        </div>
+
+        <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-outline-primary w-100">
+            Подробнее
+        </a>
+    </div>
+</div>

@@ -1,8 +1,291 @@
-﻿@{
-    ViewData["Title"] = "Privacy Policy";
+@{
+    ViewData["Title"] = "Политика конфиденциальности";
 }
 
-<section class="section-content flex-row d-flex" style="align-items: flex-start;">
-    <h1>@ViewData["Title"]</h1>
-    <p>Use this page to detail your site's privacy policy.</p>
-</section>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,500;0,600;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+
+<style>
+.policy-page { background: var(--bg); }
+
+/* Hero */
+.policy-hero {
+    background: linear-gradient(135deg, #0e170e 0%, #1a2f1a 60%, #0e170e 100%);
+    padding: 4rem 2rem 3rem;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+.policy-hero::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse 55% 70% at 75% 25%, rgba(134,191,146,.14) 0%, transparent 65%);
+    pointer-events: none;
+}
+.policy-hero-tag {
+    display: inline-block;
+    font-size: .72rem; font-weight: 600;
+    letter-spacing: .18em; text-transform: uppercase;
+    color: #86bf92;
+    border: 1px solid rgba(134,191,146,.3);
+    padding: .32rem .95rem; border-radius: 999px;
+    margin-bottom: 1.25rem;
+}
+.policy-hero h1 {
+    font-family: 'Lora', serif;
+    font-size: clamp(1.8rem, 3.5vw, 2.6rem);
+    color: #fff; line-height: 1.2;
+    letter-spacing: -.02em; margin: 0 0 .85rem;
+}
+.policy-hero h1 em { font-style: italic; color: #a8d8b0; }
+.policy-hero p {
+    font-size: .875rem;
+    color: rgba(255,255,255,.4);
+    margin: 0 auto;
+}
+
+/* Layout */
+.policy-body {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 3rem 2rem 6rem;
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    gap: 2.5rem;
+    align-items: start;
+}
+@@media(max-width: 700px) {
+    .policy-body { grid-template-columns: 1fr; padding: 2rem 1.25rem 4rem; }
+    .policy-toc { display: none; }
+}
+
+/* Table of contents */
+.policy-toc {
+    position: sticky;
+    top: 5rem;
+    background: #fff;
+    border: 1px solid #e4ede6;
+    border-radius: 16px;
+    padding: 1.25rem 1.4rem;
+    box-shadow: 0 4px 16px rgba(30,45,30,.05);
+}
+.policy-toc-title {
+    font-size: .68rem; font-weight: 700;
+    letter-spacing: .1em; text-transform: uppercase;
+    color: #86bf92; margin-bottom: .9rem;
+}
+.policy-toc a {
+    display: flex; align-items: center; gap: .5rem;
+    font-size: .8rem; color: #5c5c58;
+    text-decoration: none;
+    padding: .42rem .5rem;
+    border-radius: 8px;
+    transition: background .2s, color .2s;
+    line-height: 1.35;
+}
+.policy-toc a:hover { background: #f0f7f2; color: #3b6d11; }
+.policy-toc a::before {
+    content: '';
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: #c8e6cc;
+    flex-shrink: 0;
+}
+
+/* Content */
+.policy-content { min-width: 0; }
+
+.policy-updated {
+    display: inline-flex; align-items: center; gap: .5rem;
+    background: #f0f7f2; border-radius: 8px;
+    padding: .42rem .9rem;
+    font-size: .78rem; color: #5a9668; font-weight: 500;
+    margin-bottom: 2rem;
+}
+
+.policy-section {
+    margin-bottom: 2.5rem;
+    animation: fadeUp .5s ease both;
+}
+.policy-section:nth-child(2) { animation-delay: .05s; }
+.policy-section:nth-child(3) { animation-delay: .1s; }
+.policy-section:nth-child(4) { animation-delay: .15s; }
+.policy-section:nth-child(5) { animation-delay: .2s; }
+.policy-section:nth-child(6) { animation-delay: .25s; }
+@@keyframes fadeUp {
+    from { opacity:0; transform:translateY(12px); }
+    to   { opacity:1; transform:translateY(0); }
+}
+
+.policy-section-num {
+    font-size: .68rem; font-weight: 700;
+    letter-spacing: .12em; text-transform: uppercase;
+    color: #86bf92; margin-bottom: .35rem;
+}
+.policy-section h2 {
+    font-family: 'Lora', serif;
+    font-size: 1.25rem; font-weight: 600;
+    color: #1a2f1a; margin: 0 0 .9rem;
+    line-height: 1.3;
+}
+.policy-section p {
+    font-size: .9rem; color: #4a4a46;
+    line-height: 1.75; margin: 0 0 .75rem;
+}
+.policy-section p:last-child { margin-bottom: 0; }
+
+/* Highlight box */
+.policy-highlight {
+    background: linear-gradient(135deg, #f0f7f2, #e8f4eb);
+    border-left: 3px solid #86bf92;
+    border-radius: 0 12px 12px 0;
+    padding: 1rem 1.25rem;
+    margin: 1rem 0;
+    font-size: .875rem; color: #2e5c3a;
+    line-height: 1.65;
+}
+
+/* List */
+.policy-list {
+    list-style: none; padding: 0; margin: .75rem 0;
+    display: flex; flex-direction: column; gap: .5rem;
+}
+.policy-list li {
+    display: flex; align-items: flex-start; gap: .65rem;
+    font-size: .875rem; color: #4a4a46; line-height: 1.6;
+}
+.policy-list li::before {
+    content: '✓';
+    font-size: .75rem; font-weight: 700;
+    color: #5a9668;
+    background: #eef7f0;
+    border-radius: 50%;
+    width: 20px; height: 20px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; margin-top: .1rem;
+}
+
+.policy-divider {
+    border: none;
+    border-top: 1px solid #e4ede6;
+    margin: 0 0 2.5rem;
+    display: block;
+}
+</style>
+
+<div class="policy-page">
+
+    <div class="policy-hero">
+        <span class="policy-hero-tag">Документы</span>
+        <h1>Политика <em>конфиденциальности</em></h1>
+        <p>Как мы обрабатываем и защищаем ваши данные</p>
+    </div>
+
+    <div class="policy-body">
+
+        <!-- TOC -->
+        <nav class="policy-toc">
+            <div class="policy-toc-title">Содержание</div>
+            <a href="#s1">Сбор данных</a>
+            <a href="#s2">Использование данных</a>
+            <a href="#s3">Хранение и защита</a>
+            <a href="#s4">Передача третьим лицам</a>
+            <a href="#s5">Ваши права</a>
+            <a href="#s6">Файлы cookie</a>
+            <a href="#s7">Изменения политики</a>
+            <a href="#s8">Контакты</a>
+        </nav>
+
+        <!-- Content -->
+        <div class="policy-content">
+
+            <div class="policy-updated">
+                📅 Обновлено: 1 января 2025 г.
+            </div>
+
+            <div class="policy-highlight">
+                Используя NutriX, вы соглашаетесь с настоящей политикой конфиденциальности. Мы ценим ваше доверие и обязуемся защищать ваши персональные данные.
+            </div>
+
+            <span class="policy-divider"></span>
+
+            <div class="policy-section" id="s1">
+                <div class="policy-section-num">01</div>
+                <h2>Сбор персональных данных</h2>
+                <p>Мы собираем только те данные, которые необходимы для корректной работы сервиса и предоставления персонализированных рекомендаций по питанию.</p>
+                <ul class="policy-list">
+                    <li>Имя и адрес электронной почты при регистрации</li>
+                    <li>Параметры здоровья: вес, рост, возраст, цели питания</li>
+                    <li>История просмотренных рецептов и планы питания</li>
+                    <li>Технические данные: IP-адрес, тип браузера, операционная система</li>
+                </ul>
+            </div>
+
+            <div class="policy-section" id="s2">
+                <div class="policy-section-num">02</div>
+                <h2>Использование данных</h2>
+                <p>Собранные данные используются исключительно в целях работы сервиса NutriX:</p>
+                <ul class="policy-list">
+                    <li>Формирование персонального плана питания</li>
+                    <li>Расчёт КБЖУ и подбор подходящих рецептов</li>
+                    <li>Улучшение работы платформы на основе обезличенной статистики</li>
+                    <li>Отправка уведомлений о новых функциях (с вашего согласия)</li>
+                </ul>
+            </div>
+
+            <div class="policy-section" id="s3">
+                <div class="policy-section-num">03</div>
+                <h2>Хранение и защита данных</h2>
+                <p>Ваши данные хранятся на защищённых серверах с применением современных стандартов шифрования. Мы используем протокол HTTPS для всех передач данных и регулярно проводим аудит безопасности.</p>
+                <div class="policy-highlight">
+                    Данные хранятся в течение срока действия вашей учётной записи. После удаления аккаунта все персональные данные уничтожаются в течение 30 дней.
+                </div>
+            </div>
+
+            <div class="policy-section" id="s4">
+                <div class="policy-section-num">04</div>
+                <h2>Передача данных третьим лицам</h2>
+                <p>Мы не продаём, не сдаём в аренду и не передаём ваши персональные данные третьим лицам в коммерческих целях. Данные могут передаваться только:</p>
+                <ul class="policy-list">
+                    <li>Платёжным системам — для обработки транзакций</li>
+                    <li>Хостинг-провайдерам — для обеспечения работы сервиса</li>
+                    <li>Государственным органам — по законному требованию</li>
+                </ul>
+            </div>
+
+            <div class="policy-section" id="s5">
+                <div class="policy-section-num">05</div>
+                <h2>Ваши права</h2>
+                <p>В соответствии с законодательством вы имеете право в любое время:</p>
+                <ul class="policy-list">
+                    <li>Запросить копию своих персональных данных</li>
+                    <li>Потребовать исправления неточных данных</li>
+                    <li>Удалить свой аккаунт и все связанные данные</li>
+                    <li>Отозвать согласие на обработку данных</li>
+                </ul>
+            </div>
+
+            <div class="policy-section" id="s6">
+                <div class="policy-section-num">06</div>
+                <h2>Файлы cookie</h2>
+                <p>NutriX использует файлы cookie для корректной работы сайта, запоминания настроек и анализа трафика. Вы можете управлять cookie через настройки вашего браузера, однако отключение некоторых типов cookie может повлиять на функциональность сайта.</p>
+            </div>
+
+            <div class="policy-section" id="s7">
+                <div class="policy-section-num">07</div>
+                <h2>Изменения политики</h2>
+                <p>Мы оставляем за собой право обновлять настоящую политику конфиденциальности. При существенных изменениях мы уведомим вас по электронной почте или через уведомление на сайте. Продолжение использования NutriX после публикации изменений означает ваше согласие с обновлённой политикой.</p>
+            </div>
+
+            <div class="policy-section" id="s8">
+                <div class="policy-section-num">08</div>
+                <h2>Свяжитесь с нами</h2>
+                <p>Если у вас есть вопросы или пожелания относительно обработки ваших данных, напишите нам:</p>
+                <p>
+                    📧 <a href="mailto:eco.nutrix.o@gmail.com" style="color:#5a9668;font-weight:500">eco.nutrix.o@gmail.com</a>
+                </p>
+                <p>Мы ответим в течение 3 рабочих дней.</p>
+            </div>
+
+        </div>
+    </div>
+</div>

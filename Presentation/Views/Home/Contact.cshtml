@@ -1,31 +1,488 @@
-﻿@using Microsoft.AspNetCore.Mvc.TagHelpers
-<section class="section contact p-4" id="contact">
-    <div class="contact-content">
-        <div class="contact-section mt-4 mb-4">
-            <div class="m-0">
-                <h3>Остались какие-то вопросы?</h3>
-                <p>Дайте нам знать, что мы можем улучшить</p>
-            </div>
-            <form class="contact-form">
-                <div class="justify-content-between d-flex gap-3 w-100 flex-row mt-4 mb-0">
-                    <input type="text" placeholder="Имя" required="">
-                    <input type="email" placeholder="Email" required="">
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,500;0,600;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+
+<style>
+/* ── CONTACT PAGE ── */
+.contact-page {
+    min-height: calc(100vh - 120px);
+    background: var(--bg);
+}
+
+/* Hero strip */
+.contact-hero {
+    background: linear-gradient(135deg, #0e170e 0%, #1a2f1a 60%, #0e170e 100%);
+    padding: 4rem 2rem 3rem;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+.contact-hero::before {
+    content: '';
+    position: absolute; inset: 0;
+    background:
+        radial-gradient(ellipse 50% 80% at 80% 20%, rgba(134,191,146,.15) 0%, transparent 65%),
+        radial-gradient(ellipse 40% 60% at 15% 80%, rgba(78,125,88,.10) 0%, transparent 65%);
+    pointer-events: none;
+}
+.contact-hero-tag {
+    display: inline-block;
+    font-size: .72rem;
+    font-weight: 600;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: #86bf92;
+    border: 1px solid rgba(134,191,146,.3);
+    padding: .32rem .95rem;
+    border-radius: 999px;
+    margin-bottom: 1.25rem;
+}
+.contact-hero h1 {
+    font-family: 'Lora', serif;
+    font-size: clamp(1.9rem, 4vw, 2.8rem);
+    color: #fff;
+    line-height: 1.2;
+    letter-spacing: -.02em;
+    margin: 0 0 .9rem;
+}
+.contact-hero h1 em { font-style: italic; color: #a8d8b0; }
+.contact-hero p {
+    font-size: .95rem;
+    color: rgba(255,255,255,.45);
+    max-width: 420px;
+    margin: 0 auto;
+    line-height: 1.65;
+}
+
+/* Main content */
+.contact-body {
+    max-width: 1020px;
+    margin: 0 auto;
+    padding: 3rem 0;
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: 2rem;
+    align-items: start;
+}
+@@media(max-width: 760px) {
+    .contact-body { grid-template-columns: 1fr; padding: 2rem 1.25rem 4rem; }
+}
+
+/* ── FORM CARD ── */
+.cform-card {
+    background: #fff;
+    border: 1px solid #e4ede6;
+    border-radius: 20px;
+    padding: 2.25rem 2rem;
+    box-shadow: 0 8px 32px rgba(30,45,30,.07);
+}
+h2 {
+    font-family: 'Lora', serif;
+    font-size: 1.4rem;
+    color: #1a2f1a;
+    margin: 0 0 .4rem;
+}
+.cform-card > p {
+    font-size: .875rem;
+    color: #7a7168;
+    margin: 0 0 1.75rem;
+    line-height: 1.5;
+}
+
+.cform-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: .9rem;
+    margin-bottom: .9rem;
+}
+@@media(max-width: 520px) { .cform-row { grid-template-columns: 1fr; } }
+
+.cform-group {
+    display: flex;
+    flex-direction: column;
+    gap: .4rem;
+    margin-bottom: .9rem;
+}
+.cform-group label {
+    font-size: .75rem;
+    font-weight: 600;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    color: #5a9668;
+}
+.cform-group input,
+.cform-group textarea {
+    background: #fafcfa;
+    border: 1.5px solid #e4ede6;
+    border-radius: 12px;
+    padding: .75rem 1rem;
+    font-family: 'DM Sans', sans-serif;
+    font-size: .9rem;
+    color: #1a2f1a;
+    outline: none;
+    transition: border-color .2s, box-shadow .2s, background .2s;
+    resize: none;
+    width: 100%;
+    box-sizing: border-box;
+}
+.cform-group input:focus,
+.cform-group textarea:focus {
+    border-color: #86bf92;
+    box-shadow: 0 0 0 3px rgba(134,191,146,.14);
+    background: #fff;
+}
+.cform-group input::placeholder,
+.cform-group textarea::placeholder {
+    color: #b0b8b2;
+}
+
+.cform-submit {
+    width: 100%;
+    padding: .9rem 1.5rem;
+    background: linear-gradient(135deg, #5a9668, #86bf92);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: .9rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: .55rem;
+    transition: transform .15s, box-shadow .2s, opacity .2s;
+    box-shadow: 0 4px 16px rgba(90,150,104,.25);
+    margin-top: .25rem;
+}
+.cform-submit:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 22px rgba(90,150,104,.32);
+}
+.cform-submit:active { transform: translateY(0); }
+.cform-submit svg { width: 16px; height: 16px; flex-shrink: 0; }
+
+/* Success toast */
+.cform-success {
+    display: none;
+    align-items: center;
+    gap: .75rem;
+    background: #eef7f0;
+    border: 1px solid #a7d9b5;
+    border-radius: 12px;
+    padding: .9rem 1.1rem;
+    margin-top: 1rem;
+    font-size: .875rem;
+    color: #1e6039;
+    animation: fadeSlideUp .4s ease;
+}
+.cform-success.show { display: flex; }
+@@keyframes fadeSlideUp {
+    from { opacity:0; transform:translateY(6px); }
+    to   { opacity:1; transform:translateY(0); }
+}
+
+/* ── INFO CARD ── */
+.contact-map {
+    max-width: 1020px;
+    margin: 0 auto;
+}
+
+.cinfo-card {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.cinfo-block {
+    background: #fff;
+    border: 1px solid #e4ede6;
+    border-radius: 20px;
+    padding: 1.6rem 1.75rem;
+    box-shadow: 0 4px 18px rgba(30,45,30,.05);
+}
+.cinfo-block h3 {
+    font-family: 'Lora', serif;
+    font-size: 1.1rem;
+    color: #1a2f1a;
+    margin: 0 0 1.1rem;
+}
+
+/* Contact items */
+.cinfo-item {
+    display: flex;
+    align-items: center;
+    gap: .85rem;
+    padding: .65rem 0;
+    border-bottom: 1px solid #f0f7f2;
+    text-decoration: none;
+    transition: gap .2s;
+}
+.cinfo-item:last-child { border-bottom: none; padding-bottom: 0; }
+.cinfo-item:hover { gap: 1.1rem; }
+.cinfo-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: var(--primary-light, #f0f7f2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.05rem;
+    flex-shrink: 0;
+    transition: background .2s;
+}
+.cinfo-item:hover .cinfo-icon { background: #d6ead9; }
+.cinfo-text-top {
+    font-size: .72rem;
+    font-weight: 600;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    color: #86bf92;
+    margin-bottom: .05rem;
+}
+.cinfo-text-val {
+    font-size: .875rem;
+    font-weight: 500;
+    color: #1a2f1a;
+}
+
+/* Social links */
+.csocial-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: .6rem;
+    margin-top: .25rem;
+}
+.csocial-btn {
+    aspect-ratio: 1;
+    border-radius: 12px;
+    background: #f4faf5;
+    border: 1.5px solid #e4ede6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    transition: background .2s, border-color .2s, transform .15s;
+    overflow: hidden;
+}
+.csocial-btn:hover {
+    background: #e0f0e4;
+    border-color: #86bf92;
+    transform: translateY(-2px);
+}
+.csocial-btn img {
+    width: 22px;
+    height: 22px;
+    object-fit: contain;
+}
+
+/* Working hours */
+.chours-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: .5rem 0;
+    border-bottom: 1px solid #f0f7f2;
+    font-size: .85rem;
+}
+.chours-row:last-child { border-bottom: none; }
+.chours-day { color: #5c5c58; }
+.chours-time { font-weight: 600; color: #1a2f1a; }
+.chours-time.closed { color: #b0b8b2; font-weight: 400; }
+.chours-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: #86bf92; flex-shrink: 0;
+    box-shadow: 0 0 0 3px rgba(134,191,146,.2);
+}
+.chours-dot.off { background: #d1d5db; box-shadow: none; }
+</style>
+
+<div class="contact-page">
+
+    <!-- Hero -->
+    <div class="contact-hero">
+        <span class="contact-hero-tag">Обратная связь</span>
+        <h1>Остались <em>вопросы?</em></h1>
+        <p>Напишите нам — мы отвечаем в течение одного рабочего дня</p>
+    </div>
+
+    <!-- Body grid -->
+    <div class="contact-body">
+        <!-- ── ФОРМА ── -->
+        <div class="cform-card">
+            <h2>Напишите нам</h2>
+            <p>Расскажите, что вас беспокоит или что можно улучшить в NutriX</p>
+
+            <form class="contact-form" id="contactForm" novalidate>
+                <div class="cform-row">
+                    <div class="cform-group">
+                        <label>Имя</label>
+                        <input type="text" placeholder="Иван Иванов" required />
+                    </div>
+                    <div class="cform-group">
+                        <label>Email</label>
+                        <input type="email" placeholder="ivan@mail.ru" required />
+                    </div>
                 </div>
-                <textarea placeholder="Сообщение" rows="4" required="" style="min-height: 108px"></textarea>
-                <button type="submit" class="button">Отправить</button>
+
+                <div class="cform-group">
+                    <label>Тема</label>
+                    <input type="text" placeholder="Вопрос о планировщике" />
+                </div>
+
+                <div class="cform-group">
+                    <label>Сообщение</label>
+                    <textarea rows="5" placeholder="Опишите вашу идею или проблему..." required></textarea>
+                </div>
+
+                <button type="submit" class="cform-submit">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                    </svg>
+                    Отправить сообщение
+                </button>
+
+                <div class="cform-success" id="formSuccess">
+                    <span style="font-size:1.3rem">✅</span>
+                    <span>Сообщение отправлено! Мы свяжемся с вами в ближайшее время.</span>
+                </div>
             </form>
         </div>
-        <div class="contact-section mt-4 mb-0">
-            <h3>Контакты</h3>
-            <p>📞 +7 (495) 123-45-67</p>
-            <p>📧 info@blackgold.ru</p>
-            <div class="social-links">
-                <a href="#"><img src="/images/social network/inst.png" alt="inst" id="inst"/></a>
-                <a href="#"><img src="/images/social network/tg.png" alt="inst" id="tg"/></a>
-                <a href="#"><img src="/images/social network/tt.png" alt="inst" id="tt"/></a>
-                <a href="#"><img src="/images/social network/gmail.png" alt="inst" id="gmail"/></a>
-                <a href="#"><img src="/images/social network/fb.png" alt="inst" id="fb"/></a>
+
+        <!-- ── ИНФО ── -->
+        <div class="cinfo-card">
+
+            <!-- Контакты -->
+            <div class="cinfo-block">
+                <h3>Контакты</h3>
+
+                <a class="cinfo-item" href="tel:+37377582714">
+                    <div class="cinfo-icon">📞</div>
+                    <div>
+                        <div class="cinfo-text-top">Телефон</div>
+                        <div class="cinfo-text-val">+373 (775) 82-71-4</div>
+                    </div>
+                </a>
+
+                <a class="cinfo-item" href="mailto:eco.nutrix.o@gmail.com">
+                    <div class="cinfo-icon">📧</div>
+                    <div>
+                        <div class="cinfo-text-top">Email</div>
+                        <div class="cinfo-text-val">eco.nutrix.o@gmail.com</div>
+                    </div>
+                </a>
+
+                <a class="cinfo-item" href="#">
+                    <div class="cinfo-icon">📍</div>
+                    <div>
+                        <div class="cinfo-text-top">Адрес</div>
+                        <div class="cinfo-text-val">Тирасполь, ул. Текстильщиков, 1</div>
+                    </div>
+                </a>
+            </div>
+
+            <!-- Соцсети -->
+            <div class="cinfo-block">
+                <h3>Мы в соцсетях</h3>
+                <div class="csocial-grid">
+                    <a href="#" class="csocial-btn" title="Instagram">
+                        <img src="/images/social network/inst.png" alt="Instagram" />
+                    </a>
+                    <a href="#" class="csocial-btn" title="Telegram">
+                        <img src="/images/social network/tg.png" alt="Telegram" />
+                    </a>
+                    <a href="#" class="csocial-btn" title="TikTok">
+                        <img src="/images/social network/tt.png" alt="TikTok" />
+                    </a>
+                    <a href="#" class="csocial-btn" title="Gmail">
+                        <img src="/images/social network/gmail.png" alt="Gmail" />
+                    </a>
+                    <a href="#" class="csocial-btn" title="Facebook">
+                        <img src="/images/social network/fb.png" alt="Facebook" />
+                    </a>
+                </div>
+            </div>
+
+            <!-- Часы работы -->
+            <div class="cinfo-block">
+                <h3>Время работы</h3>
+                <div class="chours-row">
+                    <span class="chours-day">Пн — Пт</span>
+                    <div style="display:flex;align-items:center;gap:.5rem">
+                        <div class="chours-dot"></div>
+                        <span class="chours-time">9:00 — 18:00</span>
+                    </div>
+                </div>
+                <div class="chours-row">
+                    <span class="chours-day">Суббота</span>
+                    <div style="display:flex;align-items:center;gap:.5rem">
+                        <div class="chours-dot"></div>
+                        <span class="chours-time">10:00 — 15:00</span>
+                    </div>
+                </div>
+                <div class="chours-row">
+                    <span class="chours-day">Воскресенье</span>
+                    <div style="display:flex;align-items:center;gap:.5rem">
+                        <div class="chours-dot off"></div>
+                        <span class="chours-time closed">Выходной</span>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-</section>
+    
+    <div class="contact-map">
+        <!-- Карта -->
+        <h2 class="w-100 text-center mb-3">Как нас найти</h2>
+    
+        <div class="cinfo-block" style="padding: 1rem; overflow: hidden; height: 480px; border-radius: 20px; background: 0; border: 2px solid greenyellow; background: none">
+            <div id="yandex-map" style="width: 100%; height: -webkit-fill-available;"></div>
+        </div>
+    </div>
+</div>
+
+<script src="https://api-maps.yandex.ru/2.1/?apikey=free&lang=ru_RU" type="text/javascript"></script>
+
+<script>
+    ymaps.ready(init);
+
+    function init() {
+        var myMap = new ymaps.Map("yandex-map", {
+            center: [46.836, 29.629],     // Координаты Тирасполя (ул. Текстильщиков)
+            zoom: 16,
+            controls: ['zoomControl', 'fullscreenControl']
+        });
+
+        var placemark = new ymaps.Placemark([46.8365, 29.6288], {
+            hintContent: 'NutriX',
+            balloonContent: `
+                <strong>NutriX — офис</strong><br>
+                г. Тирасполь<br>
+                ул. Текстильщиков, 1<br>
+                <small>Режим работы: Пн–Пт 9:00–18:00</small>
+            `
+        }, {
+            preset: 'islands#greenDotIcon'
+        });
+
+        myMap.geoObjects.add(placemark);
+    }
+</script>
+
+<script>
+document.getElementById('contactForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const btn = this.querySelector('.cform-submit');
+    btn.style.opacity = '.65';
+    btn.disabled = true;
+    btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;animation:spin .8s linear infinite"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4"/></svg> Отправка...`;
+    setTimeout(() => {
+        btn.style.opacity = '1';
+        btn.disabled = false;
+        btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Отправить сообщение`;
+        document.getElementById('formSuccess').classList.add('show');
+        this.reset();
+    }, 1200);
+});
+</script>

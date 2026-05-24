@@ -2,8 +2,6 @@
 using Domain.Enums;
 using Infrastructure.Interfaces;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
-using Services.Helpers;
 using Services.Interfaces;
 
 namespace Services.Services

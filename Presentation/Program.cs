@@ -5,20 +5,12 @@ using Hangfire.PostgreSql;
 using Infrastructure.Interfaces;
 using Infrastructure.Repositories;
 using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Authentication.Google;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
 using Presentation;
 using Presentation.Helpers;
-using PuppeteerSharp;
-using Services;
-using Services.Helpers;
 using Services.Interfaces;
 using Services.Jobs;
 using Services.Services;
-using Services.UserService.Services.Implementations;
-using Services.UserService.Services.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -63,13 +55,6 @@ builder.Services.AddHangfire(config => config
         c.UseNpgsqlConnection(builder.Configuration.GetConnectionString("DefaultConnection"))));
  
 builder.Services.AddHangfireServer();
-
-// HttpClient для nutrition API
-builder.Services.AddHttpClient<INutritionApiService, NutritionApiService>(client =>
-{
-    client.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36");
-    client.Timeout = TimeSpan.FromSeconds(15);
-});
 
 builder.Services.AddHttpClient<IRecipeParserService, RecipeParserService>(client =>
 {

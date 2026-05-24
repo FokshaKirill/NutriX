@@ -1,6 +1,6 @@
 ﻿using System.Security.Claims;
 
-namespace Services.UserService.Services.Interfaces;
+namespace Services.Interfaces;
 
 public interface IJwtService
 {

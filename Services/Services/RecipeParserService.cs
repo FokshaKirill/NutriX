@@ -2,6 +2,8 @@
 using System.Text.RegularExpressions;
 using HtmlAgilityPack;
 using Domain.Entities;
+using Services.DTO;
+using Services.Helpers;
 using Services.Interfaces;
 using Services.Services;
 
@@ -11,16 +13,13 @@ namespace Services.Services
     {
         private readonly HttpClient _httpClient;
         private readonly IProductService _productService;
-        private readonly INutritionApiService _nutritionService;
 
         public RecipeParserService(
             HttpClient httpClient, 
-            IProductService productService,
-            INutritionApiService nutritionService)
+            IProductService productService)
         {
             _httpClient = httpClient;
             _productService = productService;
-            _nutritionService = nutritionService;
         }
 
         public async Task<ParsedRecipeDto> ParseRecipeFromUrlAsync(string url)
@@ -81,20 +80,37 @@ namespace Services.Services
 
         private int ParseServings(HtmlDocument doc)
         {
-            // Ищем информацию о порциях в recipeYield
-            var servingsNode = doc.DocumentNode.SelectSingleNode("//*[@itemprop='recipeYield']");
-
-            if (servingsNode != null)
+            // Приоритет 1: Прямой input с 1000menu
+            var yieldInput = doc.DocumentNode.SelectSingleNode("//input[@id='yield_num_input']");
+            if (yieldInput != null)
             {
-                var text = servingsNode.InnerText;
-                var match = Regex.Match(text, @"\d+");
-                if (match.Success && int.TryParse(match.Value, out int servings))
-                {
+                var val = yieldInput.GetAttributeValue("value", "");
+                if (int.TryParse(val, out int servings) && servings > 0)
                     return servings;
+            }
+
+            // Приоритет 2: Microdata
+            var recipeYield = doc.DocumentNode.SelectSingleNode("//*[@itemprop='recipeYield']");
+            if (recipeYield != null)
+            {
+                var match = Regex.Match(recipeYield.InnerText, @"(\d+)");
+                if (match.Success && int.TryParse(match.Groups[1].Value, out int s))
+                    return s;
+            }
+
+            // Приоритет 3: Текст на странице
+            var textNodes = doc.DocumentNode.SelectNodes("//*[contains(text(),'порц') or contains(text(),'Порц')]");
+            if (textNodes != null)
+            {
+                foreach (var node in textNodes)
+                {
+                    var match = Regex.Match(node.InnerText, @"(\d+)\s*порц", RegexOptions.IgnoreCase);
+                    if (match.Success && int.TryParse(match.Groups[1].Value, out int s))
+                        return s;
                 }
             }
 
-            return 4; // По умолчанию
+            return 4; // fallback
         }
 
         private string? ParseMainImage(HtmlDocument doc)
@@ -438,44 +454,55 @@ namespace Services.Services
             return recipe;
         }
 
-        private async Task<Product> FindOrCreateProductAsync(string name)
+        // ── Замена FindOrCreateProductAsync в RecipeParserService ───────────────
+
+        private async Task<Product> FindOrCreateProductAsync(string rawName)
         {
-            // Ищем продукт в базе
+            // 1. Пробуем получить каноническое имя через нормализатор
+            var canonical = ProductNormalizer.Normalize(rawName);
+
             var products = await _productService.GetAllProductsAsync();
-            
-            // Нормализуем название для поиска
-            var normalizedName = NormalizeProductName(name);
-            
-            // Точное совпадение
-            var product = products.FirstOrDefault(p => 
-                NormalizeProductName(p.Name).Equals(normalizedName, StringComparison.OrdinalIgnoreCase));
 
-            if (product != null) return product;
-
-            // Частичное совпадение
-            product = products.FirstOrDefault(p => 
+            // 2. Ищем по каноническому имени (точное)
+            if (!string.IsNullOrEmpty(canonical))
             {
-                var pName = NormalizeProductName(p.Name);
-                return pName.Contains(normalizedName, StringComparison.OrdinalIgnoreCase) ||
-                       normalizedName.Contains(pName, StringComparison.OrdinalIgnoreCase);
+                var byCanonical = products.FirstOrDefault(p =>
+                    p.Name.Equals(canonical, StringComparison.OrdinalIgnoreCase));
+                if (byCanonical != null) return byCanonical;
+            }
+
+            // 3. Ищем по исходному названию (вдруг оно уже в базе как есть)
+            var byRaw = products.FirstOrDefault(p =>
+                p.Name.Equals(rawName, StringComparison.OrdinalIgnoreCase));
+            if (byRaw != null) return byRaw;
+
+            // 4. Частичное совпадение по нормализованному
+            //    Используем уже существующий NormalizeProductName (убирает прилагательные)
+            var normalized = NormalizeProductName(rawName);
+            var byPartial = products.FirstOrDefault(p =>
+            {
+                var pn = NormalizeProductName(p.Name);
+                return pn.Contains(normalized, StringComparison.OrdinalIgnoreCase)
+                       || normalized.Contains(pn, StringComparison.OrdinalIgnoreCase);
             });
+            if (byPartial != null) return byPartial;
 
-            if (product != null) return product;
-
-            // Создаем новый продукт
-            var newProduct = new Product
+            // 5. Ничего не нашли — создаём заглушку.
+            //    Имя сохраняем сырым, чтобы потом можно было вручную смапить.
+            //    INutritionApiService убрали — нет смысла в онлайн-запросе,
+            //    если база из 999 продуктов + нормализатор закрывают 95% случаев.
+            var stub = new Product
             {
-                Id = Guid.NewGuid(),
-                Name = name,
-                Unit = "г",
+                Id           = Guid.NewGuid(),
+                Name         = rawName.Trim(),
+                Unit         = "г",
                 PricePerUnit = 0,
+                Source       = "parser:unknown",   // легко найти в админке
+                CreatedAt    = DateTime.UtcNow,
             };
 
-            // Получаем БЖУ из API
-            newProduct = await _nutritionService.EnrichProductWithNutritionAsync(newProduct);
-
-            await _productService.CreateAsync(newProduct);
-            return newProduct;
+            await _productService.CreateAsync(stub);
+            return stub;
         }
 
         private string NormalizeProductName(string name)
@@ -510,37 +537,5 @@ namespace Services.Services
             
             return name;
         }
-    }
-
-    // DTO для парсинга
-    public class ParsedRecipeDto
-    {
-        public string Name { get; set; } = string.Empty;
-        public string? Description { get; set; }
-        public int Servings { get; set; } = 4;
-        public string? ImageUrl { get; set; }
-        public List<ParsedIngredientDto> Ingredients { get; set; } = new();
-        public List<ParsedStepDto> Steps { get; set; } = new();
-        public decimal? TotalCalories { get; set; }
-        public decimal? TotalProtein { get; set; }
-        public decimal? TotalFat { get; set; }
-        public decimal? TotalCarbs { get; set; }
-    }
-
-    public class ParsedIngredientDto
-    {
-        public string Name { get; set; } = string.Empty;
-        public decimal Amount { get; set; }
-        public string Unit { get; set; } = "г";
-        public string? Comment { get; set; }
-        public string OriginalText { get; set; } = string.Empty;
-    }
-
-    public class ParsedStepDto
-    {
-        public int Order { get; set; }
-        public string Description { get; set; } = string.Empty;
-        public int? TimerSeconds { get; set; }
-        public string? ImageUrl { get; set; }
     }
 }

@@ -1,0 +1,35 @@
+@model Domain.Entities.Recipe
+@* _FavRecipeCard.cshtml — карточка избранного рецепта на странице аккаунта *@
+
+<div class="fav-card">
+    <div class="fav-card-img">
+        @if (!string.IsNullOrEmpty(Model.ImageUrl))
+        {
+            <img src="@Model.ImageUrl" alt="@Model.Name" />
+        }
+        else
+        {
+            <span>🍽</span>
+        }
+    </div>
+    <div class="fav-card-body">
+        <div class="fav-card-name">@Model.Name</div>
+        @if (Model.TotalCalories > 0)
+        {
+            <div class="fav-card-meta">🔥 @((int)Model.CaloriesPerServing) ккал · Б @((int)Model.ProteinPerServing)г</div>
+        }
+        <div class="fav-card-actions">
+            <a asp-action="Details" asp-controller="Recipe"
+               asp-route-id="@Model.Id" class="fav-open-btn">
+                <i class="fas fa-eye" style="font-size:.65rem"></i> Открыть
+            </a>
+            <form asp-action="Remove" asp-controller="Favorites"
+                  method="post" style="display:contents">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="recipeId" value="@Model.Id" />
+                <input type="hidden" name="returnUrl" value="/account" />
+                <button type="submit" class="fav-rm-btn" title="Убрать из избранного">♥</button>
+            </form>
+        </div>
+    </div>
+</div>

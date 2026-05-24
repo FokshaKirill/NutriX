@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Services.Interfaces;
-using Services.UserService.Services.Interfaces;
 
 namespace Presentation.Controllers;
 
@@ -12,17 +11,20 @@ public class AccountController : Controller
     private readonly IUserService               _userService;
     private readonly IFavoriteService           _favoriteService;
     private readonly IRecipeService           _recipeService;
+    private readonly IMealPlanService _mealPlanService;
 
     public AccountController(
         ILogger<AccountController> logger,
         IUserService               userService,
         IFavoriteService           favoriteService,
-        IRecipeService           recipeService)
+        IRecipeService             recipeService,
+        IMealPlanService           mealPlanService)   // ← добавить
     {
         _logger          = logger;
         _userService     = userService;
         _favoriteService = favoriteService;
-        _recipeService = recipeService;
+        _recipeService   = recipeService;
+        _mealPlanService = mealPlanService;           // ← добавить
     }
 
     private Guid? CurrentUserId
@@ -83,12 +85,37 @@ public class AccountController : Controller
         var favorites = await _favoriteService.GetFavoritesAsync(CurrentUserId.Value);
         var myRecipes = await _recipeService.GetByAuthorAsync(CurrentUserId.Value);
 
+        var todayPlan = await _mealPlanService.GetCurrentWeekPlanAsync(CurrentUserId.Value);
+
+        int todayKcal = 0, todayP = 0, todayF = 0, todayC = 0;
+        if (todayPlan != null)
+        {
+            var today = DateTime.Today;
+            var diff   = (7 + (today.DayOfWeek - DayOfWeek.Monday)) % 7;
+            var monday = today.AddDays(-diff).Date;
+            var offset = (today - monday).Days;
+
+            var todayMeals = todayPlan.Meals
+                .Where(m => m.DayOffset == offset && m.Recipe != null)
+                .ToList();
+
+            todayKcal = (int)Math.Round(todayMeals.Sum(m => m.Recipe!.CaloriesPerServing * m.Servings));
+            todayP    = (int)Math.Round(todayMeals.Sum(m => m.Recipe!.ProteinPerServing  * m.Servings));
+            todayF    = (int)Math.Round(todayMeals.Sum(m => m.Recipe!.FatPerServing      * m.Servings));
+            todayC    = (int)Math.Round(todayMeals.Sum(m => m.Recipe!.CarbsPerServing    * m.Servings));
+        }
+
+        ViewBag.TodayKcal = todayKcal;
+        ViewBag.TodayP    = todayP;
+        ViewBag.TodayF    = todayF;
+        ViewBag.TodayC    = todayC;
         ViewBag.CurrentUser = user;
         ViewBag.Favorites   = favorites;
         ViewBag.MyRecipes   = myRecipes;
 
         ViewData["Title"] = "Аккаунт";
         ViewBag.IsAdmin = User.IsInRole("Admin"); 
+        
         return View();
     }
 }

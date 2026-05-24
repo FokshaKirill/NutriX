@@ -1,0 +1,85 @@
+@*
+    _AccountKbzu.cshtml
+    Секция «КБЖУ на сегодня» для страницы аккаунта.
+    Данные читаются account.js из localStorage.
+    Razor нужен только для отображения целей в подписях.
+*@
+@{
+    var calGoal  = ViewData["calGoal"]  as string ?? "2000";
+    var protGoal = ViewData["protGoal"] as string ?? "120";
+    var fatGoal  = ViewData["fatGoal"]  as string ?? "70";
+    var carbGoal = ViewData["carbGoal"] as string ?? "250";
+
+    // ← новые серверные факты
+    var todayKcal = (int)(ViewData["todayKcal"] ?? 0);
+    var todayP    = (int)(ViewData["todayP"]    ?? 0);
+    var todayF    = (int)(ViewData["todayF"]    ?? 0);
+    var todayC    = (int)(ViewData["todayC"]    ?? 0);
+
+    double kcalGoalD = double.TryParse(calGoal,  out var kg) ? kg : 2000;
+    double pGoalD    = double.TryParse(protGoal, out var pg) ? pg : 120;
+    double fGoalD    = double.TryParse(fatGoal,  out var fg) ? fg : 70;
+    double cGoalD    = double.TryParse(carbGoal, out var cg) ? cg : 250;
+
+    double pctKcal = kcalGoalD > 0 ? Math.Min(100, todayKcal / kcalGoalD * 100) : 0;
+    double pctP    = pGoalD    > 0 ? Math.Min(100, todayP    / pGoalD    * 100) : 0;
+    double pctF    = fGoalD    > 0 ? Math.Min(100, todayF    / fGoalD    * 100) : 0;
+    double pctC    = cGoalD    > 0 ? Math.Min(100, todayC    / cGoalD    * 100) : 0;
+}
+
+<div class="kbzu-section">
+    <p class="card-label">КБЖУ на сегодня — из плана питания</p>
+
+    <div class="kbzu-totals">
+        <div class="kbzu-bubble">
+            <div class="kbzu-bubble-val">@todayKcal</div>
+            <div class="kbzu-bubble-label">ккал</div>
+        </div>
+        <div class="kbzu-bubble">
+            <div class="kbzu-bubble-val" style="color:#1d4ed8">@todayP г</div>
+            <div class="kbzu-bubble-label">белки</div>
+        </div>
+        <div class="kbzu-bubble">
+            <div class="kbzu-bubble-val" style="color:#c2410c">@todayF г</div>
+            <div class="kbzu-bubble-label">жиры</div>
+        </div>
+        <div class="kbzu-bubble">
+            <div class="kbzu-bubble-val" style="color:#a16207">@todayC г</div>
+            <div class="kbzu-bubble-label">углеводы</div>
+        </div>
+    </div>
+
+    <div class="prog-row">
+        <span class="prog-label">Калории</span>
+        <div class="prog-bar-wrap">
+            <div class="prog-bar" style="width:@pctKcal.ToString("F1", System.Globalization.CultureInfo.InvariantCulture)%;background:#86bf92"></div>
+        </div>
+        <span class="prog-val">@todayKcal / @calGoal</span>
+    </div>
+    <div class="prog-row">
+        <span class="prog-label">Белки</span>
+        <div class="prog-bar-wrap">
+            <div class="prog-bar" style="width:@pctP.ToString("F1", System.Globalization.CultureInfo.InvariantCulture)%;background:#3b82f6"></div>
+        </div>
+        <span class="prog-val">@todayP / @protGoal г</span>
+    </div>
+    <div class="prog-row">
+        <span class="prog-label">Жиры</span>
+        <div class="prog-bar-wrap">
+            <div class="prog-bar" style="width:@pctF.ToString("F1", System.Globalization.CultureInfo.InvariantCulture)%;background:#f97316"></div>
+        </div>
+        <span class="prog-val">@todayF / @fatGoal г</span>
+    </div>
+    <div class="prog-row">
+        <span class="prog-label">Углеводы</span>
+        <div class="prog-bar-wrap">
+            <div class="prog-bar" style="width:@pctC.ToString("F1", System.Globalization.CultureInfo.InvariantCulture)%;background:#eab308"></div>
+        </div>
+        <span class="prog-val">@todayC / @carbGoal г</span>
+    </div>
+
+    <p style="font-size:.75rem;color:var(--muted);margin-top:.75rem;margin-bottom:0">
+        Плановые значения на сегодня из
+        <a href="/MealPlan/Week" style="color:var(--sage-d)">плана питания</a>
+    </p>
+</div>

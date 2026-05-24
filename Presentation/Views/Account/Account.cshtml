@@ -3,96 +3,110 @@
 @model dynamic
 @{
     ViewData["Title"] = "Аккаунт";
-    var favorites = ViewBag.Favorites as IEnumerable<Recipe> ?? Enumerable.Empty<Recipe>();
-    var user = ViewBag.CurrentUser as Domain.Entities.User;
-    var userName = user?.Username ?? User.Identity?.Name ?? "Пользователь";
-    var userEmail = user?.Email ?? User.FindFirst(ClaimTypes.Email)?.Value ?? "";
-    var avatarUrl = user?.AvatarUrl;
-    var initials = string.IsNullOrEmpty(userName) ? "?" : string.Concat(userName.Split(' ').Take(2).Select(w => w[0].ToString().ToUpper()));
-    var isPro = user?.SubscriptionType == Domain.Enums.SubscriptionType.Premium;
-    var createdAt = user?.CreatedAt.ToLocalTime().ToString("dd MMM yyyy") ?? "";
-    var lastLogin = user?.LastLoginAt != null
-        ? user.LastLoginAt.Value.ToLocalTime().ToString("dd MMM yyyy HH:mm")
-        : "сегодня";
 
-    var calGoal  = (double)(user?.DailyCalorieGoal ?? 2000);
-    var protGoal = (double)(user?.DailyProteinGoal ?? 120);
-    var fatGoal  = (double)(user?.DailyFatGoal  ?? 70);
-    var carbGoal = (double)(user?.DailyCarbsGoal ?? 250);
+    var favorites  = ViewBag.Favorites as IEnumerable<Recipe> ?? Enumerable.Empty<Recipe>();
+    var user       = ViewBag.CurrentUser as Domain.Entities.User;
+    var userName   = user?.Username ?? User.Identity?.Name ?? "Пользователь";
+    var userEmail  = user?.Email ?? User.FindFirst(ClaimTypes.Email)?.Value ?? "";
+    var avatarUrl  = user?.AvatarUrl;
+    var initials   = string.IsNullOrEmpty(userName)
+                        ? "?"
+                        : string.Concat(userName.Split(' ').Take(2).Select(w => w[0].ToString().ToUpper()));
+    var isPro      = user?.SubscriptionType == Domain.Enums.SubscriptionType.Premium;
+    var createdAt  = user?.CreatedAt.ToLocalTime().ToString("dd MMM yyyy") ?? "";
+    var lastLogin  = user?.LastLoginAt != null
+                        ? user.LastLoginAt.Value.ToLocalTime().ToString("dd MMM yyyy HH:mm")
+                        : "сегодня";
 
-    var myRecipes = ViewBag.MyRecipes as IEnumerable<Domain.Entities.Recipe>
-                   ?? Enumerable.Empty<Domain.Entities.Recipe>();
+    var calGoal    = (double)(user?.DailyCalorieGoal ?? 2000);
+    var protGoal   = (double)(user?.DailyProteinGoal ?? 120);
+    var fatGoal    = (double)(user?.DailyFatGoal     ?? 70);
+    var carbGoal   = (double)(user?.DailyCarbsGoal   ?? 250);
+        
+    var kbzuViewData = new ViewDataDictionary(ViewData);
+    kbzuViewData["calGoal"]   = calGoal.ToString("F0", System.Globalization.CultureInfo.InvariantCulture);
+    kbzuViewData["protGoal"]  = protGoal.ToString("F0", System.Globalization.CultureInfo.InvariantCulture);
+    kbzuViewData["fatGoal"]   = fatGoal.ToString("F0", System.Globalization.CultureInfo.InvariantCulture);
+    kbzuViewData["carbGoal"]  = carbGoal.ToString("F0", System.Globalization.CultureInfo.InvariantCulture);
+    kbzuViewData["todayKcal"] = (int)ViewBag.TodayKcal;
+    kbzuViewData["todayP"]    = (int)ViewBag.TodayP;
+    kbzuViewData["todayF"]    = (int)ViewBag.TodayF;
+    kbzuViewData["todayC"]    = (int)ViewBag.TodayC;
+
+    var myRecipes  = ViewBag.MyRecipes as IEnumerable<Domain.Entities.Recipe>
+                    ?? Enumerable.Empty<Domain.Entities.Recipe>();
 }
+
 @Html.AntiForgeryToken()
 
+@* ── Шрифты ────────────────────────────────────────────────────────────────── *@
 <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
 
-<style>
-:root {
-    --sage: #86bf92; --sage-d: #5a9668; --sage-pale: #f0f7f2;
-    --ink: #1a1a18; --muted: #7a7168; --border: #e4ede6;
-    --card: #fff; --danger: #e24b4a;
-    --radius: 16px; --shadow: 0 4px 20px rgba(0,0,0,.06);
-}
-</style>
+@* ── Стили, специфичные для страницы аккаунта ──────────────────────────────── *@
+<link rel="stylesheet" href="~/css/account.css" asp-append-version="true" />
+
+@* ── Data bridge ───────────────────────────────────────────────────────────── *@
+<script>
+    window.AccountData = {
+        goals: {
+            kcal: @calGoal.ToString("F0", System.Globalization.CultureInfo.InvariantCulture),
+            p:    @protGoal.ToString("F0", System.Globalization.CultureInfo.InvariantCulture),
+            f:    @fatGoal.ToString("F0", System.Globalization.CultureInfo.InvariantCulture),
+            c:    @carbGoal.ToString("F0", System.Globalization.CultureInfo.InvariantCulture)
+        },
+        today: {
+            kcal: @((int)ViewBag.TodayKcal),
+            p:    @((int)ViewBag.TodayP),
+            f:    @((int)ViewBag.TodayF),
+            c:    @((int)ViewBag.TodayC)
+        }
+    };
+</script>
 
 <div class="acc-wrap">
-
-    <!-- HEADER -->
-    <div class="acc-header">
-        <div class="avatar-wrap">
-            @if (!string.IsNullOrEmpty(avatarUrl))
-            {
-                <img src="@avatarUrl" alt="@userName" class="avatar-img" />
-            }
-            else
-            {
-                <div class="avatar">@initials</div>
-            }
-        </div>
-        <div class="acc-info">
-            <h2>@userName</h2>
-            <p>@userEmail</p>
-            <div class="badges-row">
-                <span class="badge @(isPro ? "badge-pro" : "badge-free")">@(isPro ? "Pro" : "Free")</span>
-                @if (user?.IsGoogleUser == true)
+    <div class="f-row">
+        <div class="bookmark-left"></div>
+        @* ── HEADER ─────────────────────────────────────────────────────────────── *@
+        <div class="acc-header">
+            <div class="avatar-wrap">
+                @if (!string.IsNullOrEmpty(avatarUrl))
                 {
-                    <span class="badge badge-google">
-                        <svg width="11" height="11" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z"/></svg>
-                        Google
-                    </span>
+                    <img src="@avatarUrl" alt="@userName" class="avatar-img"/>
                 }
-                <span class="meta-text">Вход: @lastLogin</span>
+                else
+                {
+                    <div class="avatar">@initials</div>
+                }
             </div>
+            <div class="acc-info">
+                <h2>@userName</h2>
+                <p>@userEmail</p>
+                <div class="badges-row">
+                    <span class="badge @(isPro ? "badge-pro" : "badge-free")">@(isPro ? "Pro" : "Free")</span>
+                    @if (user?.IsGoogleUser == true)
+                    {
+                        <span class="badge badge-google">
+                            <svg width="11" height="11" viewBox="0 0 18 18">
+                                <path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z"/>
+                                <path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z"/>
+                                <path fill="#FBBC05" d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"/>
+                                <path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z"/>
+                            </svg>
+                            Google
+                        </span>
+                    }
+                    <span class="meta-text">Вход: @lastLogin</span>
+                </div>
+            </div>
+            <button class="btn-logout" onclick="logout()">Выйти</button>
         </div>
-        <button class="btn-logout" onclick="logout()">Выйти</button>
+        <div class="bookmark-right"></div>
     </div>
 
-    <!-- GRID: цели + статистика -->
+    @* ── GRID: цели + статистика ─────────────────────────────────────────────── *@
     <div class="acc-grid">
-        <div class="acc-card">
-            <p class="card-label">Цели питания</p>
-            <div class="stat-row">
-                <span class="stat-label">Калории</span>
-                <span class="stat-val">@calGoal ккал/день</span>
-            </div>
-            <div class="goal-bar"><div class="goal-fill" id="gKcal" style="width:0%;background:#86bf92"></div></div>
-            <div class="stat-row">
-                <span class="stat-label">Белки</span>
-                <span class="stat-val">@protGoal.ToString("F0") г/день</span>
-            </div>
-            <div class="goal-bar"><div class="goal-fill" id="gP" style="width:0%;background:#3b82f6"></div></div>
-            <div class="stat-row">
-                <span class="stat-label">Углеводы</span>
-                <span class="stat-val">@carbGoal.ToString("F0") г/день</span>
-            </div>
-            <div class="goal-bar"><div class="goal-fill" id="gC" style="width:0%;background:#eab308"></div></div>
-            <div class="stat-row">
-                <span class="stat-label">Жиры</span>
-                <span class="stat-val">@fatGoal.ToString("F0") г/день</span>
-            </div>
-            <div class="goal-bar" style="margin-bottom:0"><div class="goal-fill" id="gF" style="width:0%;background:#f97316"></div></div>
-        </div>
+        @* ── КБЖУ на сегодня ─────────────────────────────────────────────────────── *@
+        @await Html.PartialAsync("_AccountKbzu", kbzuViewData)
 
         <div class="acc-card">
             <p class="card-label">Статистика</p>
@@ -103,43 +117,17 @@
             <div class="stat-row"><span class="stat-label">Регистрация</span><span class="stat-val">@createdAt</span></div>
             <div class="stat-row"><span class="stat-label">Email подтверждён</span><span class="stat-val">@(user?.IsEmailConfirmed == true ? "✓ Да" : "Нет")</span></div>
         </div>
+
+        <div class="acc-card">
+            <p class="card-label">Достижения</p>
+            <div class="achieve-empty" style="padding:15%">
+                <div style="font-size:1.5rem;margin-bottom:.5rem"><i class="fa fa-trophy" aria-hidden="true"></i></div>
+                <p>Достижений пока нет</p>
+            </div>
+        </div>
     </div>
 
-    <!-- КБЖУ НА СЕГОДНЯ -->
-    <div class="kbzu-section">
-        <p class="card-label">КБЖУ на сегодня — из меню дня</p>
-        <div class="kbzu-totals">
-            <div class="kbzu-bubble"><div class="kbzu-bubble-val" id="accKcal">0</div><div class="kbzu-bubble-label">ккал</div></div>
-            <div class="kbzu-bubble"><div class="kbzu-bubble-val" id="accP" style="color:#1d4ed8">0г</div><div class="kbzu-bubble-label">белки</div></div>
-            <div class="kbzu-bubble"><div class="kbzu-bubble-val" id="accF" style="color:#c2410c">0г</div><div class="kbzu-bubble-label">жиры</div></div>
-            <div class="kbzu-bubble"><div class="kbzu-bubble-val" id="accC" style="color:#a16207">0г</div><div class="kbzu-bubble-label">углеводы</div></div>
-        </div>
-        <div class="prog-row">
-            <span class="prog-label">Калории</span>
-            <div class="prog-bar-wrap"><div class="prog-bar" id="accBarKcal" style="width:0%;background:#86bf92"></div></div>
-            <span class="prog-val" id="accLblKcal">0 / @calGoal.ToString("F0")</span>
-        </div>
-        <div class="prog-row">
-            <span class="prog-label">Белки</span>
-            <div class="prog-bar-wrap"><div class="prog-bar" id="accBarP" style="width:0%;background:#3b82f6"></div></div>
-            <span class="prog-val" id="accLblP">0 / @protGoal.ToString("F0")г</span>
-        </div>
-        <div class="prog-row">
-            <span class="prog-label">Жиры</span>
-            <div class="prog-bar-wrap"><div class="prog-bar" id="accBarF" style="width:0%;background:#f97316"></div></div>
-            <span class="prog-val" id="accLblF">0 / @fatGoal.ToString("F0")г</span>
-        </div>
-        <div class="prog-row">
-            <span class="prog-label">Углеводы</span>
-            <div class="prog-bar-wrap"><div class="prog-bar" id="accBarC" style="width:0%;background:#eab308"></div></div>
-            <span class="prog-val" id="accLblC">0 / @carbGoal.ToString("F0")г</span>
-        </div>
-        <p style="font-size:.75rem;color:var(--muted);margin-top:.75rem;margin-bottom:0">
-            Считаются только отмеченные как «съедено» блюда из <a href="/" style="color:var(--sage-d)">меню дня</a>
-        </p>
-    </div>
-
-    <!-- ИЗБРАННЫЕ -->
+    @* ── ИЗБРАННЫЕ ───────────────────────────────────────────────────────────── *@
     <div class="fav-section">
         <div class="fav-header">
             <p class="card-label" style="margin:0">Избранные рецепты</p>
@@ -158,47 +146,13 @@
             <div class="fav-scroll">
                 @foreach (var recipe in favorites)
                 {
-                    <div class="fav-card">
-                        <div class="fav-card-img">
-                            @if (!string.IsNullOrEmpty(recipe.ImageUrl))
-                            { <img src="@recipe.ImageUrl" alt="@recipe.Name" /> }
-                            else
-                            { <span>🍽</span> }
-                        </div>
-                        <div class="fav-card-body">
-                            <div class="fav-card-name">@recipe.Name</div>
-                            @if (recipe.TotalCalories > 0)
-                            {
-                                <div class="fav-card-meta">🔥 @((int)recipe.CaloriesPerServing) ккал · Б @((int)recipe.ProteinPerServing)г</div>
-                            }
-                            <div class="fav-card-actions">
-                                <a asp-action="Details" asp-controller="Recipe"
-                                   asp-route-id="@recipe.Id" class="fav-open-btn">
-                                    <i class="fas fa-eye" style="font-size:.65rem"></i> Открыть
-                                </a>
-                                <!--
-                                    ИСПРАВЛЕНО: было asp-action="ToggleFavorite" + name="recipeId",
-                                    но ToggleFavorite возвращает JSON (для AJAX), а не редирект.
-                                    Теперь используем отдельный action Remove, который делает
-                                    RedirectToAction("Account") после удаления.
-                                    Параметр recipeId совпадает с сигнатурой Remove(Guid recipeId).
-                                -->
-                                <form asp-action="Remove" asp-controller="Favorites"
-                                      method="post" style="display:contents">
-                                    @Html.AntiForgeryToken()
-                                    <input type="hidden" name="recipeId" value="@recipe.Id" />
-                                    <input type="hidden" name="returnUrl" value="/account" />
-                                    <button type="submit" class="fav-rm-btn" title="Убрать из избранного">♥</button>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
+                    @await Html.PartialAsync("_FavRecipeCard", recipe)
                 }
             </div>
         }
     </div>
 
-    <!-- МОИ РЕЦЕПТЫ -->
+    @* ── МОИ РЕЦЕПТЫ ─────────────────────────────────────────────────────────── *@
     <div class="fav-section">
         <div class="fav-header">
             <p class="card-label" style="margin:0">Мои рецепты</p>
@@ -209,9 +163,10 @@
         {
             <div class="fav-empty">
                 <div style="font-size:2rem;margin-bottom:.5rem">🍳</div>
-                <p>Ещё нет рецептов.
-                   <a asp-action="Create" asp-controller="Recipe">Создать</a> или
-                   <a asp-action="Import" asp-controller="Recipe">Импортировать</a>
+                <p>
+                    Ещё нет рецептов.
+                    <a asp-action="Create" asp-controller="Recipe">Создать</a> или
+                    <a asp-action="Import" asp-controller="Recipe">Импортировать</a>
                 </p>
             </div>
         }
@@ -220,48 +175,13 @@
             <div class="fav-scroll">
                 @foreach (var recipe in myRecipes.OrderByDescending(r => r.CreatedAt))
                 {
-                    <div class="fav-card">
-                        <div class="fav-card-img">
-                            @if (!string.IsNullOrEmpty(recipe.ImageUrl))
-                            { <img src="@recipe.ImageUrl" alt="@recipe.Name" /> }
-                            else { <span>🍽</span> }
-                        </div>
-                        <div class="fav-card-body">
-                            <div class="fav-card-name">@recipe.Name</div>
-                            @if (recipe.TotalCalories > 0)
-                            {
-                                <div class="fav-card-meta">
-                                    🔥 @((int)recipe.CaloriesPerServing) ккал ·
-                                    @recipe.DefaultServings порц.
-                                </div>
-                            }
-                            <div class="fav-card-actions">
-                                <a asp-action="Details" asp-controller="Recipe"
-                                   asp-route-id="@recipe.Id" class="fav-open-btn">
-                                    <i class="fas fa-eye" style="font-size:.65rem"></i> Открыть
-                                </a>
-                                <a asp-action="Edit" asp-controller="Recipe"
-                                   asp-route-id="@recipe.Id" class="fav-open-btn"
-                                   style="background:#f0f7f2">
-                                    <i class="fas fa-pen" style="font-size:.65rem"></i>
-                                </a>
-                                <form asp-action="Delete" asp-controller="Recipe"
-                                      method="post" style="display:contents">
-                                    @Html.AntiForgeryToken()
-                                    <input type="hidden" name="id" value="@recipe.Id" />
-                                    <button type="submit" class="fav-rm-btn"
-                                            onclick="return confirm('Удалить «@recipe.Name»?')"
-                                            title="Удалить">🗑</button>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
+                    @await Html.PartialAsync("_MyRecipeCard", recipe)
                 }
             </div>
         }
     </div>
 
-    <!-- ADMIN -->
+    @* ── ADMIN ────────────────────────────────────────────────────────────────── *@
     <div class="admin-activate-section @(User.IsInRole("Admin") ? "is-admin" : "")">
         @if (User.IsInRole("Admin"))
         {
@@ -284,7 +204,7 @@
                 </div>
                 <div class="admin-activate-form">
                     <input type="password" id="adminSecretInput" placeholder="Секретный код"
-                           autocomplete="off" maxlength="64" />
+                           autocomplete="off" maxlength="64"/>
                     <button id="adminActivateBtn" onclick="activateAdmin()">Активировать</button>
                 </div>
                 <div id="adminActivateMsg" class="admin-activate-msg" style="display:none"></div>
@@ -294,125 +214,7 @@
 
 </div>
 
-<script src="~/js/auth.js" asp-append-version="true"></script>
-<script>
-// ── КБЖУ из localStorage ────────────────────────────────────────────────────
-//
-// ИСПРАВЛЕНО: старый код читал 'nutrix_day_meals_' со структурой { done, kcal, p, f, c },
-// которой в Index.cshtml никогда не существовало.
-// В Index.cshtml хранится только 'nutrix_done_DATE' — Set<string> из ID отмеченных блюд,
-// а данные о нутриентах — в 'nutrix_meal_data_DATE' (объект { [id]: {calories,protein,fat,carbs} }).
-//
-// Теперь Account.cshtml читает из тех же ключей что пишет Index.cshtml:
-//   nutrix_done_DATE      — список отмеченных ID
-//   nutrix_meal_data_DATE — нутриенты по каждому ID
-//
-(function () {
-    const today = new Date().toISOString().slice(0, 10);
-
-    // Цели из сервера (Razor → JS)
-    const goals = {
-        kcal: @calGoal.ToString("F0", System.Globalization.CultureInfo.InvariantCulture),
-        p:    @protGoal.ToString("F0", System.Globalization.CultureInfo.InvariantCulture),
-        f:    @fatGoal.ToString("F0", System.Globalization.CultureInfo.InvariantCulture),
-        c:    @carbGoal.ToString("F0", System.Globalization.CultureInfo.InvariantCulture)
-    };
-
-    // Читаем отмеченные ID
-    let doneIds = new Set();
-    try {
-        const raw = localStorage.getItem('nutrix_done_' + today);
-        doneIds = new Set(JSON.parse(raw || '[]'));
-    } catch {}
-
-    // Читаем данные о нутриентах блюд
-    // Index.cshtml должен сохранять этот ключ при замене — см. ниже
-    let mealData = {};
-    try {
-        const raw = localStorage.getItem('nutrix_meal_data_' + today);
-        mealData = JSON.parse(raw || '{}');
-    } catch {}
-
-    let totKcal = 0, totP = 0, totF = 0, totC = 0;
-
-    for (const id of doneIds) {
-        const m = mealData[id];
-        if (!m) continue;
-        totKcal += m.calories || 0;
-        totP    += m.protein  || 0;
-        totF    += m.fat      || 0;
-        totC    += m.carbs    || 0;
-    }
-
-    // Плашки
-    document.getElementById('accKcal').textContent = Math.round(totKcal);
-    document.getElementById('accP').textContent    = Math.round(totP) + 'г';
-    document.getElementById('accF').textContent    = Math.round(totF) + 'г';
-    document.getElementById('accC').textContent    = Math.round(totC) + 'г';
-
-    // Прогресс-бары + подписи
-    function setBar(barId, lblId, current, goal, isKcal) {
-        const pct  = Math.min(100, goal > 0 ? (current / goal) * 100 : 0);
-        const unit = isKcal ? '' : 'г';
-        const bar  = document.getElementById(barId);
-        const lbl  = document.getElementById(lblId);
-        if (bar) bar.style.width = pct + '%';
-        if (lbl) lbl.textContent = Math.round(current) + unit + ' / ' + goal + unit;
-    }
-
-    setBar('accBarKcal', 'accLblKcal', totKcal, goals.kcal, true);
-    setBar('accBarP',    'accLblP',    totP,    goals.p,    false);
-    setBar('accBarF',    'accLblF',    totF,    goals.f,    false);
-    setBar('accBarC',    'accLblC',    totC,    goals.c,    false);
-
-    // Полоски целей в левой карточке
-    function setGoalBar(id, current, goal) {
-        const el = document.getElementById(id);
-        if (el) el.style.width = Math.min(100, goal > 0 ? (current / goal) * 100 : 0) + '%';
-    }
-    setGoalBar('gKcal', totKcal, goals.kcal);
-    setGoalBar('gP',    totP,    goals.p);
-    setGoalBar('gF',    totF,    goals.f);
-    setGoalBar('gC',    totC,    goals.c);
-})();
-
-// ── Активация admin ──────────────────────────────────────────────────────────
-async function activateAdmin() {
-    const input = document.getElementById('adminSecretInput');
-    const btn   = document.getElementById('adminActivateBtn');
-    const code  = input?.value?.trim();
-    if (!code) { showAdminMsg('Введите код', 'error'); return; }
-    btn.disabled = true; btn.textContent = 'Проверяем...';
-    try {
-        const res  = await fetch('/api/auth/activate-admin', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ secretCode: code })
-        });
-        const data = await res.json();
-        if (res.ok) {
-            showAdminMsg(data.message || 'Готово!', 'success');
-            input.value = '';
-            setTimeout(() => window.location.reload(), 1500);
-        } else {
-            showAdminMsg(data.message || 'Ошибка', 'error');
-            btn.disabled = false; btn.textContent = 'Активировать';
-        }
-    } catch {
-        showAdminMsg('Нет соединения', 'error');
-        btn.disabled = false; btn.textContent = 'Активировать';
-    }
+@section Scripts {
+    <script src="~/js/auth.js" asp-append-version="true"></script>
+    <script src="~/js/account.js" asp-append-version="true"></script>
 }
-
-function showAdminMsg(text, type) {
-    const el = document.getElementById('adminActivateMsg');
-    if (!el) return;
-    el.textContent = text;
-    el.className   = 'admin-activate-msg ' + type;
-    el.style.display = 'block';
-}
-
-document.getElementById('adminSecretInput')?.addEventListener('keypress', e => {
-    if (e.key === 'Enter') activateAdmin();
-});
-</script>

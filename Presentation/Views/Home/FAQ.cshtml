@@ -1,0 +1,560 @@
+@{
+    ViewData["Title"] = "Часто задаваемые вопросы";
+}
+
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,500;0,600;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+
+<style>
+.faq-page { background: var(--bg); }
+
+/* Hero */
+.faq-hero {
+    background: linear-gradient(135deg, #0e170e 0%, #1a2f1a 60%, #0e170e 100%);
+    padding: 4.5rem 2rem 3.5rem;
+    text-align: center;
+    position: relative; overflow: hidden;
+}
+.faq-hero::before {
+    content: '';
+    position: absolute; inset: 0;
+    background:
+        radial-gradient(ellipse 45% 60% at 80% 20%, rgba(134,191,146,.16) 0%, transparent 65%),
+        radial-gradient(ellipse 35% 55% at 10% 75%, rgba(78,125,88,.10) 0%, transparent 65%);
+    pointer-events: none;
+}
+.faq-hero-tag {
+    display: inline-block; font-size: .72rem; font-weight: 600;
+    letter-spacing: .18em; text-transform: uppercase;
+    color: #86bf92; border: 1px solid rgba(134,191,146,.3);
+    padding: .32rem .95rem; border-radius: 999px; margin-bottom: 1.25rem;
+}
+.faq-hero h1 {
+    font-family: 'Lora', serif;
+    font-size: clamp(1.9rem, 4vw, 2.8rem);
+    color: #fff; line-height: 1.2;
+    letter-spacing: -.02em; margin: 0 0 .9rem;
+}
+.faq-hero h1 em { font-style: italic; color: #a8d8b0; }
+.faq-hero p {
+    font-size: .95rem; color: rgba(255,255,255,.45);
+    max-width: 440px; margin: 0 auto 2rem; line-height: 1.65;
+}
+
+/* Search bar */
+.faq-search-wrap {
+    max-width: 440px; margin: 0 auto; position: relative;
+}
+.faq-search {
+    width: 100%; box-sizing: border-box;
+    background: rgba(255,255,255,.08);
+    border: 1.5px solid rgba(255,255,255,.15);
+    border-radius: 12px;
+    padding: .8rem 1rem .8rem 2.9rem;
+    font-family: 'DM Sans', sans-serif;
+    font-size: .9rem; color: #fff; outline: none;
+    transition: border-color .2s, background .2s;
+}
+.faq-search::placeholder { color: rgba(255,255,255,.35); }
+.faq-search:focus {
+    border-color: rgba(134,191,146,.5);
+    background: rgba(255,255,255,.12);
+}
+.faq-search-icon {
+    position: absolute; left: .9rem; top: 50%; transform: translateY(-50%);
+    color: rgba(255,255,255,.35); font-size: .9rem;
+    pointer-events: none;
+}
+
+/* Body */
+.faq-body {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 3rem 2rem 6rem;
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    gap: 2.5rem;
+    align-items: start;
+}
+@@media(max-width: 720px) {
+    .faq-body { grid-template-columns: 1fr; padding: 2rem 1.25rem 4rem; gap: 1.5rem; }
+}
+
+/* Category nav */
+.faq-cats { position: sticky; top: 5rem; }
+.faq-cats-title {
+    font-size: .68rem; font-weight: 700;
+    letter-spacing: .1em; text-transform: uppercase;
+    color: #86bf92; margin-bottom: .75rem; padding: 0 .5rem;
+}
+.faq-cat-btn {
+    display: flex; align-items: center; gap: .65rem;
+    width: 100%; padding: .6rem .75rem;
+    border: none; background: transparent;
+    border-radius: 10px; cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    font-size: .83rem; color: #5c5c58; font-weight: 500;
+    text-align: left;
+    transition: background .2s, color .2s;
+}
+.faq-cat-btn:hover { background: #f0f7f2; color: #3b6d11; }
+.faq-cat-btn.active { background: #f0f7f2; color: #3b6d11; font-weight: 600; }
+.faq-cat-btn .cat-icon { font-size: 1.1rem; }
+.faq-cat-count {
+    margin-left: auto; font-size: .72rem; font-weight: 600;
+    background: #e4ede6; color: #5a9668;
+    border-radius: 999px; padding: .1rem .5rem;
+}
+.faq-cat-btn.active .faq-cat-count { background: #c8e6cc; }
+
+/* FAQ list */
+.faq-list { }
+
+.faq-category-title {
+    font-size: .68rem; font-weight: 700;
+    letter-spacing: .1em; text-transform: uppercase;
+    color: #86bf92; margin: 0 0 .75rem;
+}
+
+.faq-group {
+    margin-bottom: 2rem;
+    animation: fadeUp .4s ease both;
+}
+.faq-group:nth-child(2) { animation-delay: .05s; }
+.faq-group:nth-child(3) { animation-delay: .1s; }
+.faq-group:nth-child(4) { animation-delay: .15s; }
+@@keyframes fadeUp {
+    from { opacity:0; transform:translateY(10px); }
+    to   { opacity:1; transform:translateY(0); }
+}
+
+/* Accordion item */
+.faq-item {
+    background: #fff;
+    border: 1px solid #e4ede6;
+    border-radius: 14px;
+    margin-bottom: .65rem;
+    overflow: hidden;
+    transition: box-shadow .2s, border-color .2s;
+}
+.faq-item:hover { box-shadow: 0 4px 16px rgba(30,45,30,.07); }
+.faq-item.open { border-color: #a8d8b0; box-shadow: 0 4px 20px rgba(134,191,146,.12); }
+
+.faq-q {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 1rem;
+    padding: 1.1rem 1.3rem;
+    cursor: pointer;
+    user-select: none;
+}
+.faq-q-text {
+    font-family: 'DM Sans', sans-serif;
+    font-size: .9rem; font-weight: 600;
+    color: #1a2f1a; line-height: 1.4; flex: 1;
+}
+.faq-item.open .faq-q-text { color: #3b6d11; }
+
+.faq-chevron {
+    width: 28px; height: 28px;
+    border-radius: 8px;
+    background: #f4faf5;
+    border: 1px solid #e4ede6;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    transition: background .2s, transform .3s;
+    color: #86bf92;
+}
+.faq-item.open .faq-chevron {
+    background: #86bf92; color: #fff; border-color: #86bf92;
+    transform: rotate(180deg);
+}
+
+.faq-a {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height .35s ease, padding .25s ease;
+}
+.faq-item.open .faq-a {
+    max-height: 600px;
+}
+.faq-a-inner {
+    padding: 0 1.3rem 1.2rem;
+    font-size: .875rem; color: #4a4a46;
+    line-height: 1.75;
+    border-top: 1px solid #f0f7f2;
+    padding-top: .85rem;
+}
+.faq-a-inner a { color: #5a9668; font-weight: 500; }
+.faq-a-inner a:hover { text-decoration: underline; }
+.faq-a-inner ul {
+    margin: .5rem 0; padding: 0;
+    list-style: none;
+    display: flex; flex-direction: column; gap: .35rem;
+}
+.faq-a-inner ul li {
+    display: flex; gap: .5rem; align-items: flex-start;
+}
+.faq-a-inner ul li::before {
+    content: '→'; color: #86bf92; font-weight: 600; flex-shrink: 0;
+}
+
+/* No results */
+.faq-no-results {
+    text-align: center; padding: 3rem;
+    color: #9a9a94;
+}
+.faq-no-results .faq-nr-icon { font-size: 2.5rem; margin-bottom: .75rem; }
+
+/* CTA strip */
+.faq-cta {
+    background: linear-gradient(135deg, #1a2f1a, #0e170e);
+    border-radius: 20px;
+    padding: 2rem 2rem;
+    text-align: center;
+    margin-top: 1rem;
+    border: 1px solid rgba(134,191,146,.2);
+}
+.faq-cta h3 {
+    font-family: 'Lora', serif;
+    font-size: 1.25rem; color: #fff; margin: 0 0 .5rem;
+}
+.faq-cta p { font-size: .875rem; color: rgba(255,255,255,.45); margin: 0 0 1.25rem; }
+.faq-cta a {
+    display: inline-flex; align-items: center; gap: .5rem;
+    background: #86bf92; color: #0e170e;
+    font-family: 'DM Sans', sans-serif; font-weight: 600; font-size: .85rem;
+    padding: .75rem 1.75rem; border-radius: 999px;
+    text-decoration: none;
+    transition: background .2s, transform .15s;
+}
+.faq-cta a:hover { background: #9fd4a7; transform: translateY(-2px); }
+</style>
+
+<div class="faq-page">
+
+    <!-- Hero + Search -->
+    <div class="faq-hero">
+        <span class="faq-hero-tag">Помощь</span>
+        <h1>Частые <em>вопросы</em></h1>
+        <p>Быстрые ответы на самые популярные вопросы о NutriX</p>
+        <div class="faq-search-wrap">
+            <span class="faq-search-icon">🔍</span>
+            <input class="faq-search" id="faqSearch" type="text" placeholder="Поиск по вопросам..." />
+        </div>
+    </div>
+
+    <div class="faq-body">
+
+        <!-- Category nav -->
+        <nav class="faq-cats" id="faqCats">
+            <div class="faq-cats-title">Разделы</div>
+            <button class="faq-cat-btn active" data-cat="all">
+                <span class="cat-icon">📋</span> Все
+                <span class="faq-cat-count" id="cnt-all">14</span>
+            </button>
+            <button class="faq-cat-btn" data-cat="start">
+                <span class="cat-icon">🚀</span> Начало работы
+                <span class="faq-cat-count">4</span>
+            </button>
+            <button class="faq-cat-btn" data-cat="plan">
+                <span class="cat-icon">🥗</span> Планирование
+                <span class="faq-cat-count">4</span>
+            </button>
+            <button class="faq-cat-btn" data-cat="recipes">
+                <span class="cat-icon">📖</span> Рецепты
+                <span class="faq-cat-count">3</span>
+            </button>
+            <button class="faq-cat-btn" data-cat="account">
+                <span class="cat-icon">👤</span> Аккаунт
+                <span class="faq-cat-count">3</span>
+            </button>
+        </nav>
+
+        <!-- FAQ list -->
+        <div id="faqList">
+
+            <!-- Начало работы -->
+            <div class="faq-group" data-cat="start">
+                <div class="faq-category-title">🚀 Начало работы</div>
+
+                <div class="faq-item">
+                    <div class="faq-q">
+                        <span class="faq-q-text">Что такое NutriX и для кого он предназначен?</span>
+                        <div class="faq-chevron">
+                            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        </div>
+                    </div>
+                    <div class="faq-a">
+                        <div class="faq-a-inner">
+                            NutriX — это умный планировщик питания, который помогает считать КБЖУ, составлять меню на неделю и контролировать бюджет на еду. Подходит всем, кто хочет питаться осознанно — будь то похудение, набор массы или просто здоровый образ жизни.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-q">
+                        <span class="faq-q-text">Нужно ли регистрироваться для использования сервиса?</span>
+                        <div class="faq-chevron">
+                            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        </div>
+                    </div>
+                    <div class="faq-a">
+                        <div class="faq-a-inner">
+                            Просматривать рецепты можно без регистрации. Для составления персонального меню, сохранения избранного и отслеживания прогресса потребуется создать аккаунт — это бесплатно и занимает меньше минуты.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-q">
+                        <span class="faq-q-text">Как задать свои цели по питанию?</span>
+                        <div class="faq-chevron">
+                            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        </div>
+                    </div>
+                    <div class="faq-a">
+                        <div class="faq-a-inner">
+                            Перейдите в <a href="#">Профиль → Цели питания</a> и укажите вес, рост, возраст и желаемый результат. NutriX автоматически рассчитает суточную норму КБЖУ. Или воспользуйтесь генератором меню — он предложит план и сохранит цели автоматически.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-q">
+                        <span class="faq-q-text">Сервис бесплатный?</span>
+                        <div class="faq-chevron">
+                            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        </div>
+                    </div>
+                    <div class="faq-a">
+                        <div class="faq-a-inner">
+                            Да, базовый функционал полностью бесплатен. В него входит доступ к рецептам, базовый подсчёт КБЖУ и план питания на неделю. Расширенные возможности доступны в Premium-версии.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Планирование -->
+            <div class="faq-group" data-cat="plan">
+                <div class="faq-category-title">🥗 Планирование питания</div>
+
+                <div class="faq-item">
+                    <div class="faq-q">
+                        <span class="faq-q-text">Как работает генерация меню на неделю?</span>
+                        <div class="faq-chevron">
+                            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        </div>
+                    </div>
+                    <div class="faq-a">
+                        <div class="faq-a-inner">
+                            Нажмите «Сгенерировать меню» — алгоритм подберёт рецепты завтраков, обедов и ужинов на 7 дней с учётом ваших целей по КБЖУ. Вы можете заменить любой приём пищи вручную или перегенерировать всё заново.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-q">
+                        <span class="faq-q-text">Можно ли изменить уже созданное меню?</span>
+                        <div class="faq-chevron">
+                            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        </div>
+                    </div>
+                    <div class="faq-a">
+                        <div class="faq-a-inner">
+                            Конечно. Любой приём пищи в меню можно заменить: нажмите на блюдо и выберите альтернативу из каталога рецептов. Суточные показатели КБЖУ пересчитаются автоматически.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-q">
+                        <span class="faq-q-text">Учитывается ли бюджет при составлении меню?</span>
+                        <div class="faq-chevron">
+                            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        </div>
+                    </div>
+                    <div class="faq-a">
+                        <div class="faq-a-inner">
+                            Да. В настройках генерации вы можете указать желаемый бюджет на день или неделю. NutriX будет подбирать рецепты с учётом стоимости ингредиентов из нашей базы продуктов.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-q">
+                        <span class="faq-q-text">Откуда берутся цены на продукты?</span>
+                        <div class="faq-chevron">
+                            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        </div>
+                    </div>
+                    <div class="faq-a">
+                        <div class="faq-a-inner">
+                            Мы используем актуальную базу средних розничных цен, которую регулярно обновляем. Цены могут отличаться от реальных в вашем регионе — их можно скорректировать вручную в разделе <a href="#">Продукты</a>.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Рецепты -->
+            <div class="faq-group" data-cat="recipes">
+                <div class="faq-category-title">📖 Рецепты</div>
+
+                <div class="faq-item">
+                    <div class="faq-q">
+                        <span class="faq-q-text">Как добавить свой рецепт?</span>
+                        <div class="faq-chevron">
+                            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        </div>
+                    </div>
+                    <div class="faq-a">
+                        <div class="faq-a-inner">
+                            Перейдите в <a href="#">Рецепты → Создать рецепт</a>, заполните название, ингредиенты и шаги приготовления. КБЖУ рассчитаются автоматически по базе продуктов. Также можно импортировать рецепт с сайта 1000.menu по ссылке.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-q">
+                        <span class="faq-q-text">Как импортировать рецепт с внешнего сайта?</span>
+                        <div class="faq-chevron">
+                            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        </div>
+                    </div>
+                    <div class="faq-a">
+                        <div class="faq-a-inner">
+                            В разделе <a href="#">Рецепты → Импорт</a> вставьте ссылку с сайта 1000.menu. NutriX автоматически распознает ингредиенты, шаги и КБЖУ. Сейчас поддерживается только 1000.menu — поддержка других сайтов в разработке.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-q">
+                        <span class="faq-q-text">Могу ли я редактировать чужие рецепты?</span>
+                        <div class="faq-chevron">
+                            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        </div>
+                    </div>
+                    <div class="faq-a">
+                        <div class="faq-a-inner">
+                            Нет — редактировать можно только собственные рецепты. Если хотите адаптировать чужой рецепт, создайте его копию через кнопку «Сохранить как свой» и редактируйте уже свою версию.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Аккаунт -->
+            <div class="faq-group" data-cat="account">
+                <div class="faq-category-title">👤 Аккаунт</div>
+
+                <div class="faq-item">
+                    <div class="faq-q">
+                        <span class="faq-q-text">Как удалить аккаунт?</span>
+                        <div class="faq-chevron">
+                            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        </div>
+                    </div>
+                    <div class="faq-a">
+                        <div class="faq-a-inner">
+                            Перейдите в <a href="#">Настройки → Аккаунт → Удалить аккаунт</a>. После подтверждения все ваши данные будут безвозвратно удалены в течение 30 дней в соответствии с нашей <a href="#">политикой конфиденциальности</a>.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-q">
+                        <span class="faq-q-text">Забыл пароль — что делать?</span>
+                        <div class="faq-chevron">
+                            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        </div>
+                    </div>
+                    <div class="faq-a">
+                        <div class="faq-a-inner">
+                            На странице входа нажмите «Забыли пароль?» и введите email, указанный при регистрации. Мы отправим ссылку для сброса пароля. Если письмо не пришло — проверьте папку «Спам».
+                        </div>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-q">
+                        <span class="faq-q-text">Можно ли войти через Google?</span>
+                        <div class="faq-chevron">
+                            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        </div>
+                    </div>
+                    <div class="faq-a">
+                        <div class="faq-a-inner">
+                            Да, авторизация через Google поддерживается. На странице входа нажмите «Войти через Google» — вам не потребуется вводить пароль.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- No results placeholder -->
+            <div class="faq-no-results" id="faqNoResults" style="display:none">
+                <div class="faq-nr-icon">🔍</div>
+                <p style="font-weight:600;color:#4a4a46;margin-bottom:.25rem">Ничего не найдено</p>
+                <p style="font-size:.875rem">Попробуйте другой запрос или напишите нам напрямую</p>
+            </div>
+
+            <!-- CTA -->
+            <div class="faq-cta" id="faqCta">
+                <h3>Не нашли ответ?</h3>
+                <p>Напишите нам — мы ответим в течение рабочего дня</p>
+                <a asp-action="Contact" asp-controller="Home">✉️ Написать в поддержку</a>
+            </div>
+
+        </div><!-- /faq-list -->
+    </div>
+</div>
+
+<script>
+// Accordion
+document.querySelectorAll('.faq-q').forEach(q => {
+    q.addEventListener('click', () => {
+        const item = q.closest('.faq-item');
+        const wasOpen = item.classList.contains('open');
+        document.querySelectorAll('.faq-item.open').forEach(i => i.classList.remove('open'));
+        if (!wasOpen) item.classList.add('open');
+    });
+});
+
+// Category filter
+document.querySelectorAll('.faq-cat-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.faq-cat-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const cat = btn.dataset.cat;
+        document.querySelectorAll('.faq-group').forEach(g => {
+            g.style.display = (cat === 'all' || g.dataset.cat === cat) ? '' : 'none';
+        });
+        document.getElementById('faqSearch').value = '';
+        updateNoResults();
+    });
+});
+
+// Search
+document.getElementById('faqSearch').addEventListener('input', function() {
+    const q = this.value.toLowerCase().trim();
+    let visibleCount = 0;
+    document.querySelectorAll('.faq-item').forEach(item => {
+        const text = item.textContent.toLowerCase();
+        const match = !q || text.includes(q);
+        item.style.display = match ? '' : 'none';
+        if (match) visibleCount++;
+    });
+    document.querySelectorAll('.faq-group').forEach(g => {
+        const visible = [...g.querySelectorAll('.faq-item')].some(i => i.style.display !== 'none');
+        g.style.display = visible ? '' : 'none';
+    });
+    if (q) {
+        document.querySelectorAll('.faq-cat-btn').forEach(b => b.classList.remove('active'));
+        document.querySelector('[data-cat="all"]').classList.add('active');
+    }
+    updateNoResults();
+});
+
+function updateNoResults() {
+    const anyVisible = [...document.querySelectorAll('.faq-item')].some(i => i.style.display !== 'none');
+    document.getElementById('faqNoResults').style.display = anyVisible ? 'none' : 'block';
+    document.getElementById('faqCta').style.display = anyVisible ? '' : 'none';
+}
+</script>

@@ -3,9 +3,9 @@ using System.Security.Claims;
 using System.Text;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
-using Services.UserService.Services.Interfaces;
+using Services.Interfaces;
 
-namespace Services.UserService.Services.Implementations;
+namespace Services.Services;
 
 public class JwtService : IJwtService
 {

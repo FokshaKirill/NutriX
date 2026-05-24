@@ -1,7 +1,7 @@
 ﻿using Infrastructure;
-using Services.UserService.Services.Interfaces;
+using Services.Interfaces;
 
-namespace Services.UserService.Services.Implementations;
+namespace Services.Services;
 
 public class UserService : IUserService
 {

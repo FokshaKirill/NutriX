@@ -6,8 +6,8 @@ using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Services.DTO;
-using Services.UserService.Services;
-using Services.UserService.Services.Interfaces;
+using Services.Helpers;
+using Services.Interfaces;
 
 namespace Presentation.Controllers;
 

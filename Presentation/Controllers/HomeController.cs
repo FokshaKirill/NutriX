@@ -3,7 +3,6 @@ using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using Presentation.Models;
 using Services.Interfaces;
-using Services.UserService.Services.Interfaces;
 
 namespace Presentation.Controllers
 {
@@ -59,7 +58,7 @@ namespace Presentation.Controllers
 
         public IActionResult Error()   => View();
         public IActionResult Contact() => View();
-        public IActionResult Help()    => View();
+        public IActionResult Faq()    => View();
         public IActionResult Privacy() => View();
     }
 }

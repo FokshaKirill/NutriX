@@ -1,12 +1,26 @@
-﻿@model IEnumerable<Presentation.Models.ProductViewModel>
+@model IEnumerable<Presentation.Models.ProductViewModel>
+@*
+    Product/Index.cshtml
+    JS вынесен в wwwroot/js/product-index.js.
+    URL для AJAX передаются через window.ProductIndex (data bridge ниже).
+*@
+
+@* ── Data bridge ───────────────────────────────────────────────────────────── *@
+<script>
+    window.ProductIndex = {
+        createModalUrl:         '@Url.Action("CreateModal", "Product")',
+        createCategoryModalUrl: '@Url.Action("CreateCategoryModal", "Product")'
+    };
+</script>
 
 <div class="container py-5">
     <div class="row">
-        <!-- Левая колонка: Фильтры -->
+
+        @* ── Левая колонка: Фильтры ──────────────────────────────────────────── *@
         <div class="col-lg-3 mb-5">
-            <div class="card p-4" style="background: var(--primary-light); ">
+            <div class="card p-4" style="background: var(--primary-light);">
                 <h4 class="mb-4" style="color: var(--primary);">Фильтры</h4>
-                
+
                 <form asp-action="Index" method="get">
                     <div class="mb-4">
                         <label class="form-label fw-medium">Категория</label>
@@ -14,56 +28,59 @@
                             <option value="">Все категории</option>
                             @foreach (var cat in ViewBag.Categories)
                             {
-                                <option value="@cat.Value" 
+                                <option value="@cat.Value"
                                         selected="@(ViewBag.SelectedCategory?.ToString() == cat.Value ? "selected" : null)">
                                     @cat.Text
                                 </option>
                             }
                         </select>
                     </div>
-                    
+
                     <div class="mb-4">
                         <label class="form-label fw-medium">Калорийность (на 100г)</label>
-                        <input type="range" name="maxCalories" class="form-range" min="0" max="900" value="@ViewBag.MaxCalories" id="caloriesRange">
+                        <input type="range" name="maxCalories" class="form-range"
+                               min="0" max="900" value="@ViewBag.MaxCalories" id="caloriesRange" />
                         <div class="d-flex justify-content-between text-muted small">
                             <span>0 ккал</span>
                             <span id="caloriesValue">@ViewBag.MaxCalories+ ккал</span>
                         </div>
                     </div>
-                    
+
                     <div class="mb-4">
                         <label class="form-label fw-medium">Цена за единицу</label>
-                        <input type="number" name="minPrice" class="form-control form-control-lg" placeholder="От" value="@ViewBag.MinPrice">
-                        <input type="number" name="maxPrice" class="form-control form-control-lg mt-2" placeholder="До" value="@ViewBag.MaxPrice">
+                        <input type="number" name="minPrice" class="form-control form-control-lg"
+                               placeholder="От" value="@ViewBag.MinPrice" />
+                        <input type="number" name="maxPrice" class="form-control form-control-lg mt-2"
+                               placeholder="До" value="@ViewBag.MaxPrice" />
                     </div>
-                    
+
                     <button type="submit" class="btn btn-success w-100 btn-lg">Применить</button>
                     <a asp-action="Index" class="btn btn-outline-primary w-100 mt-2">Сбросить</a>
                 </form>
             </div>
         </div>
 
-        <!-- Правая колонка: Поиск + продукты -->
+        @* ── Правая колонка: Поиск + продукты ───────────────────────────────── *@
         <div class="col-lg-9">
-            <!-- Поиск и кнопки -->
+
             <div class="d-flex align-items-center mb-4">
                 <div class="flex-grow-1 me-2">
                     <form asp-action="Index" method="get" class="d-flex">
-                        <input type="search" name="searchTerm" value="@ViewBag.SearchTerm" class="form-control form-control-lg me-2" placeholder="Поиск продуктов..." aria-label="Search">
+                        <input type="search" name="searchTerm" value="@ViewBag.SearchTerm"
+                               class="form-control form-control-lg me-2"
+                               placeholder="Поиск продуктов..." aria-label="Search" />
                         <button type="submit" class="btn btn-outline-success">Найти</button>
                     </form>
                 </div>
-                
+
                 @if (User.IsInRole("Admin"))
                 {
-                    <!-- Кнопка "Добавить продукт" -->
                     <div class="text-end" style="margin-right: 4px;">
-                        <button type="button" class="btn btn-success btn-lg" data-bs-toggle="modal" data-bs-target="#createProductModal">
+                        <button type="button" class="btn btn-success btn-lg"
+                                data-bs-toggle="modal" data-bs-target="#createProductModal">
                             <i class="fas fa-plus"></i>
                         </button>
                     </div>
-                    
-                    <!-- Кнопка "Импорт продуктов" -->
                     <div class="text-end">
                         <a asp-action="Parser" asp-controller="Admin">
                             <button class="btn btn-success btn-lg">Импорт</button>
@@ -72,129 +89,91 @@
                 }
             </div>
 
-            <!-- Информация о результатах -->
             @if (ViewBag.TotalCount > 0)
             {
                 <div class="mb-3">
                     <small class="text-muted">
-                        Показано @Model.Count() из @ViewBag.TotalCount продуктов (страница @ViewBag.CurrentPage из @ViewBag.TotalPages)
+                        Показано @Model.Count() из @ViewBag.TotalCount продуктов
+                        (страница @ViewBag.CurrentPage из @ViewBag.TotalPages)
                     </small>
                 </div>
             }
 
-            <!-- Сетка продуктов -->
             <div class="row g-5">
                 @foreach (var product in Model)
                 {
-                    <div class="col-md-6 col-lg-4">
-                        <div class="card text-center p-4" style=" background: var(--primary-light);">
-                            @if (!string.IsNullOrEmpty(product.ImageUrl))
-                            {
-                                <img src="@product.ImageUrl" alt="@product.Name" class="rounded-4 mb-4" style="width: 100%; height: 220px; object-fit: cover;">
-                            }
-                            else
-                            {
-                                @* <div class="bg-light d-flex align-items-center justify-content-center rounded-4 mb-4" style="height: 220px;"> *@
-                                @*     <i class="fas fa-carrot fs-1 text-muted"></i> *@
-                                @* </div> *@
-                            }
-                            
-                            <h5 class="mb-3" style="color: var(--primary);">@product.Name</h5>
-                            
-                            <p class="text-muted mb-4">
-                                <strong>Единица:</strong> @product.Unit<br>
-                                <strong>Цена:</strong> @product.PricePerUnit ₽ / @product.Unit
-                            </p>
-                            
-                            <div class="d-flex justify-content-center gap-3 mb-4">
-                                <div class="text-center">
-                                    <div class="fs-4 fw-bold" style="color: var(--primary);">@product.CaloriesPer100</div>
-                                    <small class="text-muted">ккал/100г</small>
-                                </div>
-                                <div class="text-center">
-                                    <div class="fs-5">Б: @product.ProteinPer100 г</div>
-                                    <div class="fs-5">Ж: @product.FatPer100 г</div>
-                                    <div class="fs-5">У: @product.CarbsPer100 г</div>
-                                </div>
-                            </div>
-                            
-                            <a asp-action="Details" asp-route-id="@product.Id" class="btn btn-outline-primary w-100">Подробнее</a>
-                        </div>
-                    </div>
+                    @await Html.PartialAsync("_ProductCard", product)
                 }
             </div>
 
-            <!-- Если продуктов нет -->
             @if (!Model.Any())
             {
                 <div class="text-center py-5">
                     <p class="text-muted" style="font-size: 1rem;">Продукты не найдены...</p>
-                    <button type="button" class="btn btn-success btn-lg" data-bs-toggle="modal" data-bs-target="#createProductModal">
+                    <button type="button" class="btn btn-success btn-lg"
+                            data-bs-toggle="modal" data-bs-target="#createProductModal">
                         <i class="fas fa-plus"></i>
                     </button>
                 </div>
             }
         </div>
 
-        <!-- Пагинация -->
+        @* ── Пагинация ───────────────────────────────────────────────────────── *@
         @if (ViewBag.TotalPages > 1)
         {
             <nav aria-label="Пагинация продуктов" class="mt-5">
                 <ul class="pagination justify-content-center">
+
                     @if (ViewBag.CurrentPage > 1)
                     {
                         <li class="page-item">
-                            <a class="page-link" 
-                               asp-action="Index" 
+                            <a class="page-link"
+                               asp-action="Index"
                                asp-route-page="@(ViewBag.CurrentPage - 1)"
                                asp-route-searchTerm="@ViewBag.SearchTerm"
                                asp-route-categoryId="@ViewBag.SelectedCategoryId"
                                asp-route-maxCalories="@ViewBag.MaxCalories"
                                asp-route-minPrice="@ViewBag.MinPrice"
-                               asp-route-maxPrice="@ViewBag.MaxPrice">
-                                &lt;
-                            </a>
+                               asp-route-maxPrice="@ViewBag.MaxPrice">&lt;</a>
                         </li>
                     }
 
-                    @for (int i = Math.Max(1, ViewBag.CurrentPage - 9); i <= Math.Min(ViewBag.TotalPages, ViewBag.CurrentPage + 9); i++)
+                    @for (int i = Math.Max(1, ViewBag.CurrentPage - 9);
+                          i <= Math.Min(ViewBag.TotalPages, ViewBag.CurrentPage + 9); i++)
                     {
                         <li class="page-item @(i == ViewBag.CurrentPage ? "active" : "")">
-                            <a class="page-link" 
-                               asp-action="Index" 
+                            <a class="page-link"
+                               asp-action="Index"
                                asp-route-page="@i"
                                asp-route-searchTerm="@ViewBag.SearchTerm"
                                asp-route-categoryId="@ViewBag.SelectedCategoryId"
                                asp-route-maxCalories="@ViewBag.MaxCalories"
                                asp-route-minPrice="@ViewBag.MinPrice"
-                               asp-route-maxPrice="@ViewBag.MaxPrice">
-                                @i
-                            </a>
+                               asp-route-maxPrice="@ViewBag.MaxPrice">@i</a>
                         </li>
                     }
 
                     @if (ViewBag.CurrentPage < ViewBag.TotalPages)
                     {
                         <li class="page-item">
-                            <a class="page-link" 
-                               asp-action="Index" 
+                            <a class="page-link"
+                               asp-action="Index"
                                asp-route-page="@(ViewBag.CurrentPage + 1)"
                                asp-route-searchTerm="@ViewBag.SearchTerm"
                                asp-route-categoryId="@ViewBag.SelectedCategoryId"
                                asp-route-maxCalories="@ViewBag.MaxCalories"
                                asp-route-minPrice="@ViewBag.MinPrice"
-                               asp-route-maxPrice="@ViewBag.MaxPrice">
-                                &gt;
-                            </a>
+                               asp-route-maxPrice="@ViewBag.MaxPrice">&gt;</a>
                         </li>
                     }
+
                 </ul>
             </nav>
         }
     </div>
 </div>
 
-<!-- Модальное окно создания продукта -->
+@* ── Модальное окно создания продукта ────────────────────────────────────────── *@
 <div class="modal fade" id="createProductModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content" style="overflow: hidden;">
@@ -212,70 +191,5 @@
 </div>
 
 @section Scripts {
-    <script>
-        // Обновление значения калорий при движении слайдера
-        document.getElementById('caloriesRange').addEventListener('input', function(e) {
-            document.getElementById('caloriesValue').textContent = e.target.value + '+ ккал';
-        });
-
-        // Основная модалка продукта — загружаем форму при открытии
-        $('#createProductModal').on('show.bs.modal', function () {
-            $.get('@Url.Action("CreateModal", "Product")', function (data) {
-                $('#createModalBody').html(data);
-                attachCategoryFormHandler();
-            });
-        });
-
-        function attachCategoryFormHandler() {
-            $(document).off('submit', '#addCategoryForm');
-            $(document).on('submit', '#addCategoryForm', function (e) {
-                e.preventDefault();
-
-                $.ajax({
-                    url: '@Url.Action("CreateCategoryModal", "Product")',
-                    type: 'POST',
-                    data: $(this).serialize(),
-                    success: function (result) {
-                        if (result.success) {
-                            var select = $('#ParentId');
-                            select.append(new Option(result.name, result.id, true, true));
-                            $('#addCategoryModal').modal('hide');
-                            $('#addCategoryForm input[name="name"]').val('');
-                        } else {
-                            alert(result.message || 'Ошибка при добавлении категории');
-                        }
-                    },
-                    error: function () {
-                        alert('Произошла ошибка при сохранении категории');
-                    }
-                });
-            });
-        }
-
-        $(document).on('submit', '#createProductForm', function (e) {
-            e.preventDefault();
-
-            var formData = new FormData(this);
-
-            $.ajax({
-                url: '@Url.Action("CreateModal", "Product")',
-                type: 'POST',
-                data: formData,
-                processData: false,
-                contentType: false,
-                success: function (result) {
-                    if (result.success) {
-                        $('#createProductModal').modal('hide');
-                        location.reload();
-                    } else {
-                        $('#createModalBody').html(result);
-                        attachCategoryFormHandler();
-                    }
-                },
-                error: function () {
-                    alert('Произошла ошибка при сохранении продукта.');
-                }
-            });
-        });
-    </script>
+    <script src="~/js/product-index.js" asp-append-version="true"></script>
 }

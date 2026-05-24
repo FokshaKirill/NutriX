@@ -1,0 +1,35 @@
+@model Presentation.Models.RecipeListViewModel
+@* _RecipeCard.cshtml — карточка рецепта для главной страницы *@
+
+<div class="rc">
+    <div class="rc-thumb">
+        @if (!string.IsNullOrEmpty(Model.ImageUrl))
+        {
+            <img src="@Model.ImageUrl" alt="@Model.Name" loading="lazy" />
+        }
+        else
+        {
+            <div class="rc-thumb-ph">🥘</div>
+        }
+    </div>
+    <div class="rc-body">
+        <a asp-action="Details" asp-controller="Recipe"
+           asp-route-id="@Model.Id" class="rc-name">@Model.Name</a>
+
+        <div class="rc-macros">
+            @if (Model.CaloriesPerServing > 0)
+            { <span class="rc-macro kcal">🔥 @((int)Model.CaloriesPerServing!) ккал</span> }
+            @if (Model.ProteinPerServing > 0)
+            { <span class="rc-macro p">Б @((int)Model.ProteinPerServing!)г</span> }
+            @if (Model.FatPerServing > 0)
+            { <span class="rc-macro f">Ж @((int)Model.FatPerServing!)г</span> }
+            @if (Model.CarbsPerServing > 0)
+            { <span class="rc-macro c">У @((int)Model.CarbsPerServing!)г</span> }
+        </div>
+
+        <a asp-action="Details" asp-controller="Recipe"
+           asp-route-id="@Model.Id" class="rc-open">
+            Открыть <i class="fas fa-arrow-right" style="font-size:.7rem"></i>
+        </a>
+    </div>
+</div>

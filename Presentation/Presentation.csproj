@@ -31,6 +31,22 @@
 
     <ItemGroup>
       <_ContentIncludedByDefault Remove="Views\PriceRu\Index.cshtml" />
+      <_ContentIncludedByDefault Remove="wwwroot\social network\b.png" />
+      <_ContentIncludedByDefault Remove="wwwroot\social network\dir.png" />
+      <_ContentIncludedByDefault Remove="wwwroot\social network\fb.png" />
+      <_ContentIncludedByDefault Remove="wwwroot\social network\gmail.png" />
+      <_ContentIncludedByDefault Remove="wwwroot\social network\google.png" />
+      <_ContentIncludedByDefault Remove="wwwroot\social network\in.png" />
+      <_ContentIncludedByDefault Remove="wwwroot\social network\inst.png" />
+      <_ContentIncludedByDefault Remove="wwwroot\social network\phone.png" />
+      <_ContentIncludedByDefault Remove="wwwroot\social network\pin.png" />
+      <_ContentIncludedByDefault Remove="wwwroot\social network\snap.png" />
+      <_ContentIncludedByDefault Remove="wwwroot\social network\spot.png" />
+      <_ContentIncludedByDefault Remove="wwwroot\social network\tg.png" />
+      <_ContentIncludedByDefault Remove="wwwroot\social network\tt.png" />
+      <_ContentIncludedByDefault Remove="wwwroot\social network\vk.png" />
+      <_ContentIncludedByDefault Remove="wwwroot\social network\wsup.png" />
+      <_ContentIncludedByDefault Remove="wwwroot\social network\yt.png" />
     </ItemGroup>
 
     <ItemGroup>

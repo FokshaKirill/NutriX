@@ -5,7 +5,6 @@ using Microsoft.AspNetCore.Mvc;
 using Presentation.Models;
 using Services.DTO;
 using Services.Interfaces;
-using Services.UserService.Services.Interfaces;
 
 namespace Presentation.Controllers
 {

@@ -45,7 +45,7 @@
     --radius-lg: 20px;
 
     /* TRANSITIONS */
-    --transition: all .25s ease;
+    --transition: all .1s ease;
 }
 
 /* Общие стили */
@@ -60,6 +60,7 @@ body {
     font-size: 15px;
     line-height: 1.6;
     background: var(--bg);
+    overflow-x: hidden;
 }
 
 .main-content {
@@ -141,7 +142,7 @@ a, text, span, p, h1, h2, h3, h4, h5, h6 {
     font-weight: 500;
     font-size: medium;
     border: none;
-    transition: all 0.2s ease;
+    transition: all 0.15s ease;
 }
 
 .btn-success {
@@ -466,11 +467,17 @@ hr {
 
 /* ── HEADER ── */
 .acc-header {
-    display: flex; align-items: center; gap: 1.5rem;
-    background: var(--card); border-radius: var(--radius);
-    padding: 1.75rem 2rem; border: 1px solid var(--border);
-    box-shadow: var(--shadow); margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 1.75rem 2rem;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
     flex-wrap: wrap;
+    min-width: 72vw;
+    justify-self: center;
 }
 .avatar {
     width: 72px; height: 72px; border-radius: 50%;
@@ -496,13 +503,13 @@ hr {
     padding: 8px 18px; background:transparent;
     border: 1.5px solid var(--border); border-radius: 10px;
     color: var(--muted); cursor:pointer; font-family:'DM Sans',sans-serif;
-    font-size:.85rem; transition: all .2s; flex-shrink:0;
+    font-size:.85rem; transition: all .15s; flex-shrink:0;
 }
 .btn-logout:hover { background:#fef2f2; color:var(--danger); border-color:#fecaca; }
 
 /* ── GRID ── */
 .acc-grid {
-    display: grid; grid-template-columns: 1fr 1fr;
+    display: grid; grid-template-columns: 1fr 1fr 1fr;
     gap: 1.25rem; margin-bottom: 1.25rem;
 }
 
@@ -539,7 +546,7 @@ hr {
 .kbzu-section {
     background: var(--card); border-radius: var(--radius);
     padding: 1.5rem; border: 1px solid var(--border);
-    box-shadow: var(--shadow); margin-bottom: 1.25rem;
+    box-shadow: var(--shadow);
 }
 .kbzu-totals {
     display:flex; gap:.75rem; flex-wrap:wrap; margin-bottom:1.25rem;
@@ -592,7 +599,7 @@ hr {
     border-radius: 14px;
     overflow: hidden;
     scroll-snap-align: start;
-    transition: transform .2s, box-shadow .2s;
+    transition: transform .15s, box-shadow .15s;
 }
 .fav-card:hover { transform:translateY(-3px); box-shadow:0 8px 20px rgba(0,0,0,.09); }
 
@@ -619,7 +626,7 @@ hr {
     background:var(--sage-pale); color:var(--sage-d);
     border:none; border-radius:7px; padding:.35rem .5rem;
     text-decoration:none; display:flex; align-items:center; justify-content:center;
-    gap:.25rem; cursor:pointer; transition:background .2s;
+    gap:.25rem; cursor:pointer; transition:background .15s;
 }
 .fav-open-btn:hover { background:#ddf0e2; color:#3b6d11; }
 .fav-rm-btn {
@@ -627,11 +634,11 @@ hr {
     background:#fef2f2; color:#e24b4a;
     border:none; border-radius:7px; cursor:pointer;
     display:flex;align-items:center;justify-content:center;
-    font-size:.85rem; transition:background .2s;
+    font-size:.85rem; transition:background .15s;
 }
 .fav-rm-btn:hover { background:#fecaca; }
 
-.fav-empty {
+.fav-empty, .achieve-empty  {
     text-align:center; padding:2rem;
     color:var(--muted); font-size:.9rem;
 }
@@ -651,7 +658,7 @@ hr {
 .btn-admin-panel {
     margin-left:auto; flex-shrink:0; padding:8px 16px;
     background:var(--ink); color:#fff; border-radius:10px;
-    font-size:.8rem; font-weight:500; text-decoration:none; transition:background .2s;
+    font-size:.8rem; font-weight:500; text-decoration:none; transition:background .15s;
 }
 .btn-admin-panel:hover { background:#2e2e2b; color:#fff; }
 .admin-activate-inner { display:flex; align-items:center; gap:1rem; flex-wrap:wrap; }
@@ -664,13 +671,13 @@ hr {
     height:38px; border:1.5px solid var(--border); border-radius:9px;
     padding:0 13px; font-size:.85rem; color:var(--ink);
     background:#faf8f4; outline:none; width:180px;
-    font-family:'DM Sans',sans-serif; transition:border-color .2s;
+    font-family:'DM Sans',sans-serif; transition:border-color .15s;
 }
 .admin-activate-form input:focus { border-color:var(--sage); box-shadow:0 0 0 3px rgba(134,191,146,.12); background:#fff; }
 .admin-activate-form button {
     height:38px; padding:0 16px; background:var(--ink); color:#fff;
     border:none; border-radius:9px; font-size:.85rem; font-weight:500;
-    cursor:pointer; font-family:'DM Sans',sans-serif; transition:background .2s;
+    cursor:pointer; font-family:'DM Sans',sans-serif; transition:background .15s;
 }
 .admin-activate-form button:hover { background:#2e2e2b; }
 .admin-activate-form button:disabled { opacity:.6; cursor:not-allowed; }
@@ -708,6 +715,7 @@ hr {
 
 .recipe-card:hover .recipe-image {
     transform: scale(1.05);
+    transition: var(--transition);
 }
 
 .recipe-image-container {
@@ -724,7 +732,7 @@ hr {
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: 0.2s;
+    transition: 0.15s;
 }
 
 .favorite-btn:hover {
@@ -733,7 +741,7 @@ hr {
 }
 
 .favorite-btn i {
-    transition: transform 0.2s ease;
+    transition: transform 0.15s ease;
 }
 
 /* 💥 POP анимация */
@@ -768,7 +776,7 @@ hr {
     font-size: 13.5px;
     font-weight: 500;
     text-decoration: none;
-    transition: background 0.2s;
+    transition: background 0.15s;
     white-space: nowrap;
 }
 
@@ -811,7 +819,7 @@ hr {
     background: #faf8f4;
     outline: none;
     width: 200px;
-    transition: border-color 0.2s;
+    transition: border-color 0.15s;
     font-family: inherit;
 }
 
@@ -831,7 +839,7 @@ hr {
     font-size: 13.5px;
     font-weight: 500;
     cursor: pointer;
-    transition: background 0.2s, transform 0.1s;
+    transition: background 0.15s, transform 0.1s;
     font-family: inherit;
     white-space: nowrap;
 }
@@ -914,7 +922,7 @@ hr {
     padding: .85rem 2rem;
     border-radius: 999px;
     text-decoration: none;
-    transition: background .2s, transform .15s;
+    transition: background .15s, transform .15s;
 }
 .hero-cta:hover { background: #9fd4a7; transform: translateY(-2px); }
 .hero-cta-ghost {
@@ -930,7 +938,7 @@ hr {
     border-radius: 999px;
     text-decoration: none;
     border: 1px solid rgba(255,255,255,.18);
-    transition: border-color .2s, color .2s;
+    transition: border-color .15s, color .15s;
 }
 .hero-cta-ghost:hover { border-color: rgba(255,255,255,.4); color: #fff; }
 
@@ -978,7 +986,7 @@ hr {
     border: 1px solid #e4ede6;
     border-radius: 16px;
     overflow: hidden;
-    transition: transform .2s, box-shadow .2s;
+    transition: transform .15s, box-shadow .15s;
     display: flex;
     flex-direction: column;
 }
@@ -1055,7 +1063,7 @@ hr {
     display: flex;
     flex-direction: column;
     gap: .75rem;
-    margin-bottom: 1.5rem;
+    margin: 1.5rem 0;
 }
 
 /* Карточка приёма пищи */
@@ -1064,7 +1072,7 @@ hr {
     border: 1.5px solid #e4ede6;
     border-radius: 14px;
     overflow: hidden;
-    transition: border-color .2s;
+    transition: border-color .15s;
 }
 .meal-card.done {
     border-color: #86bf92;
@@ -1088,7 +1096,7 @@ hr {
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    transition: border-color .2s, background .2s;
+    transition: border-color .15s, background .15s;
     font-size: .9rem;
 }
 .meal-card.done .meal-check {
@@ -1168,7 +1176,7 @@ hr {
     padding: .45rem 1rem;
     cursor: pointer;
     text-decoration: none;
-    transition: background .2s;
+    transition: background .15s;
 }
 .meal-add-btn:hover { background: #e4f0e7; }
 
@@ -1223,3 +1231,31 @@ hr {
     line-height: 1;
 }
 .day-total-label { font-size: .72rem; color: #9a9a94; margin-top: .25rem; }
+
+.f-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 4rem;
+    padding: 0 12px;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+}
+
+.bookmark-left {
+    width: 14rem;
+    height: 6rem;
+    background: var(--sage);
+    flex-shrink: 0;
+    clip-path: polygon(0 0, 100% 0, 82% 50%, 100% 100%, 0 100%);
+    margin-left: -12px;
+}
+
+.bookmark-right {
+    width: 14rem;
+    height: 6rem;
+    background: var(--sage);
+    flex-shrink: 0;
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%, 18% 50%);
+    margin-right: -12px;
+}
