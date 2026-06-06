@@ -27,8 +27,6 @@
     </div>
 
     <div class="row g-4 mb-5">
-
-        {{!-- Кнопка 1: Парсинг всех продуктов --}}
         <div class="col-md-6">
             <div class="card h-100 p-4 shadow-sm" style="border-radius: 1.2rem; border: 2px solid var(--primary-light);">
                 <div class="mb-3">
@@ -48,8 +46,7 @@
                 </button>
             </div>
         </div>
-
-        {{!-- Кнопка 2: Обновление цен --}}
+        
         <div class="col-md-6">
             <div class="card h-100 p-4 shadow-sm" style="border-radius: 1.2rem; border: 2px solid #fff3cd;">
                 <div class="mb-3">
@@ -75,7 +72,6 @@
         </div>
     </div>
 
-    {{!-- JSON-ответ --}}
     <div id="resultBlock" style="display: none;">
         <div class="d-flex align-items-center justify-content-between mb-2">
             <h5 class="mb-0" style="color: var(--primary);">
@@ -99,7 +95,6 @@
         "></pre>
     </div>
 
-    {{!-- Статус --}}
     <div id="statusBar" style="display: none;"
          class="alert mt-3 mb-0" role="alert"></div>
 </div>
@@ -176,7 +171,7 @@
         setStatus('⏳ Обновляем цены...', 'warning');
         const result = await post('/Admin/UpdatePrices', { minPct, maxPct }, 'spinPrices');
         if (result && !result.error) {
-            setStatus(`✅ Цены обновлены у ${result.updated} продуктов.`, 'success');
+            setStatus(`✅ ${result.message}`, 'success');
         }
     }
 </script>

@@ -2,161 +2,616 @@
 @model Presentation.Models.RecipeCreateViewModel
 
 @{
-    ViewData["Title"] = "Редактировать рецепт";
+    ViewData["Title"] = Model.Id != Guid.Empty ? "Редактировать рецепт" : "Новый рецепт";
+    var isEdit = Model.Id != Guid.Empty;
 }
 
-<div class="container py-5">
-    <h2 class="mb-5" style="color: var(--primary);">Редактировать рецепт</h2>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,500;0,600;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
 
-    <form asp-action="Edit" method="post" enctype="multipart/form-data">
-        <input type="hidden" asp-for="Id" />  @* Важно! *@
-        
-        <div class="row g-4">
-            <!-- Главное фото -->
-            <div class="col-12 text-center mb-4">
-                @if (!string.IsNullOrEmpty(Model.ImageUrl))
-                {
-                    <div class="mb-3">
-                        <img src="@Model.ImageUrl" alt="Текущее фото" class="img-fluid rounded-4 shadow-sm" style="max-height: 300px;" />
+<style>
+:root {
+    --sage:      #7aab84;
+    --sage-d:    #4e7d58;
+    --sage-pale: #f0f7f2;
+    --bark:      #2d2417;
+    --muted:     #7a7168;
+    --border:    #e4ede6;
+    --danger:    #e24b4a;
+}
+
+.edit-page {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 5rem;
+    font-family: 'DM Sans', sans-serif;
+}
+
+.edit-page-title {
+    font-family: 'Lora', serif;
+    font-size: 1.7rem;
+    color: var(--bark);
+    margin: 0 0 1.5rem;
+}
+
+/* ── Two-column layout ── */
+.edit-layout {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 1.25rem;
+    align-items: start;
+}
+@@media(max-width: 860px) { .edit-layout { grid-template-columns: 1fr; } }
+
+/* ── Section card ── */
+.edit-card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1.35rem 1.5rem;
+    margin-bottom: 1.25rem;
+}
+.edit-card:last-child { margin-bottom: 0; }
+
+.card-label {
+    font-size: .68rem;
+    font-weight: 700;
+    letter-spacing: .09em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0 0 1rem;
+}
+
+/* ── Fields ── */
+.field { display: flex; flex-direction: column; gap: .28rem; margin-bottom: .85rem; }
+.field:last-child { margin-bottom: 0; }
+.field-lbl { font-size: .76rem; font-weight: 600; color: var(--muted); }
+
+.field-input, .field-textarea {
+    border: 1.5px solid var(--border);
+    border-radius: var(10px);
+    padding: .58rem .85rem;
+    font-size: .9rem;
+    color: var(--bark);
+    background: #fff;
+    outline: none;
+    font-family: 'DM Sans', sans-serif;
+    transition: border-color .15s, box-shadow .15s;
+    width: 100%;
+    box-sizing: border-box;
+}
+.field-input:focus, .field-textarea:focus {
+    border-color: var(--sage);
+    box-shadow: 0 0 0 3px rgba(122,171,132,.12);
+}
+.field-textarea { resize: vertical; line-height: 1.6; }
+
+.row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; }
+@@media(max-width:500px) { .row-2 { grid-template-columns: 1fr; } }
+
+/* ── Main photo ── */
+.photo-drop {
+    border: 2px dashed var(--border);
+    border-radius: 12px;
+    background: var(--sage-pale);
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    transition: border-color .2s;
+    min-height: 190px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.photo-drop:hover { border-color: var(--sage); }
+.photo-drop.filled { border-style: solid; border-color: var(--border); }
+
+.photo-drop-preview {
+    width: 100%; height: 220px;
+    object-fit: cover; display: block;
+}
+.photo-drop-ph {
+    text-align: center; padding: 1.5rem; pointer-events: none;
+}
+.photo-drop-ph .ph-ico { font-size: 2rem; display: block; margin-bottom: .4rem; }
+.photo-drop-ph .ph-lbl { font-size: .85rem; color: var(--muted); }
+.photo-drop-ph .ph-sub { font-size: .73rem; color: #b8b0a8; margin-top: .2rem; }
+
+.photo-drop input[type=file] {
+    position: absolute; inset: 0; opacity: 0;
+    cursor: pointer; width: 100%; height: 100%;
+}
+.photo-drop-badge {
+    position: absolute; bottom: .6rem; right: .6rem;
+    background: rgba(0,0,0,.52); color: #fff;
+    border: none; border-radius: 7px;
+    padding: .28rem .65rem; font-size: .75rem;
+    pointer-events: none;
+}
+
+/* ── Cost sidebar ── */
+.cost-box {
+    background: var(--sage-pale);
+    border: 1px solid #d0e8d4;
+    border-radius: 12px;
+    padding: 1rem 1.25rem;
+    margin-top: 1rem;
+}
+.cost-box-total {
+    font-family: 'Lora', serif;
+    font-size: 2rem; font-weight: 600;
+    color: var(--sage-d); line-height: 1;
+}
+.cost-box-label { font-size: .72rem; color: var(--muted); margin-bottom: .2rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+.cost-box-per { font-size: .8rem; color: var(--muted); margin-top: .35rem; }
+.cost-box-per b { color: var(--bark); }
+
+/* ── Ingredient rows ── */
+.ing-row {
+    display: flex;
+    align-items: center;
+    gap: .45rem;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(10px);
+    padding: .45rem .7rem;
+    margin-bottom: .45rem;
+    transition: border-color .15s, box-shadow .15s;
+}
+.ing-row:hover { border-color: var(--sage); box-shadow: 0 2px 8px rgba(122,171,132,.09); }
+
+.ing-sel {
+    flex: 2; min-width: 0;
+    border: none; background: transparent;
+    font-size: .84rem; color: var(--bark);
+    outline: none; cursor: pointer;
+    font-family: 'DM Sans', sans-serif; padding: 0;
+}
+.ing-amt {
+    width: 68px; flex-shrink: 0;
+    border: none; border-left: 1px solid var(--border);
+    background: transparent; font-size: .84rem;
+    color: var(--bark); outline: none;
+    padding: 0 .45rem; text-align: right;
+    font-family: 'DM Sans', sans-serif;
+}
+.ing-cmt {
+    flex: 1; min-width: 0;
+    border: none; border-left: 1px solid var(--border);
+    background: transparent; font-size: .79rem;
+    color: var(--muted); outline: none;
+    padding: 0 .45rem;
+    font-family: 'DM Sans', sans-serif;
+}
+.ing-cmt::placeholder { color: #ccc; }
+.ing-chip {
+    font-size: .7rem; color: var(--sage-d);
+    background: var(--sage-pale);
+    padding: .1rem .42rem;
+    border-radius: 999px; white-space: nowrap;
+    flex-shrink: 0; min-width: 44px; text-align: center;
+}
+.ing-del {
+    width: 22px; height: 22px; flex-shrink: 0;
+    border: none; background: transparent;
+    color: #ccc; font-size: 1rem; line-height: 1;
+    cursor: pointer; border-radius: 5px;
+    display: flex; align-items: center; justify-content: center;
+    transition: background .15s, color .15s;
+}
+.ing-del:hover { background: #fef2f2; color: var(--danger); }
+
+/* ── Step rows ── */
+.step-row {
+    display: flex; align-items: flex-start; gap: .6rem;
+    background: #fff; border: 1px solid var(--border);
+    border-radius: 12px; padding: .7rem;
+    margin-bottom: .6rem; transition: border-color .15s;
+}
+.step-row:hover { border-color: #c8dece; }
+
+.step-num {
+    width: 26px; height: 26px; flex-shrink: 0;
+    border-radius: 50%; background: var(--sage-pale);
+    color: var(--sage-d); font-size: .75rem; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    margin-top: .38rem;
+}
+.step-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: .45rem; }
+
+.step-txt {
+    width: 100%; border: 1px solid var(--border);
+    border-radius: 8px; padding: .48rem .7rem;
+    font-size: .875rem; color: var(--bark);
+    resize: none; outline: none; background: #fafcfa;
+    line-height: 1.55; font-family: 'DM Sans', sans-serif;
+    box-sizing: border-box;
+    transition: border-color .15s, box-shadow .15s;
+}
+.step-txt:focus { border-color: var(--sage); box-shadow: 0 0 0 3px rgba(122,171,132,.09); background: #fff; }
+.step-txt::placeholder { color: #c8c8c4; }
+
+.step-foot { display: flex; align-items: center; gap: .55rem; flex-wrap: wrap; }
+
+.step-timer {
+    width: 105px; flex-shrink: 0;
+    border: 1px solid var(--border); border-radius: 8px;
+    padding: .35rem .55rem; font-size: .79rem;
+    color: var(--muted); text-align: center;
+    outline: none; background: #fafcfa;
+    font-family: 'DM Sans', sans-serif;
+    transition: border-color .15s;
+}
+.step-timer:focus { border-color: var(--sage); color: var(--bark); }
+
+/* step photo */
+.sph-wrap { position: relative; flex-shrink: 0; display: flex; align-items: center; gap: .4rem; }
+.sph-thumb {
+    width: 56px; height: 42px; object-fit: cover;
+    border-radius: 6px; border: 1px solid var(--border);
+    display: none; flex-shrink: 0;
+}
+.sph-thumb.on { display: block; }
+.sph-btn {
+    display: flex; align-items: center; gap: .28rem;
+    padding: .34rem .65rem;
+    border: 1px dashed var(--border); border-radius: 7px;
+    background: #fafcfa; color: var(--muted);
+    font-size: .76rem; cursor: pointer; white-space: nowrap;
+    transition: border-color .15s, color .15s;
+    position: relative;
+}
+.sph-btn:hover, .sph-btn.on { border-color: var(--sage); color: var(--sage-d); background: var(--sage-pale); }
+.sph-input {
+    position: absolute; inset: 0; opacity: 0;
+    cursor: pointer; width: 100%; height: 100%;
+}
+
+.step-del {
+    width: 24px; height: 24px; flex-shrink: 0;
+    border: none; background: transparent;
+    color: #ccc; font-size: 1rem; cursor: pointer;
+    border-radius: 5px; display: flex; align-items: center; justify-content: center;
+    transition: background .15s, color .15s; margin-top: .3rem;
+}
+.step-del:hover { background: #fef2f2; color: var(--danger); }
+
+/* ── Add button ── */
+.add-btn {
+    display: inline-flex; align-items: center; gap: .35rem;
+    padding: .45rem .95rem;
+    border: 1.5px dashed var(--border); border-radius: 8px;
+    background: transparent; color: var(--muted);
+    font-size: .81rem; font-weight: 500; cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    transition: border-color .15s, color .15s, background .15s;
+    margin-top: .2rem;
+}
+.add-btn:hover { border-color: var(--sage); color: var(--sage-d); background: var(--sage-pale); }
+
+/* ── Actions ── */
+.edit-actions { display: flex; gap: .7rem; flex-wrap: wrap; margin-top: 1.25rem; }
+
+.btn-save {
+    display: inline-flex; align-items: center; gap: .45rem;
+    padding: .72rem 1.8rem;
+    background: var(--sage); color: #fff; border: none;
+    border-radius: var(10px); font-size: .9rem; font-weight: 600;
+    cursor: pointer; font-family: 'DM Sans', sans-serif;
+    transition: background .15s, transform .1s;
+}
+.btn-save:hover { background: var(--sage-d); transform: translateY(-1px); }
+
+.btn-cancel {
+    display: inline-flex; align-items: center; gap: .45rem;
+    padding: .72rem 1.3rem;
+    background: #fff; color: var(--muted);
+    border: 1.5px solid var(--border); border-radius: var(10px);
+    font-size: .9rem; font-weight: 500; cursor: pointer;
+    text-decoration: none; font-family: 'DM Sans', sans-serif;
+    transition: border-color .15s, color .15s;
+}
+.btn-cancel:hover { border-color: var(--sage); color: var(--sage-d); }
+
+.field-error { font-size: .76rem; color: var(--danger); margin-top: .15rem; }
+</style>
+
+<div class="edit-page">
+    <h1 class="edit-page-title">@(isEdit ? "Редактировать рецепт" : "Новый рецепт")</h1>
+
+    <form asp-action="@(isEdit ? "Edit" : "Create")" method="post" enctype="multipart/form-data" id="recipeForm">
+        @Html.AntiForgeryToken()
+        @if (isEdit) { <input type="hidden" asp-for="Id"/> }
+        <input type="hidden" asp-for="ImageUrl" id="existingImageUrl"/>
+
+        <div class="edit-layout">
+
+            <!-- ══ LEFT COLUMN ══ -->
+            <div>
+
+                <!-- Основная информация -->
+                <div class="edit-card">
+                    <p class="card-label">📝 Основная информация</p>
+
+                    <div class="field">
+                        <label class="field-lbl">Название рецепта</label>
+                        <input asp-for="Name" class="field-input" placeholder="Например: Паста Карбонара" required/>
+                        <span asp-validation-for="Name" class="field-error"></span>
                     </div>
-                }
-                <label class="form-label fw-medium">Новое главное фото (оставьте пустым, чтобы не менять)</label>
-                <input type="file" name="mainImage" class="form-control form-control-lg" accept="image/*" />
-                <small class="text-muted">JPG, PNG, WEBP до 5 МБ</small>
-            </div>
 
-            <!-- Название и порции -->
-            <div class="col-md-8">
-                <label class="form-label fw-medium">Название рецепта</label>
-                <input asp-for="Name" class="form-control form-control-lg" required />
-                <span asp-validation-for="Name" class="text-danger"></span>
-            </div>
-            <div class="col-md-4">
-                <label class="form-label fw-medium">Порций по умолчанию</label>
-                <input asp-for="DefaultServings" type="number" class="form-control form-control-lg" min="1" required />
-            </div>
+                    <div class="row-2">
+                        <div class="field">
+                            <label class="field-lbl">Порций</label>
+                            <input asp-for="DefaultServings" type="number" class="field-input"
+                                   min="1" max="100" id="servingsInput" required/>
+                        </div>
+                        @* <div class="field"> *@
+                        @*     <label class="field-lbl">Время (мин.)</label> *@
+                        @*     <input asp-for="CookingTimeMinutes" type="number" class="field-input" *@
+                        @*            min="1" placeholder="45"/> *@
+                        @* </div> *@
+                    </div>
 
-            <!-- Описание -->
-            <div class="col-12">
-                <label class="form-label fw-medium">Описание</label>
-                <textarea asp-for="Description" class="form-control form-control-lg" rows="3"></textarea>
-            </div>
+                    <div class="field">
+                        <label class="field-lbl">Описание</label>
+                        <textarea asp-for="Description" class="field-textarea" rows="3"
+                                  placeholder="Кратко опишите рецепт..."></textarea>
+                    </div>
+                </div>
 
-            <!-- Ингредиенты -->
-            <div class="col-12 mt-4">
-                <h5 class="mb-4" style="color: var(--primary);">Ингредиенты</h5>
-                <div id="ingredientsContainer">
-                    @for (int i = 0; i < Model.Ingredients.Count; i++)
+                <!-- Ингредиенты -->
+                <div class="edit-card">
+                    <p class="card-label">🛒 Ингредиенты</p>
+
+                    <div id="ingredientsContainer">
+                        @for (int i = 0; i < Model.Ingredients.Count; i++)
+                        {
+                            @await Html.PartialAsync("_IngredientRow",
+                                new Tuple<int, RecipeIngredientViewModel>(i, Model.Ingredients[i]))
+                        }
+                    </div>
+
+                    <button type="button" class="add-btn" id="addIngredient">+ Добавить ингредиент</button>
+                </div>
+
+                <!-- Шаги -->
+                <div class="edit-card">
+                    <p class="card-label">👨‍🍳 Шаги приготовления</p>
+
+                    <div id="stepsContainer">
+                        @for (int i = 0; i < Model.Steps.Count; i++)
+                        {
+                            @await Html.PartialAsync("_StepRow",
+                                new Tuple<int, RecipeStepViewModel>(i, Model.Steps[i]))
+                        }
+                    </div>
+
+                    <button type="button" class="add-btn" id="addStep">+ Добавить шаг</button>
+                </div>
+
+                <div class="edit-actions">
+                    <button type="submit" class="btn-save">
+                        ✓ @(isEdit ? "Сохранить изменения" : "Создать рецепт")
+                    </button>
+                    @if (isEdit)
                     {
-                        <partial name="_IngredientRow" model="@(new Tuple<int, RecipeIngredientViewModel>(i, Model.Ingredients[i]))" />
+                        <a asp-action="Details" asp-route-id="@Model.Id" class="btn-cancel">Отмена</a>
+                    }
+                    else
+                    {
+                        <a asp-action="Index" class="btn-cancel">Отмена</a>
                     }
                 </div>
-
-                <button type="button" class="btn btn-outline-primary mt-3" id="addIngredient">
-                    <i class="fas fa-plus me-2"></i> Добавить ингредиент
-                </button>
-
-                <div class="mt-4 p-4 bg-light rounded-4 text-center">
-                    <h5 class="mb-2">Общая стоимость рецепта:</h5>
-                    <h3 id="totalPrice" class="text-success fw-bold">0.00 ₽</h3>
-                </div>
             </div>
 
-            <!-- Шаги -->
-            <div class="col-12 mt-5">
-                <h5 class="mb-4" style="color: var(--primary);">Шаги приготовления</h5>
-                <div id="stepsContainer">
-                    @for (int i = 0; i < Model.Steps.Count; i++)
-                    {
-                        <partial name="_StepRow" model="@(new Tuple<int, RecipeStepViewModel>(i, Model.Steps[i]))" />
-                    }
+            <!-- ══ RIGHT COLUMN (sticky sidebar) ══ -->
+            <div style="position: sticky; top: 1rem;">
+
+                <!-- Главное фото -->
+                <div class="edit-card">
+                    <p class="card-label">📷 Главное фото</p>
+
+                    <div class="photo-drop @(!string.IsNullOrEmpty(Model.ImageUrl) ? "filled" : "")"
+                         id="mainPhotoArea">
+
+                        @if (!string.IsNullOrEmpty(Model.ImageUrl))
+                        {
+                            <img src="@Model.ImageUrl" class="photo-drop-preview" id="mainPhotoPreview" alt=""/>
+                            <span class="photo-drop-badge">Сменить</span>
+                        }
+                        else
+                        {
+                            <img src="" class="photo-drop-preview" id="mainPhotoPreview"
+                                 style="display:none; height:220px; object-fit:cover;" alt=""/>
+                            <div class="photo-drop-ph" id="mainPhotoPh">
+                                <span class="ph-ico">🖼</span>
+                                <div class="ph-lbl">Нажмите для загрузки</div>
+                                <div class="ph-sub">JPG, PNG, WEBP · до 5 МБ</div>
+                            </div>
+                        }
+
+                        <input type="file" name="mainImage" id="mainPhotoInput" accept="image/*"/>
+                    </div>
                 </div>
 
-                <button type="button" class="btn btn-outline-primary mt-3" id="addStep">
-                    <i class="fas fa-plus me-2"></i> Добавить шаг
-                </button>
-            </div>
+                <!-- Live стоимость -->
+                <div class="edit-card">
+                    <p class="card-label">💰 Стоимость рецепта</p>
+                    <div class="cost-box">
+                        <div class="cost-box-label">Итого</div>
+                        <div style="display:flex;align-items:baseline;gap:.3rem">
+                            <span class="cost-box-total" id="totalPriceVal">0.00</span>
+                            <span style="font-size:.95rem;color:var(--muted)">₽</span>
+                        </div>
+                        <div class="cost-box-per">за порцию: <b id="perServingVal">0.00</b> ₽</div>
+                    </div>
 
-            <div class="col-12 mt-5 text-center">
-                <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-outline-secondary btn-lg me-3">Отмена</a>
-                <button type="submit" class="btn btn-success btn-lg">Сохранить изменения</button>
+                    <!-- Список ингредиентов с ценами -->
+                    <div id="costBreakdown" style="margin-top:.85rem;display:flex;flex-direction:column;gap:.3rem"></div>
+                </div>
+
             </div>
         </div>
     </form>
 </div>
 
-<!-- Шаблоны для динамического добавления -->
-<div id="ingredientTemplate" style="display: none;">
-    <partial name="_IngredientRow" model="@(new Tuple<int, RecipeIngredientViewModel>(0, new RecipeIngredientViewModel()))" />
+<!-- Шаблоны -->
+<div id="ingredientTemplate" style="display:none">
+    @await Html.PartialAsync("_IngredientRow",
+        new Tuple<int, RecipeIngredientViewModel>(0, new RecipeIngredientViewModel()))
 </div>
-
-<div id="stepTemplate" style="display: none;">
-    <partial name="_StepRow" model="@(new Tuple<int, RecipeStepViewModel>(0, new RecipeStepViewModel()))" />
+<div id="stepTemplate" style="display:none">
+    @await Html.PartialAsync("_StepRow",
+        new Tuple<int, RecipeStepViewModel>(0, new RecipeStepViewModel()))
 </div>
 
 @section Scripts {
 <script>
-    const allProducts = @Html.Raw(Json.Serialize(
-        ViewBag.Products == null 
-            ? new List<object>() 
-            : ((List<Domain.Entities.Product>)ViewBag.Products).Select(p => new {
-                id = p.Id.ToString(),
-                name = p.Name,
-                pricePerUnit = p.PricePerUnit,
-                unit = p.Unit
-            })
-    ));
+// ─── Продукты из сервера ───────────────────────────────────────────────────
+const PRODUCTS = @Html.Raw(Json.Serialize(
+    ViewBag.Products == null
+        ? new List<object>()
+        : ((List<Domain.Entities.Product>)ViewBag.Products).Select(p => new {
+            id           = p.Id.ToString(),
+            name         = p.Name,
+            pricePerUnit = p.PricePerUnit,
+            unit         = p.Unit
+        })
+));
+const PM = {};  // product map: id → product
+PRODUCTS.forEach(p => PM[p.id] = p);
 
-    let ingredientIndex = @Model.Ingredients.Count;
-    let stepIndex = @Model.Steps.Count;
+let ingIdx  = @Model.Ingredients.Count;
+let stepIdx = @Model.Steps.Count;
 
-    // Повторяем логику расчёта стоимости
-    function calculateTotalPrice() {
-        let total = 0;
-        $('.ingredient-row').each(function () {
-            const price = parseFloat($(this).find('.product-select option:selected').data('price')) || 0;
-            const amount = parseFloat($(this).find('.amount-input').val()) || 0;
-            total += price * amount / 100;
-        });
-        $('#totalPrice').text(total.toFixed(2) + ' ₽');
+// ─── Главное фото ──────────────────────────────────────────────────────────
+document.getElementById('mainPhotoInput').addEventListener('change', function () {
+    if (!this.files[0]) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+        const prev = document.getElementById('mainPhotoPreview');
+        const ph   = document.getElementById('mainPhotoPh');
+        prev.src = ev.target.result;
+        prev.style.display = 'block';
+        if (ph) ph.style.display = 'none';
+        document.getElementById('mainPhotoArea').classList.add('filled');
+    };
+    reader.readAsDataURL(this.files[0]);
+});
+
+// ─── Калькулятор стоимости ─────────────────────────────────────────────────
+function calcCost() {
+    let total = 0;
+    const breakdown = [];
+
+    document.querySelectorAll('#ingredientsContainer .ing-row').forEach(row => {
+        const sel   = row.querySelector('.ing-sel');
+        const amt   = parseFloat(row.querySelector('.ing-amt')?.value) || 0;
+        const chip  = row.querySelector('.ing-chip');
+        if (!sel) return;
+
+        const prod = PM[sel.value];
+        if (!prod || !amt) {
+            if (chip) chip.textContent = '—';
+            return;
+        }
+        const line = prod.pricePerUnit * amt / 100;
+        total += line;
+        if (chip) chip.textContent = line.toFixed(1) + ' ₽';
+        breakdown.push({ name: prod.name, price: line });
+    });
+
+    document.getElementById('totalPriceVal').textContent = total.toFixed(2);
+    const srv = Math.max(1, parseInt(document.getElementById('servingsInput')?.value) || 1);
+    document.getElementById('perServingVal').textContent = (total / srv).toFixed(2);
+
+    // breakdown list
+    const bd = document.getElementById('costBreakdown');
+    bd.innerHTML = breakdown.map(b =>
+        `<div style="display:flex;justify-content:space-between;font-size:.78rem;color:var(--muted)">
+            <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:65%">${b.name}</span>
+            <span style="font-weight:600;color:var(--bark)">${b.price.toFixed(1)} ₽</span>
+         </div>`
+    ).join('');
+}
+
+// ─── Добавить ингредиент ───────────────────────────────────────────────────
+document.getElementById('addIngredient').addEventListener('click', () => {
+    let html = document.getElementById('ingredientTemplate').innerHTML;
+    html = html.replace(/Ingredients\[0\]/g, `Ingredients[${ingIdx}]`);
+    const wrap = document.createElement('div');
+    wrap.innerHTML = html.trim();
+    document.getElementById('ingredientsContainer').appendChild(wrap.firstElementChild);
+    ingIdx++;
+    calcCost();
+});
+
+// ─── Добавить шаг ─────────────────────────────────────────────────────────
+document.getElementById('addStep').addEventListener('click', () => {
+    let html = document.getElementById('stepTemplate').innerHTML;
+    html = html.replace(/Steps\[0\]/g, `Steps[${stepIdx}]`);
+    // fix StepImages index too
+    html = html.replace(/StepImages\[0\]/g, `StepImages[${stepIdx}]`);
+    const wrap = document.createElement('div');
+    wrap.innerHTML = html.trim();
+    const row = wrap.firstElementChild;
+    const numEl = row.querySelector('.step-num');
+    if (numEl) numEl.textContent = stepIdx + 1;
+    document.getElementById('stepsContainer').appendChild(row);
+    bindStepPhoto(row);
+    stepIdx++;
+});
+
+// ─── Делегированные события ───────────────────────────────────────────────
+document.addEventListener('click', e => {
+    if (e.target.closest('.ing-del')) {
+        e.target.closest('.ing-row').remove();
+        calcCost();
     }
+    if (e.target.closest('.step-del')) {
+        e.target.closest('.step-row').remove();
+        renumberSteps();
+    }
+});
 
-    $('#addIngredient').click(function () {
-        let html = $('#ingredientTemplate').html();
-        html = html.replace(/Ingredients\[0\]/g, `Ingredients[${ingredientIndex}]`);
-        $('#ingredientsContainer').append(html);
-        ingredientIndex++;
-        calculateTotalPrice();
+document.addEventListener('change', e => {
+    if (e.target.closest('.ing-sel') || e.target.closest('.ing-amt')) calcCost();
+    if (e.target.id === 'servingsInput') calcCost();
+});
+document.addEventListener('input', e => {
+    if (e.target.closest('.ing-amt')) calcCost();
+    if (e.target.id === 'servingsInput') calcCost();
+});
+
+function renumberSteps() {
+    document.querySelectorAll('#stepsContainer .step-row').forEach((r, i) => {
+        const el = r.querySelector('.step-num');
+        if (el) el.textContent = i + 1;
     });
+}
 
-    $('#addStep').click(function () {
-        let html = $('#stepTemplate').html();
-        html = html.replace(/Steps\[0\]/g, `Steps[${stepIndex}]`);
-        html = html.replace(/step-number">1</, `step-number">${stepIndex + 1}</`);
-        $('#stepsContainer').append(html);
-        stepIndex++;
+// ─── Фото шага ────────────────────────────────────────────────────────────
+function bindStepPhoto(row) {
+    const input = row.querySelector('.sph-input');
+    const btn   = row.querySelector('.sph-btn');
+    const thumb = row.querySelector('.sph-thumb');
+    if (!input) return;
+    input.addEventListener('change', function () {
+        if (!this.files[0]) return;
+        const reader = new FileReader();
+        reader.onload = ev => {
+            if (thumb) { thumb.src = ev.target.result; thumb.classList.add('on'); }
+            if (btn)   { btn.classList.add('on'); }
+            const lbl = btn?.querySelector('.sph-lbl');
+            if (lbl) lbl.textContent = 'Сменить';
+        };
+        reader.readAsDataURL(this.files[0]);
     });
+}
 
-    $(document).on('click', '.remove-ingredient', function () {
-        $(this).closest('.ingredient-row').remove();
-        calculateTotalPrice();
-    });
+// Привязать к уже отрисованным шагам
+document.querySelectorAll('#stepsContainer .step-row').forEach(r => bindStepPhoto(r));
 
-    $(document).on('click', '.remove-step', function () {
-        $(this).closest('.step-row').remove();
-        $('.step-row').each(function(idx) {
-            $(this).find('.step-number').text(idx + 1);
-        });
-    });
-
-    $(document).on('change input', '.product-select, .amount-input', calculateTotalPrice);
-
-    $(document).on('change', '.product-select', function () {
-        const name = $(this).find('option:selected').data('name') || $(this).find('option:selected').text();
-        $(this).closest('.ingredient-row').find('.product-name-hidden').val(name);
-    });
-
-    // Инициализация при загрузке
-    calculateTotalPrice();
+// ─── Первичный расчёт ─────────────────────────────────────────────────────
+calcCost();
 </script>
 }

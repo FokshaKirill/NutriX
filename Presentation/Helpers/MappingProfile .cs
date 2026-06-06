@@ -1,8 +1,6 @@
 ﻿using AutoMapper;
 using Domain.Entities;
 using Presentation.Models;
-using System;
-using System.Linq;
 
 namespace Presentation.Helpers
 {
@@ -10,95 +8,94 @@ namespace Presentation.Helpers
     {
         public MappingProfile()
         {
-            // PlannedMeal → MealViewModel (главная страница)
+            // ── PlannedMeal ──────────────────────────────────────────────
             CreateMap<PlannedMeal, MealViewModel>()
-                .ForMember(d => d.MealType, opt => opt.MapFrom(s => s.MealType.Name))
-                .ForMember(d => d.RecipeName, opt => opt.MapFrom(s => s.Recipe != null ? s.Recipe.Name : "—"))
-                .ForMember(d => d.Servings, opt => opt.MapFrom(s => s.Servings))
-                .ForMember(d => d.Calories, opt => opt.MapFrom(s => s.Recipe != null 
-                    ? (int)Math.Round(s.Recipe.CaloriesPerServing * s.Servings) : 0))
-                .ForMember(d => d.Protein, opt => opt.MapFrom(s => s.Recipe != null 
-                    ? (int)Math.Round(s.Recipe.ProteinPerServing * s.Servings) : 0))
-                .ForMember(d => d.Fat, opt => opt.MapFrom(s => s.Recipe != null 
-                    ? (int)Math.Round(s.Recipe.FatPerServing * s.Servings) : 0))
-                .ForMember(d => d.Carbs, opt => opt.MapFrom(s => s.Recipe != null 
-                    ? (int)Math.Round(s.Recipe.CarbsPerServing * s.Servings) : 0));
+                .ForMember(d => d.MealType,    opt => opt.MapFrom(s => s.MealType.Name))
+                .ForMember(d => d.RecipeName,  opt => opt.MapFrom(s => s.Recipe != null ? s.Recipe.Name : "—"))
+                .ForMember(d => d.Calories,    opt => opt.MapFrom(s => s.Recipe != null ? (int)Math.Round(s.Recipe.CaloriesPerServing * s.Servings) : 0))
+                .ForMember(d => d.Protein,     opt => opt.MapFrom(s => s.Recipe != null ? (int)Math.Round(s.Recipe.ProteinPerServing  * s.Servings) : 0))
+                .ForMember(d => d.Fat,         opt => opt.MapFrom(s => s.Recipe != null ? (int)Math.Round(s.Recipe.FatPerServing      * s.Servings) : 0))
+                .ForMember(d => d.Carbs,       opt => opt.MapFrom(s => s.Recipe != null ? (int)Math.Round(s.Recipe.CarbsPerServing    * s.Servings) : 0));
 
-            
             CreateMap<PlannedMeal, PlannedMealViewModel>()
-                .ForMember(dst => dst.MealTypeName,    opt => opt.MapFrom(src => src.MealType.Name))
-                .ForMember(dst => dst.RecipeId,        opt => opt.MapFrom(src => src.Recipe.Id))
-                .ForMember(dst => dst.RecipeName,      opt => opt.MapFrom(src => src.Recipe.Name))
-                .ForMember(dst => dst.RecipeImageUrl,  opt => opt.MapFrom(src => src.Recipe.ImageUrl))
-                .ForMember(dst => dst.Calories,        opt => opt.MapFrom(src => (int)(src.Recipe.CaloriesPerServing * src.Servings)))
-                .ForMember(dst => dst.Protein,         opt => opt.MapFrom(src => (int)(src.Recipe.ProteinPerServing  * src.Servings)))
-                .ForMember(dst => dst.Fat,             opt => opt.MapFrom(src => (int)(src.Recipe.FatPerServing      * src.Servings)))
-                .ForMember(dst => dst.Carbs,           opt => opt.MapFrom(src => (int)(src.Recipe.CarbsPerServing    * src.Servings)))
-                // Cost = стоимость рецепта × количество порций
-                .ForMember(dst => dst.Cost,            opt => opt.MapFrom(src => src.Recipe.TotalCost * src.Servings));
+                .ForMember(d => d.MealTypeName,   opt => opt.MapFrom(s => s.MealType.Name))
+                .ForMember(d => d.RecipeId,       opt => opt.MapFrom(s => s.Recipe.Id))
+                .ForMember(d => d.RecipeName,     opt => opt.MapFrom(s => s.Recipe.Name))
+                .ForMember(d => d.RecipeImageUrl, opt => opt.MapFrom(s => s.Recipe.ImageUrl))
+                .ForMember(d => d.Calories,       opt => opt.MapFrom(s => (int)(s.Recipe.CaloriesPerServing * s.Servings)))
+                .ForMember(d => d.Protein,        opt => opt.MapFrom(s => (int)(s.Recipe.ProteinPerServing  * s.Servings)))
+                .ForMember(d => d.Fat,            opt => opt.MapFrom(s => (int)(s.Recipe.FatPerServing      * s.Servings)))
+                .ForMember(d => d.Carbs,          opt => opt.MapFrom(s => (int)(s.Recipe.CarbsPerServing    * s.Servings)))
+                .ForMember(d => d.Cost,           opt => opt.MapFrom(s => s.Recipe.TotalCost * s.Servings));
 
-            // Product → ProductViewModel
+            // ── Product ──────────────────────────────────────────────────
             CreateMap<Product, ProductViewModel>()
                 .ForMember(d => d.CategoryName, opt => opt.Ignore())
-                .ForMember(d => d.ImageUrl, opt => opt.Ignore());
+                .ForMember(d => d.ImageUrl,     opt => opt.Ignore());
 
-            // Recipe → RecipeListViewModel
+            // ── Recipe → read ViewModels ─────────────────────────────────
             CreateMap<Recipe, RecipeListViewModel>()
-                .ForMember(d => d.CaloriesPerServing, 
+                .ForMember(d => d.CaloriesPerServing,
                     opt => opt.MapFrom(s => (int)Math.Round(s.CaloriesPerServing)));
 
-            // Recipe → RecipeDetailViewModel
             CreateMap<Recipe, RecipeDetailViewModel>();
 
-            // RecipeIngredient → RecipeIngredientViewModel (для отображения)
-            CreateMap<RecipeIngredient, RecipeIngredientViewModel>()
-                .ForMember(d => d.ProductName, opt => opt.MapFrom(s => s.Product.Name))
-                .ForMember(d => d.Calories, opt => opt.MapFrom(s => s.Calories));
+            // ── Recipe ↔ RecipeCreateViewModel ───────────────────────────
+            CreateMap<Recipe, RecipeCreateViewModel>()
+                .ForMember(d => d.Ingredients, opt => opt.MapFrom(s => s.Ingredients))
+                .ForMember(d => d.Steps,       opt => opt.MapFrom(s => s.Steps.OrderBy(x => x.Order)));
 
-            // RecipeStep → RecipeStepViewModel
-            CreateMap<RecipeStep, RecipeStepViewModel>();
-
-            // *** ВАЖНО: Маппинг для создания рецепта ***
-            // RecipeCreateViewModel → Recipe
             CreateMap<RecipeCreateViewModel, Recipe>()
-                .ForMember(d => d.Id, opt => opt.Ignore()) // генерируем вручную
-                .ForMember(d => d.Ingredients, opt => opt.Ignore()) // заполняем вручную
-                .ForMember(d => d.Steps, opt => opt.Ignore())       // заполняем вручную
-                .ForMember(d => d.PlannedMeals, opt => opt.Ignore());
+                .ForMember(d => d.Id,          opt => opt.Ignore())
+                .ForMember(d => d.Ingredients, opt => opt.Ignore())
+                .ForMember(d => d.Steps,       opt => opt.Ignore())
+                .ForMember(d => d.PlannedMeals,opt => opt.Ignore())
+                .ForMember(d => d.Author,      opt => opt.Ignore())
+                .ForMember(d => d.AuthorId,    opt => opt.Ignore());
 
-            // RecipeIngredientViewModel → RecipeIngredient (для создания)
+            // ── RecipeIngredient ↔ RecipeIngredientViewModel ─────────────
+            // ЕДИНСТВЕННАЯ регистрация — маппит все поля включая Unit и Amount
+            CreateMap<RecipeIngredient, RecipeIngredientViewModel>()
+                .ForMember(d => d.ProductName,  opt => opt.MapFrom(s => s.Product != null ? s.Product.Name : ""))
+                .ForMember(d => d.PricePerUnit, opt => opt.MapFrom(s => s.Product != null ? s.Product.PricePerUnit : 0))
+                .ForMember(d => d.Calories,     opt => opt.MapFrom(s => s.Calories))
+                .ForMember(d => d.Protein,      opt => opt.MapFrom(s => s.Protein))
+                .ForMember(d => d.Fat,          opt => opt.MapFrom(s => s.Fat))
+                .ForMember(d => d.Carbs,        opt => opt.MapFrom(s => s.Carbs));
+                // Amount, Unit, Comment, ProductId маппятся автоматически по имени
+
             CreateMap<RecipeIngredientViewModel, RecipeIngredient>()
-                .ForMember(d => d.Id, opt => opt.Ignore())
+                .ForMember(d => d.Id,       opt => opt.Ignore())
                 .ForMember(d => d.RecipeId, opt => opt.Ignore())
-                .ForMember(d => d.Recipe, opt => opt.Ignore())
-                .ForMember(d => d.Product, opt => opt.Ignore())
-                .ForMember(d => d.Calories, opt => opt.Ignore())
-                .ForMember(d => d.Protein, opt => opt.Ignore())
-                .ForMember(d => d.Fat, opt => opt.Ignore())
-                .ForMember(d => d.Carbs, opt => opt.Ignore());
+                .ForMember(d => d.Recipe,   opt => opt.Ignore())
+                .ForMember(d => d.Product,  opt => opt.Ignore());
+                // Amount, Unit, Comment, ProductId маппятся автоматически
 
-            // RecipeStepViewModel → RecipeStep
+            // ── RecipeStep ↔ RecipeStepViewModel ─────────────────────────
+            CreateMap<RecipeStep, RecipeStepViewModel>();
+                // Id, Order, Description, TimerSeconds, ImageUrl — всё по имени
+
             CreateMap<RecipeStepViewModel, RecipeStep>()
-                .ForMember(d => d.Id, opt => opt.Ignore())
+                .ForMember(d => d.Id,       opt => opt.Ignore())
                 .ForMember(d => d.RecipeId, opt => opt.Ignore())
-                .ForMember(d => d.Recipe, opt => opt.Ignore());
+                .ForMember(d => d.Recipe,   opt => opt.Ignore());
 
-            // MealPlan → HomeViewModel
+            // ── MealPlan ─────────────────────────────────────────────────
             CreateMap<MealPlan, HomeViewModel>()
-                .ForMember(d => d.TodayDate, opt => opt.MapFrom(_ => DateTime.Today))
-                .ForMember(d => d.WeekStart, opt => opt.MapFrom(s => s.StartDate))
-                .ForMember(d => d.WeekEnd, opt => opt.MapFrom(s => s.StartDate.AddDays(6)))
-                .ForMember(d => d.TodayMeals, opt => opt.Ignore())
-                .ForMember(d => d.WeekDays, opt => opt.Ignore())
+                .ForMember(d => d.TodayDate,          opt => opt.MapFrom(_ => DateTime.Today))
+                .ForMember(d => d.WeekStart,          opt => opt.MapFrom(s => s.StartDate))
+                .ForMember(d => d.WeekEnd,            opt => opt.MapFrom(s => s.StartDate.AddDays(6)))
+                .ForMember(d => d.TodayMeals,         opt => opt.Ignore())
+                .ForMember(d => d.WeekDays,           opt => opt.Ignore())
                 .ForMember(d => d.TodayTotalCalories, opt => opt.Ignore())
-                .ForMember(d => d.TodayTotalProtein, opt => opt.Ignore())
-                .ForMember(d => d.TodayTotalFat, opt => opt.Ignore())
-                .ForMember(d => d.TodayTotalCarbs, opt => opt.Ignore())
+                .ForMember(d => d.TodayTotalProtein,  opt => opt.Ignore())
+                .ForMember(d => d.TodayTotalFat,      opt => opt.Ignore())
+                .ForMember(d => d.TodayTotalCarbs,    opt => opt.Ignore())
                 .AfterMap((src, dest, context) =>
                 {
                     if (src?.Meals == null || !src.Meals.Any())
                     {
-                        dest.WeekDays = new List<DayPlanViewModel>();
+                        dest.WeekDays   = new List<DayPlanViewModel>();
                         dest.TodayMeals = new List<MealViewModel>();
                         return;
                     }
@@ -108,45 +105,42 @@ namespace Presentation.Helpers
                         .ThenBy(m => m.MealType.Order)
                         .ToList();
 
-                    dest.WeekDays = Enumerable.Range(0, 7)
-                        .Select(offset =>
-                        {
-                            var date = src.StartDate.AddDays(offset);
-                            var dayMeals = allMeals
-                                .Where(m => m.DayOffset == offset)
-                                .Select(m => context.Mapper.Map<MealViewModel>(m))
-                                .ToList();
+                    dest.WeekDays = Enumerable.Range(0, 7).Select(offset =>
+                    {
+                        var dayMeals = allMeals
+                            .Where(m => m.DayOffset == offset)
+                            .Select(m => context.Mapper.Map<MealViewModel>(m))
+                            .ToList();
 
-                            return new DayPlanViewModel
+                        return new DayPlanViewModel
+                        {
+                            Date  = src.StartDate.AddDays(offset),
+                            Meals = dayMeals.Select(m => new PlannedMealViewModel
                             {
-                                Date = date,
-                                Meals = dayMeals.Select(m => new PlannedMealViewModel
-                                {
-                                    MealTypeName = m.MealType,
-                                    RecipeName = m.RecipeName,
-                                    Servings = m.Servings,
-                                    Calories = m.Calories,
-                                    Protein = m.Protein,
-                                    Fat = m.Fat,
-                                    Carbs = m.Carbs
-                                }).ToList()
-                            };
-                        })
-                        .ToList();
+                                MealTypeName = m.MealType,
+                                RecipeName   = m.RecipeName,
+                                Servings     = m.Servings,
+                                Calories     = m.Calories,
+                                Protein      = m.Protein,
+                                Fat          = m.Fat,
+                                Carbs        = m.Carbs
+                            }).ToList()
+                        };
+                    }).ToList();
 
                     var todayOffset = (DateTime.Today - src.StartDate).Days;
-                    if (todayOffset >= 0 && todayOffset <= 6)
+                    if (todayOffset is >= 0 and <= 6)
                     {
-                        var todayMealsList = allMeals
+                        var todayMeals = allMeals
                             .Where(m => m.DayOffset == todayOffset)
                             .Select(m => context.Mapper.Map<MealViewModel>(m))
                             .ToList();
 
-                        dest.TodayMeals = todayMealsList;
-                        dest.TodayTotalCalories = todayMealsList.Sum(m => m.Calories);
-                        dest.TodayTotalProtein = todayMealsList.Sum(m => m.Protein);
-                        dest.TodayTotalFat = todayMealsList.Sum(m => m.Fat);
-                        dest.TodayTotalCarbs = todayMealsList.Sum(m => m.Carbs);
+                        dest.TodayMeals         = todayMeals;
+                        dest.TodayTotalCalories = todayMeals.Sum(m => m.Calories);
+                        dest.TodayTotalProtein  = todayMeals.Sum(m => m.Protein);
+                        dest.TodayTotalFat      = todayMeals.Sum(m => m.Fat);
+                        dest.TodayTotalCarbs    = todayMeals.Sum(m => m.Carbs);
                     }
                     else
                     {
@@ -154,11 +148,10 @@ namespace Presentation.Helpers
                     }
                 });
 
-            // MealPlan → WeekPlanViewModel
             CreateMap<MealPlan, WeekPlanViewModel>()
                 .ForMember(d => d.MealPlanId, opt => opt.MapFrom(s => s.Id))
-                .ForMember(d => d.StartDate, opt => opt.MapFrom(s => s.StartDate))
-                .ForMember(d => d.Days, opt => opt.Ignore())
+                .ForMember(d => d.StartDate,  opt => opt.MapFrom(s => s.StartDate))
+                .ForMember(d => d.Days,       opt => opt.Ignore())
                 .AfterMap((src, dest, context) =>
                 {
                     if (src?.Meals == null || !src.Meals.Any())
@@ -167,51 +160,21 @@ namespace Presentation.Helpers
                         return;
                     }
 
-                    var allMeals = src.Meals
-                        .OrderBy(m => m.DayOffset)
-                        .ThenBy(m => m.MealType.Order)
-                        .ToList();
+                    dest.Days = Enumerable.Range(0, 7).Select(offset =>
+                    {
+                        var dayMeals = src.Meals
+                            .Where(m => m.DayOffset == offset)
+                            .OrderBy(m => m.MealType.Order)
+                            .Select(m => context.Mapper.Map<PlannedMealViewModel>(m))
+                            .ToList();
 
-                    dest.Days = Enumerable.Range(0, 7)
-                        .Select(offset =>
+                        return new DayPlanViewModel
                         {
-                            var date = src.StartDate.AddDays(offset);
-                            var dayMeals = allMeals
-                                .Where(m => m.DayOffset == offset)
-                                .Select(m => context.Mapper.Map<PlannedMealViewModel>(m))
-                                .ToList();
-
-                            return new DayPlanViewModel
-                            {
-                                Date = date,
-                                Meals = dayMeals
-                            };
-                        })
-                        .ToList();
+                            Date  = src.StartDate.AddDays(offset),
+                            Meals = dayMeals
+                        };
+                    }).ToList();
                 });
-            
-            CreateMap<Recipe, RecipeListViewModel>();
-            CreateMap<Recipe, RecipeDetailViewModel>();
-
-            // ←←← Добавь эти два маппинга:
-            CreateMap<Recipe, RecipeCreateViewModel>()
-                .ForMember(dest => dest.Ingredients, opt => opt.MapFrom(src => src.Ingredients))
-                .ForMember(d => d.Steps, o => o.MapFrom(s => s.Steps.OrderBy(x => x.Order)));
-
-            CreateMap<RecipeCreateViewModel, Recipe>()
-                .ForMember(dest => dest.Ingredients, opt => opt.Ignore())
-                .ForMember(dest => dest.Steps, opt => opt.Ignore())
-                .ForMember(dest => dest.Author, opt => opt.Ignore())
-                .ForMember(dest => dest.AuthorId, opt => opt.Ignore());
-
-            // Маппинги для вложенных объектов
-            CreateMap<RecipeIngredient, RecipeIngredientViewModel>();
-            CreateMap<RecipeStep, RecipeStepViewModel>();
-
-            CreateMap<RecipeIngredientViewModel, RecipeIngredient>()
-                .ForMember(dest => dest.Product, opt => opt.Ignore());
-
-            CreateMap<RecipeStepViewModel, RecipeStep>();
         }
     }
 }

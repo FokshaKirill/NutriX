@@ -1,11 +1,49 @@
 ﻿@model Tuple<int, Presentation.Models.RecipeStepViewModel>
 
-<div class="step-row-edit" data-index="@Model.Item1">
-    <div class="step-row-num">@(Model.Item1 + 1)</div>
-    <textarea name="Steps[@Model.Item1].Description"
-              class="step-row-text" rows="2"
-              placeholder="Описание шага...">@Model.Item2.Description</textarea>
-    <input name="Steps[@Model.Item1].TimerSeconds" type="number"
-           class="step-row-timer" placeholder="сек" value="@Model.Item2.TimerSeconds" />
-    <button type="button" class="ing-remove remove-step" title="Удалить">×</button>
+<div class="step-row" data-index="@Model.Item1">
+
+    <div class="step-num">@(Model.Item1 + 1)</div>
+
+    <div class="step-body">
+        <textarea name="Steps[@Model.Item1].Description"
+                  class="step-txt" rows="2"
+                  placeholder="Опишите этот шаг...">@Model.Item2.Description</textarea>
+
+        <div class="step-foot">
+
+            <input name="Steps[@Model.Item1].TimerSeconds"
+                   type="number" min="0"
+                   class="step-timer"
+                   placeholder="⏱ секунды"
+                   value="@Model.Item2.TimerSeconds"/>
+
+            <div class="sph-wrap">
+                @if (!string.IsNullOrEmpty(Model.Item2.ImageUrl))
+                {
+                    <img class="sph-thumb on" src="@Model.Item2.ImageUrl" alt="шаг"/>
+                }
+                else
+                {
+                    <img class="sph-thumb" src="" alt="шаг"/>
+                }
+
+                <div class="sph-btn @(!string.IsNullOrEmpty(Model.Item2.ImageUrl) ? "on" : "")">
+                    <span>📷</span>
+                    <span class="sph-lbl">@(!string.IsNullOrEmpty(Model.Item2.ImageUrl) ? "Сменить" : "Фото шага")</span>
+                    <input type="file"
+                           name="StepImages[@Model.Item1]"
+                           class="sph-input"
+                           accept="image/*"/>
+                </div>
+            </div>
+
+            @* Сохраняем существующий URL если пользователь не меняет фото *@
+            <input type="hidden"
+                   name="Steps[@Model.Item1].ImageUrl"
+                   value="@Model.Item2.ImageUrl"/>
+
+        </div>
+    </div>
+
+    <button type="button" class="step-del remove-step" title="Удалить шаг">×</button>
 </div>

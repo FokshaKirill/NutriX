@@ -50,8 +50,10 @@ namespace Presentation.Controllers
             {
                 MealPlanId = plan.Id,
                 StartDate  = plan.StartDate,
-                Days       = new List<DayPlanViewModel>()
+                Days       = new List<DayPlanViewModel>(),
+                Plan       = plan   // ← добавить
             };
+
 
             for (int offset = 0; offset < 7; offset++)
             {

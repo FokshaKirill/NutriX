@@ -2,7 +2,20 @@
 @model Presentation.Models.WeekPlanViewModel
 @{
     ViewData["Title"] = "План питания";
-    var totalCost = Model.ShoppingList.Sum(i => i.TotalPrice);
+    var totalCost   = Model.ShoppingList.Sum(i => i.TotalPrice);
+    var weekKcal    = Model.Days.Sum(d => d.Meals.Sum(m => m.Calories));
+    var weekProt    = Model.Days.Sum(d => d.Meals.Sum(m => m.Protein));
+    var weekFat     = Model.Days.Sum(d => d.Meals.Sum(m => m.Fat));
+    var weekCarbs   = Model.Days.Sum(d => d.Meals.Sum(m => m.Carbs));
+    var avgKcal     = Model.Days.Count > 0 ? weekKcal / Model.Days.Count : 0;
+
+    // Флаги диеты из плана
+    var plan        = Model.Plan; // нужно добавить в WeekPlanViewModel (см. ниже)
+    var hasDiet     = plan != null && (plan.Vegetarian || plan.Vegan || plan.GlutenFree ||
+                      plan.LowCarb || plan.HighProtein || plan.LowFat);
+    var budgetPct   = plan is { ConsiderBudget: true, WeeklyBudget: > 0 }
+                      ? Math.Min((double)totalCost / (double)plan.WeeklyBudget * 100, 100)
+                      : 0;
 }
 
 <link href="https://fonts.googleapis.com/css2?family=Lora:wght@500;600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
@@ -22,24 +35,31 @@ body { font-family: 'DM Sans', sans-serif; }
 /* ── Page layout ── */
 .wp-page { padding: 2rem 1.5rem 5rem; margin: 0 auto; }
 
+/* ── Success banner ── */
+.wp-success {
+    display: flex; align-items: center; gap: .75rem;
+    background: #eef7f0; border: 1px solid #a7d9b5;
+    border-radius: 12px; padding: .9rem 1.1rem;
+    margin-bottom: 1.25rem; font-size: .875rem; color: #1e6039;
+    animation: fadeSlideUp .4s ease;
+}
+@@keyframes fadeSlideUp {
+    from { opacity:0; transform:translateY(-8px); }
+    to   { opacity:1; transform:translateY(0); }
+}
+
 .wp-tabs {
     display: flex;
     gap: .5rem;
     margin-bottom: 1.5rem;
     border-bottom: 2px solid var(--border);
-    padding-bottom: 0;
 }
 .wp-tab {
     padding: .6rem 1.4rem;
-    border: none;
-    background: none;
-    font-size: .9rem;
-    font-weight: 600;
-    color: var(--muted);
-    cursor: pointer;
-    border-bottom: 2px solid transparent;
-    margin-bottom: -2px;
-    transition: all .2s;
+    border: none; background: none;
+    font-size: .9rem; font-weight: 600; color: var(--muted);
+    cursor: pointer; border-bottom: 2px solid transparent;
+    margin-bottom: -2px; transition: all .2s;
 }
 .wp-tab.active { color: var(--sage-d); border-bottom-color: var(--sage-d); }
 .wp-tab:hover:not(.active) { color: var(--bark); }
@@ -48,216 +68,209 @@ body { font-family: 'DM Sans', sans-serif; }
 .wp-section.active { display: block; }
 
 /* ── Week table ── */
-.week-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: .82rem;
-}
+.week-table { width: 100%; border-collapse: collapse; font-size: .82rem; }
 .week-table th {
-    background: var(--sage);
-    color: #fff;
-    padding: .6rem .75rem;
-    text-align: left;
-    font-weight: 600;
-    white-space: nowrap;
+    background: var(--sage); color: #fff;
+    padding: .6rem .75rem; text-align: left;
+    font-weight: 600; white-space: nowrap;
 }
 .week-table th:first-child { border-radius: 10px 0 0 0; }
 .week-table th:last-child  { border-radius: 0 10px 0 0; }
-
 .week-table td {
-    padding: .5rem .75rem;
-    border-bottom: 1px solid var(--border);
-    vertical-align: top;
+    padding: .5rem .75rem; border-bottom: 1px solid var(--border); vertical-align: top;
 }
 .week-table tr:last-child td { border-bottom: none; }
 .week-table tr:hover td { background: var(--sage-pale); }
 .week-table tr.today td { background: #e8f5ec; }
 
-.day-label {
-    font-weight: 700;
-    color: var(--bark);
-    white-space: nowrap;
+/* ── Week totals row ── */
+.week-totals-row td {
+    background: #f8fdf8 !important;
+    border-top: 2px solid var(--border) !important;
+    font-size: .78rem; padding: .6rem .75rem;
 }
-.day-date { font-size: .75rem; color: var(--muted); }
+.week-totals-row:hover td { background: #f0f7f0 !important; }
+
+.day-label { font-weight: 700; color: var(--bark); white-space: nowrap; }
+.day-date  { font-size: .75rem; color: var(--muted); }
 .today-badge {
-    display: inline-block;
-    background: var(--sage);
-    color: #fff;
-    font-size: .65rem;
-    font-weight: 700;
-    padding: .1rem .4rem;
-    border-radius: 999px;
-    margin-left: .3rem;
-    vertical-align: middle;
+    display: inline-block; background: var(--sage); color: #fff;
+    font-size: .65rem; font-weight: 700; padding: .1rem .4rem;
+    border-radius: 999px; margin-left: .3rem; vertical-align: middle;
 }
 
-/* ── Meal cell (рендерится через _MealCell.cshtml) ── */
+/* ── Meal cell ── */
 .meal-cell { display: flex; flex-direction: column; gap: .35rem; }
 
 .meal-entry {
-    display: flex;
-    align-items: flex-start;
-    gap: .5rem;
-    padding: .3rem .5rem;
-    border-radius: 6px;
+    display: flex; align-items: flex-start; gap: .5rem;
+    padding: .3rem .5rem; border-radius: 6px;
     background: var(--sage-pale);
+    position: relative;
 }
+.meal-entry:hover .meal-replace-btn { opacity: 1; }
+
 .meal-thumb {
-    width: 36px; height: 36px;
-    border-radius: 5px;
-    object-fit: cover;
-    flex-shrink: 0;
+    width: 36px; height: 36px; border-radius: 5px;
+    object-fit: cover; flex-shrink: 0;
 }
 .meal-thumb-placeholder {
-    width: 36px; height: 36px;
-    border-radius: 5px;
+    width: 36px; height: 36px; border-radius: 5px;
     background: #dde8df;
     display: flex; align-items: center; justify-content: center;
-    font-size: .9rem;
-    flex-shrink: 0;
+    font-size: .9rem; flex-shrink: 0;
 }
 .meal-info { flex: 1; min-width: 0; }
 .meal-name {
-    font-weight: 600;
-    color: var(--bark);
-    font-size: .8rem;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 260px;
-    display: block;
+    font-weight: 600; color: var(--bark); font-size: .8rem;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    max-width: 220px; display: block;
 }
 .meal-name:hover { text-decoration: underline; color: var(--sage-d); }
 .meal-macros { font-size: .68rem; color: var(--muted); white-space: nowrap; }
+.meal-cost   { font-size: .68rem; color: var(--sage-d); font-weight: 600; white-space: nowrap; margin-top: .1rem; }
 
-/* Цена рецепта в ячейке */
-.meal-cost {
-    font-size: .68rem;
-    color: var(--sage-d);
-    font-weight: 600;
-    white-space: nowrap;
-    margin-top: .1rem;
+/* Кнопка замены блюда */
+.meal-replace-btn {
+    opacity: 0;
+    flex-shrink: 0;
+    width: 26px; height: 26px;
+    border: 1px solid var(--border);
+    border-radius: 6px; background: #fff;
+    cursor: pointer; color: var(--muted);
+    display: flex; align-items: center; justify-content: center;
+    font-size: .75rem;
+    transition: opacity .15s, color .15s, border-color .15s;
 }
+.meal-replace-btn:hover { color: var(--sage-d); border-color: var(--sage); }
+.meal-replace-btn.loading { pointer-events:none; animation: spin .8s linear infinite; }
+@@keyframes spin { to { transform: rotate(360deg); } }
 
 .day-empty { color: var(--muted); font-size: .8rem; font-style: italic; }
 
-/* Итоговая колонка дня */
 .day-total {
-    font-size: .72rem;
-    color: var(--muted);
-    white-space: nowrap;
-    padding-top: .25rem;
-    display: flex;
-    flex-direction: column;
-    gap: .15rem;
+    font-size: .72rem; color: var(--muted); white-space: nowrap;
+    padding-top: .25rem; display: flex; flex-direction: column; gap: .15rem;
 }
 .day-total b { color: var(--bark); }
-/* Цена в итоговой колонке */
 .day-total-cost {
-    font-size: .75rem;
-    font-weight: 700;
-    color: var(--sage-d);
-    margin-top: .2rem;
-    padding-top: .2rem;
-    border-top: 1px solid var(--border);
+    font-size: .75rem; font-weight: 700; color: var(--sage-d);
+    margin-top: .2rem; padding-top: .2rem; border-top: 1px solid var(--border);
 }
+
+/* ── Plan info panel (под таблицей) ── */
+.plan-info {
+    margin-top: 1.5rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(24%, 1fr));
+    gap: 1rem;
+}
+.plan-info-card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1.1rem 1.25rem;
+    box-shadow: 0 2px 10px rgba(30,45,30,.04);
+}
+.plan-info-card-label {
+    font-size: .68rem; font-weight: 700;
+    letter-spacing: .08em; text-transform: uppercase;
+    color: var(--sage-d); margin-bottom: .7rem;
+}
+
+/* Строки КБЖУ в карточке */
+.pic-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: .3rem 0; border-bottom: 1px solid #f0f0ee; font-size: .82rem;
+}
+.pic-row:last-child { border-bottom: none; }
+.pic-row-lbl { color: var(--muted); }
+.pic-row-val { font-weight: 600; color: var(--bark); }
+
+/* Мини прогресс-бар */
+.mini-bar-wrap {
+    height: 5px; background: #f0f0ee;
+    border-radius: 999px; overflow: hidden; margin-top: .4rem;
+}
+.mini-bar { height: 100%; border-radius: 999px; transition: width .6s ease; }
+
+/* Теги диеты */
+.diet-tags { display: flex; flex-wrap: wrap; gap: .4rem; }
+.diet-tag {
+    font-size: .72rem; font-weight: 600;
+    padding: .2rem .65rem; border-radius: 999px;
+    background: #eef7f0; color: #3b6d11;
+    border: 1px solid #c8e6cc;
+}
+.diet-tag.warn { background: #fff8ec; color: #a16207; border-color: #fde68a; }
 
 /* ── Shopping list ── */
 .shop-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1.5rem;
-    flex-wrap: wrap;
-    gap: 1rem;
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;
 }
 .shop-total {
-    font-family: 'Lora', serif;
-    font-size: 1.5rem;
-    font-weight: 600;
-    color: var(--sage-d);
+    font-family: 'Lora', serif; font-size: 1.5rem;
+    font-weight: 600; color: var(--sage-d);
 }
-.shop-total span {
-    font-size: .85rem;
-    color: var(--muted);
-    font-family: 'DM Sans', sans-serif;
-    font-weight: 400;
-}
+.shop-total span { font-size: .85rem; color: var(--muted); font-family: 'DM Sans', sans-serif; font-weight: 400; }
 
-.shop-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: .85rem;
+/* Прогресс бюджета */
+.budget-bar-wrap {
+    margin-top: .5rem;
+    background: #f0f0ee; border-radius: 999px;
+    height: 6px; overflow: hidden; width: 200px;
 }
+.budget-bar { height: 100%; border-radius: 999px; transition: width .6s; }
+.budget-bar.ok  { background: var(--sage); }
+.budget-bar.warn { background: #f59e0b; }
+.budget-bar.over { background: #e24b4a; }
+
+.shop-table { width: 100%; border-collapse: collapse; font-size: .85rem; }
 .shop-table thead th {
-    background: var(--sage-pale);
-    padding: .5rem .75rem;
-    text-align: left;
-    font-size: .72rem;
-    font-weight: 700;
-    letter-spacing: .04em;
-    text-transform: uppercase;
-    color: var(--muted);
-    border-bottom: 2px solid var(--border);
+    background: var(--sage-pale); padding: .5rem .75rem;
+    text-align: left; font-size: .72rem; font-weight: 700;
+    letter-spacing: .04em; text-transform: uppercase;
+    color: var(--muted); border-bottom: 2px solid var(--border);
 }
-.shop-table td {
-    padding: .5rem .75rem;
-    border-bottom: 1px solid var(--border);
-    vertical-align: middle;
-}
+.shop-table td { padding: .5rem .75rem; border-bottom: 1px solid var(--border); vertical-align: middle; }
 .shop-table tr:hover td { background: var(--sage-pale); }
 .shop-table .cat-row td {
-    background: var(--sage-pale);
-    font-weight: 700;
-    font-size: .75rem;
-    color: var(--sage-d);
-    text-transform: uppercase;
-    letter-spacing: .05em;
+    background: var(--sage-pale); font-weight: 700; font-size: .75rem;
+    color: var(--sage-d); text-transform: uppercase; letter-spacing: .05em;
     padding: .35rem .75rem;
 }
-.shop-check {
-    width: 16px; height: 16px;
-    accent-color: var(--sage);
-    cursor: pointer;
-}
+.shop-check { width: 16px; height: 16px; accent-color: var(--sage); cursor: pointer; }
 .shop-table tr.checked td { opacity: .4; text-decoration: line-through; }
 .price-col { text-align: right; font-weight: 600; color: var(--sage-d); }
 
 /* ── Buttons ── */
-.wp-actions {
-    display: flex;
-    gap: .75rem;
-    flex-wrap: wrap;
-    margin-bottom: 1.5rem;
-}
+.wp-actions { display: flex; gap: .75rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
 .btn-wp {
-    display: inline-flex;
-    align-items: center;
-    gap: .4rem;
-    padding: .5rem 1.1rem;
-    border-radius: 8px;
-    font-size: .85rem;
-    font-weight: 500;
-    border: 1.5px solid var(--border);
-    background: #fff;
-    color: var(--muted);
-    cursor: pointer;
-    text-decoration: none;
-    transition: all .15s;
+    display: inline-flex; align-items: center; gap: .4rem;
+    padding: .5rem 1.1rem; border-radius: 8px;
+    font-size: .85rem; font-weight: 500;
+    border: 1.5px solid var(--border); background: #fff; color: var(--muted);
+    cursor: pointer; text-decoration: none; transition: all .15s;
 }
 .btn-wp:hover { border-color: var(--sage); color: var(--sage-d); background: var(--sage-pale); }
 .btn-wp.primary { background: var(--sage); color: #fff; border-color: var(--sage); }
 .btn-wp.primary:hover { background: var(--sage-d); }
 
-/* ── Print ── */
-@* Стили для печати вынесены в wwwroot/css/print-week.css чтобы избежать
-   проблем с @@ в Razor. Подключение ниже через <link>. *@
+/* Сниппет замены */
+#replaceToast {
+    position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 999;
+    background: #1a2f1a; color: #fff;
+    padding: .75rem 1.25rem; border-radius: 12px;
+    font-size: .85rem; font-weight: 500;
+    box-shadow: 0 8px 24px rgba(0,0,0,.2);
+    transform: translateY(20px); opacity: 0;
+    transition: transform .3s, opacity .3s;
+    pointer-events: none;
+}
+#replaceToast.show { transform: translateY(0); opacity: 1; }
 </style>
 
-<!--
-    Стили печати вынесены из <style> чтобы избежать ошибок Razor с @@media / @@page.
-    Файл: wwwroot/css/print-week.css
--->
 <link rel="stylesheet" href="~/css/print-week.css" asp-append-version="true" />
 
 <div class="print-only" style="display:none;text-align:center;margin-bottom:20px;font-size:14pt;font-family:'Lora',serif;">
@@ -268,6 +281,15 @@ body { font-family: 'DM Sans', sans-serif; }
 </div>
 
 <div class="wp-page">
+
+    @* ── Success banner ── *@
+    @if (TempData["GenerateSuccess"] != null)
+    {
+        <div class="wp-success no-print">
+            <span style="font-size:1.2rem">✅</span>
+            <span>Новый план питания успешно сгенерирован!</span>
+        </div>
+    }
 
     <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:1.5rem;flex-wrap:wrap;gap:1rem">
         <div class="no-print">
@@ -295,7 +317,7 @@ body { font-family: 'DM Sans', sans-serif; }
         <button class="wp-tab"        onclick="switchTab('shop', this)">🛒 Список покупок</button>
     </div>
 
-    <!-- ══ Меню ══════════════════════════════════════════════════════════════ -->
+    <!-- ══ МЕНЮ ══════════════════════════════════════════════════════════ -->
     <div class="wp-section meal-section active" id="tabMeal">
         <div style="overflow-x:auto">
             <table class="week-table">
@@ -325,16 +347,13 @@ body { font-family: 'DM Sans', sans-serif; }
                         var dinner    = GetMeals("Ужин");
                         var snack     = GetMeals("Перекус");
 
-                        // Итоги дня
                         var dayKcal  = day.Meals.Sum(m => m.Calories);
                         var dayProt  = day.Meals.Sum(m => m.Protein);
                         var dayFat   = day.Meals.Sum(m => m.Fat);
                         var dayCarbs = day.Meals.Sum(m => m.Carbs);
-                        var dayCost  = day.Meals.Sum(m => m.Cost);   // ← сумма цен за день
+                        var dayCost  = day.Meals.Sum(m => m.Cost);
 
                         <tr class="@(isToday ? "today" : "")">
-
-                            <!-- День -->
                             <td>
                                 <div class="day-label">
                                     @day.Date.ToString("ddd")
@@ -343,46 +362,236 @@ body { font-family: 'DM Sans', sans-serif; }
                                 <div class="day-date">@day.Date.ToString("d MMM")</div>
                             </td>
 
-                            <!-- Завтрак / Обед / Ужин / Перекус — рендерим через partial -->
                             @foreach (var group in new[] { breakfast, lunch, dinner, snack })
                             {
                                 <td>
-                                    @await Html.PartialAsync("_MealCell", group)
+                                    @* Рендерим ячейку с кнопками замены *@
+                                    <div class="meal-cell">
+                                        @if (!group.Any())
+                                        {
+                                            <span class="day-empty">—</span>
+                                        }
+                                        else
+                                        {
+                                            @foreach (var meal in group)
+                                            {
+                                                <div class="meal-entry" id="meal-@meal.Id">
+                                                    @if (!string.IsNullOrEmpty(meal.RecipeImageUrl))
+                                                    {
+                                                        <img class="meal-thumb" src="@meal.RecipeImageUrl" alt="@meal.RecipeName" />
+                                                    }
+                                                    else
+                                                    {
+                                                        <div class="meal-thumb-placeholder">🍽</div>
+                                                    }
+                                                    <div class="meal-info">
+                                                        <a class="meal-name" href="/Recipe/Details/@meal.RecipeId" title="@meal.RecipeName">
+                                                            @meal.RecipeName
+                                                        </a>
+                                                        <div class="meal-macros">
+                                                            @meal.Calories ккал · @meal.Protein Б · @meal.Fat Ж · @meal.Carbs У
+                                                        </div>
+                                                        @if (meal.Cost > 0)
+                                                        {
+                                                            <div class="meal-cost">@meal.Cost.ToString("F0") ₽</div>
+                                                        }
+                                                    </div>
+                                                    <button class="meal-replace-btn no-print"
+                                                            onclick="replaceMeal('@meal.Id', this)"
+                                                            title="Заменить блюдо">
+                                                        🔄
+                                                    </button>
+                                                </div>
+                                            }
+                                        }
+                                    </div>
                                 </td>
                             }
 
-                            <!-- Итоговая колонка дня -->
                             <td>
                                 @if (day.Meals.Any())
                                 {
                                     <div class="day-total">
                                         <div><b>@dayKcal</b> ккал</div>
-                                        <div>
-                                            <b>@dayProt</b> Б ·
-                                            <b>@dayFat</b> Ж ·
-                                            <b>@dayCarbs</b> У
-                                        </div>
+                                        <div><b>@dayProt</b> Б · <b>@dayFat</b> Ж · <b>@dayCarbs</b> У</div>
                                         @if (dayCost > 0)
                                         {
-                                            <!-- Стоимость дня — показывается только если рецепты имеют цены -->
                                             <div class="day-total-cost">@dayCost.ToString("F2") ₽</div>
                                         }
                                     </div>
                                 }
-                                else
-                                {
-                                    <span class="day-empty">—</span>
-                                }
+                                else { <span class="day-empty">—</span> }
                             </td>
+                        </tr>
+                    }
 
+                    @* ── Итоговая строка недели ── *@
+                    @if (Model.Days.Any(d => d.Meals.Any()))
+                    {
+                        <tr class="week-totals-row no-print">
+                            <td style="font-weight:700;color:var(--bark);font-size:.78rem">
+                                📊 Итого<br>
+                                <span style="font-weight:400;color:var(--muted);font-size:.7rem">за неделю</span>
+                            </td>
+                            <td colspan="4" style="color:var(--muted);font-size:.75rem;vertical-align:middle">
+                                Ср. день: <b style="color:var(--bark)">@avgKcal ккал</b>
+                            </td>
+                            <td>
+                                <div class="day-total">
+                                    <div><b>@weekKcal</b> ккал</div>
+                                    <div><b>@weekProt</b> Б · <b>@weekFat</b> Ж · <b>@weekCarbs</b> У</div>
+                                    @if (totalCost > 0)
+                                    {
+                                        <div class="day-total-cost">@totalCost.ToString("F2") ₽</div>
+                                    }
+                                </div>
+                            </td>
                         </tr>
                     }
                 </tbody>
             </table>
         </div>
+
+        @* ── ПАНЕЛЬ ИНФОРМАЦИИ О ПЛАНЕ (непечатаемая) ── *@
+        <div class="plan-info no-print">
+
+            @* Карточка 1: КБЖУ за неделю *@
+            <div class="plan-info-card">
+                <div class="plan-info-card-label">📊 КБЖУ за неделю</div>
+                <div class="pic-row">
+                    <span class="pic-row-lbl">Калории</span>
+                    <span class="pic-row-val">@weekKcal ккал</span>
+                </div>
+                <div class="pic-row">
+                    <span class="pic-row-lbl">Белки</span>
+                    <span class="pic-row-val">@weekProt г</span>
+                </div>
+                <div class="pic-row">
+                    <span class="pic-row-lbl">Жиры</span>
+                    <span class="pic-row-val">@weekFat г</span>
+                </div>
+                <div class="pic-row">
+                    <span class="pic-row-lbl">Углеводы</span>
+                    <span class="pic-row-val">@weekCarbs г</span>
+                </div>
+                <div style="margin-top:.6rem;font-size:.72rem;color:var(--muted)">
+                    В среднем <b style="color:var(--bark)">@avgKcal</b> ккал/день
+                </div>
+            </div>
+
+            @* Карточка 2: Бюджет *@
+            @if (plan != null)
+            {
+                <div class="plan-info-card">
+                    <div class="plan-info-card-label">💰 Бюджет</div>
+                    @if (plan.ConsiderBudget)
+                    {
+                        var barClass = budgetPct < 80 ? "ok" : budgetPct < 100 ? "warn" : "over";
+                        <div class="pic-row">
+                            <span class="pic-row-lbl">Потрачено</span>
+                            <span class="pic-row-val">@totalCost.ToString("F0") ₽</span>
+                        </div>
+                        <div class="pic-row">
+                            <span class="pic-row-lbl">Лимит</span>
+                            <span class="pic-row-val">@plan.WeeklyBudget.ToString("F0") ₽</span>
+                        </div>
+                        <div class="pic-row">
+                            <span class="pic-row-lbl">Остаток</span>
+                            <span class="pic-row-val" style="color:@(budgetPct >= 100 ? "#e24b4a" : "var(--sage-d)")">
+                                @((plan.WeeklyBudget - totalCost).ToString("F0")) ₽
+                            </span>
+                        </div>
+                        <div class="mini-bar-wrap" style="width:100%">
+                            <div class="mini-bar @barClass" style="width:@((int)budgetPct)%"></div>
+                        </div>
+                        <div style="font-size:.7rem;color:var(--muted);margin-top:.3rem">
+                            @((int)budgetPct)% бюджета использовано
+                        </div>
+                    }
+                    else
+                    {
+                        <div style="color:var(--muted);font-size:.85rem">Бюджет не ограничен</div>
+                        @if (totalCost > 0)
+                        {
+                            <div class="pic-row" style="margin-top:.5rem">
+                                <span class="pic-row-lbl">Итого</span>
+                                <span class="pic-row-val">@totalCost.ToString("F0") ₽</span>
+                            </div>
+                            <div style="font-size:.72rem;color:var(--muted)">~@((totalCost/7).ToString("F0")) ₽/день</div>
+                        }
+                    }
+                </div>
+            }
+
+            @* Карточка 3: Параметры генерации *@
+            @if (plan != null)
+            {
+                <div class="plan-info-card">
+                    <div class="plan-info-card-label">⚙️ Параметры плана</div>
+                    @if (!string.IsNullOrEmpty(plan.ExcludedProducts))
+                    {
+                        <div class="pic-row">
+                            <span class="pic-row-lbl">Исключено</span>
+                            <span class="pic-row-val" style="font-size:.75rem;text-align:right;max-width:120px;word-break:break-word">
+                                @plan.ExcludedProducts
+                            </span>
+                        </div>
+                    }
+                    <div style="margin-top:.5rem">
+                        @if (hasDiet)
+                        {
+                            <div class="diet-tags">
+                                @if (plan.Vegetarian) { <span class="diet-tag">🥦 Вегетарианство</span> }
+                                @if (plan.Vegan)      { <span class="diet-tag">🌱 Веганство</span> }
+                                @if (plan.GlutenFree) { <span class="diet-tag">🚫 Без глютена</span> }
+                                @if (plan.LowCarb)    { <span class="diet-tag warn">📉 Low-Carb</span> }
+                                @if (plan.HighProtein){ <span class="diet-tag warn">💪 Высокий белок</span> }
+                                @if (plan.LowFat)     { <span class="diet-tag warn">🫙 Low-Fat</span> }
+                            </div>
+                        }
+                        else
+                        {
+                            <span style="font-size:.82rem;color:var(--muted)">Без ограничений</span>
+                        }
+                    </div>
+                    <div style="margin-top:.75rem">
+                        <a asp-action="GenerateWeek" style="font-size:.78rem;color:var(--sage-d);text-decoration:none;font-weight:500">
+                            ✏️ Изменить параметры →
+                        </a>
+                    </div>
+                </div>
+            }
+
+            @* Карточка 4: Быстрая статистика *@
+            <div class="plan-info-card">
+                <div class="plan-info-card-label">📋 Статистика</div>
+                <div class="pic-row">
+                    <span class="pic-row-lbl">Блюд в плане</span>
+                    <span class="pic-row-val">@Model.Days.Sum(d => d.Meals.Count)</span>
+                </div>
+                <div class="pic-row">
+                    <span class="pic-row-lbl">Дней с едой</span>
+                    <span class="pic-row-val">@Model.Days.Count(d => d.Meals.Any()) из 7</span>
+                </div>
+                <div class="pic-row">
+                    <span class="pic-row-lbl">Позиций в списке</span>
+                    <span class="pic-row-val">@Model.ShoppingList.Count</span>
+                </div>
+                @if (Model.ShoppingList.Any())
+                {
+                    <div style="margin-top:.65rem">
+                        <button class="btn-wp" style="width:100%;justify-content:center;font-size:.78rem"
+                                onclick="switchTab('shop', document.querySelectorAll('.wp-tab')[1])">
+                            🛒 К списку покупок
+                        </button>
+                    </div>
+                }
+            </div>
+
+        </div>
     </div>
 
-    <!-- ══ Список покупок ═════════════════════════════════════════════════════ -->
+    <!-- ══ СПИСОК ПОКУПОК ════════════════════════════════════════════════ -->
     <div class="wp-section shop-section" id="tabShop">
         <div class="shop-header no-print">
             <div>
@@ -392,10 +601,25 @@ body { font-family: 'DM Sans', sans-serif; }
                 <div style="font-size:.8rem;color:var(--muted);margin-top:.2rem">
                     @Model.ShoppingList.Count позиций
                 </div>
+                @if (plan is { ConsiderBudget: true, WeeklyBudget: > 0 })
+                {
+                    var barClass2 = budgetPct < 80 ? "ok" : budgetPct < 100 ? "warn" : "over";
+                    <div class="budget-bar-wrap" style="margin-top:.5rem">
+                        <div class="budget-bar @barClass2" style="width:@((int)budgetPct)%"></div>
+                    </div>
+                    <div style="font-size:.72rem;color:var(--muted);margin-top:.25rem">
+                        @totalCost.ToString("F0") ₽ из @plan.WeeklyBudget.ToString("F0") ₽ бюджета
+                    </div>
+                }
             </div>
-            <label style="font-size:.82rem;color:var(--muted);display:flex;align-items:center;gap:.4rem;cursor:pointer" class="no-print">
-                <input type="checkbox" id="checkAll" style="accent-color:var(--sage)"> Отметить всё
-            </label>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:.5rem">
+                <label style="font-size:.82rem;color:var(--muted);display:flex;align-items:center;gap:.4rem;cursor:pointer">
+                    <input type="checkbox" id="checkAll" style="accent-color:var(--sage)"> Отметить всё
+                </label>
+                <button class="btn-wp" onclick="exportShopList()" style="font-size:.78rem">
+                    📋 Копировать список
+                </button>
+            </div>
         </div>
 
         <table class="shop-table">
@@ -408,9 +632,7 @@ body { font-family: 'DM Sans', sans-serif; }
                 </tr>
             </thead>
             <tbody>
-                @{
-                    string? lastCat = null;
-                }
+                @{ string? lastCat = null; }
                 @foreach (var item in Model.ShoppingList)
                 {
                     if (item.Category != lastCat)
@@ -441,12 +663,15 @@ body { font-family: 'DM Sans', sans-serif; }
     </div>
 </div>
 
+@* Toast *@
+<div id="replaceToast">🔄 Блюдо заменено</div>
+
 @section Scripts {
 <script>
 function switchTab(name, btn) {
     document.querySelectorAll('.wp-tab').forEach(t => t.classList.remove('active'));
     document.querySelectorAll('.wp-section').forEach(s => s.classList.remove('active'));
-    btn.classList.add('active');
+    if (btn) btn.classList.add('active');
     document.getElementById('tab' + name[0].toUpperCase() + name.slice(1)).classList.add('active');
 }
 
@@ -466,5 +691,70 @@ function printSection(section) {
     window.print();
     setTimeout(() => document.body.classList.remove('print-meal-plan', 'print-shop-list'), 1000);
 }
+
+// Замена блюда — вызывает POST /MealPlan/ReplaceMeal
+async function replaceMeal(plannedMealId, btn) {
+    btn.classList.add('loading');
+    btn.textContent = '⏳';
+
+    try {
+        const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value ?? '';
+        const res   = await fetch('/MealPlan/ReplaceMeal', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'RequestVerificationToken': token
+            },
+            body: `plannedMealId=${plannedMealId}`
+        });
+        const data = await res.json();
+
+        if (data.error) {
+            showToast('⚠️ ' + data.error, true);
+            return;
+        }
+
+        // Обновляем DOM ячейки
+        const entry = document.getElementById('meal-' + plannedMealId);
+        if (entry) {
+            entry.querySelector('.meal-name').textContent = data.name;
+            entry.querySelector('.meal-name').href = '/Recipe/Details/' + data.recipeId;
+            entry.querySelector('.meal-macros').textContent =
+                `${data.calories} ккал · ${data.protein} Б · ${data.fat} Ж · ${data.carbs} У`;
+            const costEl = entry.querySelector('.meal-cost');
+            if (costEl) costEl.textContent = data.cost > 0 ? data.cost.toFixed(0) + ' ₽' : '';
+            const img = entry.querySelector('.meal-thumb');
+            if (img && data.RecipeImageUrl) img.src = data.RecipeImageUrl;
+        }
+
+        showToast('✅ Заменено на «' + data.name + '»');
+    } catch {
+        showToast('❌ Ошибка при замене', true);
+    } finally {
+        btn.classList.remove('loading');
+        btn.textContent = '🔄';
+    }
+}
+
+function showToast(msg, isError = false) {
+    const t = document.getElementById('replaceToast');
+    t.textContent = msg;
+    t.style.background = isError ? '#7f1d1d' : '#1a2f1a';
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// Копировать список покупок в буфер
+function exportShopList() {
+    const rows = [...document.querySelectorAll('.shop-row')];
+    const lines = rows.map(r => {
+        const cells = r.querySelectorAll('td');
+        return `${cells[1]?.textContent.trim()} — ${cells[2]?.textContent.trim()} (${cells[3]?.textContent.trim()})`;
+    });
+    navigator.clipboard.writeText(lines.join('\n')).then(() => showToast('📋 Список скопирован!'));
+}
 </script>
+
+@* Antiforgery token для AJAX *@
+@Html.AntiForgeryToken()
 }

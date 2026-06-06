@@ -851,7 +851,7 @@ class="btn-soft danger">
 </button>
 }
 
-<button onclick="shareRecipe()" class="btn-soft">
+<button onclick="shareRecipe()" class="btn-soft" id="share-button">
 <i class="fas fa-share-alt"></i> Поделиться
 </button>
 </div>
@@ -924,7 +924,7 @@ setText('calcKcal', Math.round(BASE_KCAL * val));
 setText('calcP',    (BASE_P * val).toFixed(1));
 setText('calcF',    (BASE_F * val).toFixed(1));
 setText('calcC',    (BASE_C * val).toFixed(1));
-setText('calcCost', Math.round(BASE_TOTAL_COST * ratio));
+setText('calcCost', (BASE_TOTAL_COST * ratio).toFixed(2));
 
 // Ингредиенты
 document.querySelectorAll('.ing-item[data-base-amount]').forEach(item => {
@@ -958,5 +958,29 @@ document.getElementById('srvPlus') .addEventListener('click', () => updateServin
  document.addEventListener("keydown", e => {
      if (e.key === "Escape") document.getElementById("delBackdrop").classList.remove("open");
  });
+
+ const shareButton = document.getElementById('share-button');
+
+ shareButton.addEventListener('click', async () => {
+     // Проверяем поддержку Web Share API
+     if (!navigator.share) {
+         alert('Функция «Поделиться» не поддерживается в вашем браузере');
+         return;
+     }
+
+     try {
+         await navigator.share({
+             title: document.title,
+             text: 'Посмотрите эту интересную страницу!',
+             url: window.location.href
+         });
+         console.log('Ссылка успешно отправлена');
+     } catch (error) {
+         if (error.name !== 'AbortError') {
+             console.error('Ошибка при попытке поделиться:', error);
+         }
+     }
+ });
+
 </script>
 }
