@@ -1,0 +1,102 @@
+﻿@model Domain.Entities.Product
+@using Domain.Enums
+
+<form id="editProductForm" enctype="multipart/form-data">
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="Id" value="@Model.Id"/>
+    <input type="hidden" name="ImageUrl" value="@Model.ImageUrl"/>
+
+    <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title fw-bold">✏️ Редактировать продукт</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+    </div>
+
+    <div class="modal-body px-4">
+        <div class="mb-3">
+            <label class="form-label fw-semibold">Название</label>
+            <input name="Name" class="form-control" value="@Model.Name" required/>
+        </div>
+
+        <div class="row g-2 mb-3">
+            <div class="col-6">
+                <label class="form-label fw-semibold">Цена за единицу</label>
+                <input name="PricePerUnit" type="number" step="0.01" min="0"
+                       class="form-control" value="@Model.PricePerUnit" required/>
+            </div>
+            <div class="col-6">
+                <label class="form-label fw-semibold">Единица</label>
+                <select name="Unit" class="form-select">
+                    @foreach (var u in new[] { "г", "кг", "мл", "л", "шт", "уп" })
+                    {
+                        if (Model.Unit == u)
+                        {
+                            <option value="@u" selected>@u</option>
+                        }
+                        else
+                        {
+                            <option value="@u">@u</option>
+                        }
+                    }
+                </select>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label fw-semibold">Категория</label>
+            <select name="Category" class="form-select">
+                @foreach (ProductCategory cat in Enum.GetValues<ProductCategory>())
+                {
+                    if (Model.Category == cat)
+                    {
+                        <option value="@((int)cat)" selected>@cat.ToString()</option>
+                    }
+                    else
+                    {
+                        <option value="@((int)cat)">@cat.ToString()</option>
+                    }
+                }
+            </select>
+        </div>
+
+        <p class="text-muted small fw-bold text-uppercase mb-2">Нутриенты на 100г</p>
+        <div class="row g-2 mb-3">
+            <div class="col-3">
+                <label class="form-label small">Калории</label>
+                <input name="CaloriesPer100" type="number" step="0.1"
+                       class="form-control form-control-sm" value="@Model.CaloriesPer100"/>
+            </div>
+            <div class="col-3">
+                <label class="form-label small">Белки</label>
+                <input name="ProteinPer100" type="number" step="0.1"
+                       class="form-control form-control-sm" value="@Model.ProteinPer100"/>
+            </div>
+            <div class="col-3">
+                <label class="form-label small">Жиры</label>
+                <input name="FatPer100" type="number" step="0.1"
+                       class="form-control form-control-sm" value="@Model.FatPer100"/>
+            </div>
+            <div class="col-3">
+                <label class="form-label small">Углеводы</label>
+                <input name="CarbsPer100" type="number" step="0.1"
+                       class="form-control form-control-sm" value="@Model.CarbsPer100"/>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label fw-semibold">Фото</label>
+            @if (!string.IsNullOrEmpty(Model.ImageUrl))
+            {
+                <div class="mb-2">
+                    <img src="@Model.ImageUrl" style="height:80px;border-radius:8px;object-fit:cover;" alt=""/>
+                    <span class="text-muted small ms-2">текущее фото</span>
+                </div>
+            }
+            <input type="file" name="image" class="form-control" accept="image/*"/>
+        </div>
+    </div>
+
+    <div class="modal-footer border-0">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Отмена</button>
+        <button type="submit" class="btn btn-success px-4">💾 Сохранить</button>
+    </div>
+</form>

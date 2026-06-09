@@ -36,7 +36,7 @@ namespace Presentation.Controllers
                 page, 
                 PageSize, 
                 searchTerm, 
-                category,                    // передаём Enum
+                category,                   
                 minCalories,
                 maxCalories,
                 minPrice,
@@ -150,6 +150,70 @@ namespace Presentation.Controllers
             await _productService.CreateAsync(category);
 
             return Json(new { success = true, id = category.Id, name = category.Name });
+        }
+        
+        [HttpGet]
+        public async Task<IActionResult> EditModal(Guid id)
+        {
+            var product = await _productService.GetByIdAsync(id);
+            if (product == null) return NotFound();
+            return PartialView("_EditProductModal", product);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditModal(Product product, IFormFile? image)
+        {
+            if (image != null && image.Length > 0)
+            {
+                var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp" };
+                var extension = Path.GetExtension(image.FileName).ToLowerInvariant();
+                if (image.Length > 5 * 1024 * 1024)
+                    ModelState.AddModelError("image", "Изображение не должно превышать 5 МБ.");
+                else if (!allowedExtensions.Contains(extension))
+                    ModelState.AddModelError("image", "Допустимые форматы: JPG, PNG, GIF, WEBP.");
+            }
+
+            if (!ModelState.IsValid)
+                return PartialView("_EditProductModal", product);
+
+            var existing = await _productService.GetByIdAsync(product.Id);
+            if (existing == null) return NotFound();
+
+            existing.Name          = product.Name;
+            existing.PricePerUnit  = product.PricePerUnit;
+            existing.Unit          = product.Unit;
+            existing.WeightGrams   = product.WeightGrams;
+            existing.Category      = product.Category;
+            existing.CaloriesPer100 = product.CaloriesPer100;
+            existing.ProteinPer100  = product.ProteinPer100;
+            existing.FatPer100      = product.FatPer100;
+            existing.CarbsPer100    = product.CarbsPer100;
+            existing.UpdatedAt      = DateTime.UtcNow;
+
+            if (image != null && image.Length > 0)
+            {
+                var fileName      = Guid.NewGuid() + Path.GetExtension(image.FileName);
+                var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/images/products");
+                Directory.CreateDirectory(uploadsFolder);
+                await using var stream = new FileStream(Path.Combine(uploadsFolder, fileName), FileMode.Create);
+                await image.CopyToAsync(stream);
+                existing.ImageUrl = "/images/products/" + fileName;
+            }
+
+            await _productService.UpdateAsync(existing);
+            return Json(new { success = true });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Delete(Guid id)
+        {
+            var product = await _productService.GetByIdAsync(id);
+            if (product == null) return Json(new { success = false, message = "Продукт не найден" });
+
+            await _productService.DeleteAsync(id);
+            return Json(new { success = true });
         }
     }
 }

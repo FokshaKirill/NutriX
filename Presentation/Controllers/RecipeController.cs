@@ -181,73 +181,73 @@ public class RecipeController : Controller
         ViewBag.Products = (await _productService.GetAllProductsAsync()).OrderBy(p => p.Name).ToList();
         return View(new RecipeCreateViewModel { Ingredients = [new()], Steps = [new()] });
     }
-// ── Вставить в RecipeController вместо Edit POST и Create POST ──────────────
 
-// POST: /Recipe/Create
-[HttpPost, ValidateAntiForgeryToken]
-public async Task<IActionResult> Create(
-    RecipeCreateViewModel model,
-    IFormFile? mainImage,
-    IFormFile[]? stepImages)
-{
-    if (!CurrentUserId.HasValue) return Redirect("/account/authpage");
-
-    if (!ModelState.IsValid)
+    // POST: /Recipe/Create
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> Create(
+        RecipeCreateViewModel model,
+        IFormFile? mainImage,
+        IFormFile[]? stepImages)
     {
-        ViewBag.Products = (await _productService.GetAllProductsAsync()).OrderBy(p => p.Name).ToList();
-        return View(model);
+        if (!CurrentUserId.HasValue) return Redirect("/account/authpage");
+
+        if (!ModelState.IsValid)
+        {
+            ViewBag.Products = (await _productService.GetAllProductsAsync()).OrderBy(p => p.Name).ToList();
+            return View(model);
+        }
+
+        if (mainImage?.Length > 0)
+            model.ImageUrl = await SaveImageAsync(mainImage);
+
+        var recipe = _mapper.Map<Recipe>(model);
+        recipe.Id        = Guid.NewGuid();
+        recipe.AuthorId  = CurrentUserId.Value;
+        recipe.CreatedAt = DateTime.UtcNow;
+
+        recipe.Ingredients = model.Ingredients
+            .Where(i => i.ProductId != Guid.Empty && i.Amount > 0)
+            .Select(i => new RecipeIngredient
+            {
+                Id        = Guid.NewGuid(),
+                ProductId = i.ProductId,
+                Amount    = i.Amount,
+                Unit      = string.IsNullOrWhiteSpace(i.Unit) ? "г" : i.Unit.Trim(),
+                Comment   = i.Comment?.Trim()
+            }).ToList();
+
+        // Шаги — сохраняем с фото
+        var validSteps = model.Steps
+            .Select((s, idx) => (step: s, idx))
+            .Where(x => !string.IsNullOrWhiteSpace(x.step.Description))
+            .ToList();
+
+        recipe.Steps = new List<RecipeStep>();
+        foreach (var ((stepVm, originalIdx), fileIdx) in validSteps.Select((x, i) => (x, i)))
+        {
+            var step = new RecipeStep
+            {
+                Id           = Guid.NewGuid(),
+                Order        = recipe.Steps.Count + 1,
+                Description  = stepVm.Description.Trim(),
+                TimerSeconds = stepVm.TimerSeconds,
+                ImageUrl     = stepVm.ImageUrl   // существующий (при create — null)
+            };
+
+            // Если загружено новое фото для этого шага
+            if (stepImages != null && fileIdx < stepImages.Length && stepImages[fileIdx]?.Length > 0)
+                step.ImageUrl = await SaveImageAsync(stepImages[fileIdx]);
+
+            recipe.Steps.Add(step);
+        }
+
+        foreach (var ing in recipe.Ingredients)
+            ing.Product = await _productService.GetByIdAsync(ing.ProductId);
+
+        await _recipeService.CreateAsync(recipe);
+        return RedirectToAction("Index");
     }
 
-    if (mainImage?.Length > 0)
-        model.ImageUrl = await SaveImageAsync(mainImage);
-
-    var recipe = _mapper.Map<Recipe>(model);
-    recipe.Id        = Guid.NewGuid();
-    recipe.AuthorId  = CurrentUserId.Value;
-    recipe.CreatedAt = DateTime.UtcNow;
-
-    recipe.Ingredients = model.Ingredients
-        .Where(i => i.ProductId != Guid.Empty && i.Amount > 0)
-        .Select(i => new RecipeIngredient
-        {
-            Id        = Guid.NewGuid(),
-            ProductId = i.ProductId,
-            Amount    = i.Amount,
-            Unit      = string.IsNullOrWhiteSpace(i.Unit) ? "г" : i.Unit.Trim(),
-            Comment   = i.Comment?.Trim()
-        }).ToList();
-
-    // Шаги — сохраняем с фото
-    var validSteps = model.Steps
-        .Select((s, idx) => (step: s, idx))
-        .Where(x => !string.IsNullOrWhiteSpace(x.step.Description))
-        .ToList();
-
-    recipe.Steps = new List<RecipeStep>();
-    foreach (var ((stepVm, originalIdx), fileIdx) in validSteps.Select((x, i) => (x, i)))
-    {
-        var step = new RecipeStep
-        {
-            Id           = Guid.NewGuid(),
-            Order        = recipe.Steps.Count + 1,
-            Description  = stepVm.Description.Trim(),
-            TimerSeconds = stepVm.TimerSeconds,
-            ImageUrl     = stepVm.ImageUrl   // существующий (при create — null)
-        };
-
-        // Если загружено новое фото для этого шага
-        if (stepImages != null && fileIdx < stepImages.Length && stepImages[fileIdx]?.Length > 0)
-            step.ImageUrl = await SaveImageAsync(stepImages[fileIdx]);
-
-        recipe.Steps.Add(step);
-    }
-
-    foreach (var ing in recipe.Ingredients)
-        ing.Product = await _productService.GetByIdAsync(ing.ProductId);
-
-    await _recipeService.CreateAsync(recipe);
-    return RedirectToAction("Index");
-}
     // POST: /Recipe/ToggleFavorite  — AJAX JSON endpoint
     [HttpPost("Recipe/ToggleFavorite"), ValidateAntiForgeryToken]
     public async Task<IActionResult> ToggleFavorite([FromForm] Guid id)
