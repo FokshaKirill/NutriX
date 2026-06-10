@@ -1,12 +1,7 @@
-/**
- * product-index.js
- * Логика страницы каталога продуктов: слайдер калорий, модалка создания продукта.
- */
-
 (function () {
     'use strict';
 
-    // ── Слайдер калорийности ─────────────────────────────────────────────────────
+    // ── Слайдер калорийности
     const caloriesRange = document.getElementById('caloriesRange');
     const caloriesValue = document.getElementById('caloriesValue');
 
@@ -16,12 +11,9 @@
         });
     }
 
-    // ── Модалка создания продукта ────────────────────────────────────────────────
-    // Зависит от jQuery + Bootstrap (уже подключены глобально через _Layout).
+    if (typeof $ !== 'undefined') {
 
-    const createModal = document.getElementById('createProductModal');
-
-    if (createModal && typeof $ !== 'undefined') {
+        // МОДАЛКА СОЗДАНИЯ
         $('#createProductModal').on('show.bs.modal', function () {
             $.get(window.ProductIndex?.createModalUrl ?? '/Product/CreateModal', function (data) {
                 $('#createModalBody').html(data);
@@ -29,29 +21,28 @@
             });
         });
 
-        $(document).on('submit', '#createProductForm', function (e) {
+        $(document).on('submit', '#createProductModal form', function (e) {
             e.preventDefault();
-            const formData = new FormData(this);
+            submitModalForm(this, '#createProductModal', '#createModalBody', '/Product/CreateModal');
+        });
+    }
 
-            $.ajax({
-                url:         window.ProductIndex?.createModalUrl ?? '/Product/CreateModal',
-                type:        'POST',
-                data:        formData,
-                processData: false,
-                contentType: false,
-                success: function (result) {
-                    if (result.success) {
-                        $('#createProductModal').modal('hide');
-                        location.reload();
-                    } else {
-                        $('#createModalBody').html(result);
-                        attachCategoryFormHandler();
-                    }
-                },
-                error: function () {
-                    alert('Произошла ошибка при сохранении продукта.');
+    function submitModalForm(formElement, modalId, bodyId, fallbackUrl) {
+        $.ajax({
+            url:         $(formElement).attr('action') || fallbackUrl,
+            type:        'POST',
+            data:        new FormData(formElement),
+            processData: false,
+            contentType: false,
+            success: function (result) {
+                if (result.success) {
+                    $(modalId).modal('hide');
+                    location.reload();
+                } else {
+                    $(bodyId).html(result);
                 }
-            });
+            },
+            error: function () { alert('Ошибка при сохранении изменений.'); }
         });
     }
 
@@ -59,7 +50,6 @@
         $(document).off('submit', '#addCategoryForm');
         $(document).on('submit', '#addCategoryForm', function (e) {
             e.preventDefault();
-
             $.ajax({
                 url:     window.ProductIndex?.createCategoryModalUrl ?? '/Product/CreateCategoryModal',
                 type:    'POST',
@@ -74,9 +64,7 @@
                         alert(result.message || 'Ошибка при добавлении категории');
                     }
                 },
-                error: function () {
-                    alert('Произошла ошибка при сохранении категории');
-                }
+                error: function () { alert('Произошла ошибка при сохранении категории'); }
             });
         });
     }

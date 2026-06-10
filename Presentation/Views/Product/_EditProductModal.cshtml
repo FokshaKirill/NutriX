@@ -1,6 +1,29 @@
 ﻿@model Domain.Entities.Product
 @using Domain.Enums
 
+@{
+    var catNames = new Dictionary<ProductCategory, string> {
+        [ProductCategory.Meat]         = "Мясо",
+        [ProductCategory.Poultry]      = "Птица",
+        [ProductCategory.Fish]         = "Рыба и морепродукты",
+        [ProductCategory.Dairy]        = "Молочное",
+        [ProductCategory.Eggs]         = "Яйца",
+        [ProductCategory.Grains]       = "Крупы и зерновые",
+        [ProductCategory.Bread]        = "Хлеб и макароны",
+        [ProductCategory.Vegetables]   = "Овощи",
+        [ProductCategory.Fruits]       = "Фрукты",
+        [ProductCategory.Nuts]         = "Орехи и семена",
+        [ProductCategory.Oils]         = "Масла и жиры",
+        [ProductCategory.Spices]       = "Специи и приправы",
+        [ProductCategory.Sweets]       = "Сладкое",
+        [ProductCategory.Canned]       = "Консервы",
+        [ProductCategory.SemiFinished] = "Полуфабрикаты",
+        [ProductCategory.Soy]          = "Соевые продукты",
+        [ProductCategory.Beverages]    = "Напитки",
+        [ProductCategory.Other]        = "Прочее",
+    };
+}
+
 <form id="editProductForm" enctype="multipart/form-data">
     @Html.AntiForgeryToken()
     <input type="hidden" name="Id" value="@Model.Id"/>
@@ -48,11 +71,11 @@
                 {
                     if (Model.Category == cat)
                     {
-                        <option value="@((int)cat)" selected>@cat.ToString()</option>
+                        <option value="@((int)cat)" selected>@catNames[cat]</option>
                     }
                     else
                     {
-                        <option value="@((int)cat)">@cat.ToString()</option>
+                        <option value="@((int)cat)">@catNames[cat]</option>
                     }
                 }
             </select>
@@ -97,6 +120,6 @@
 
     <div class="modal-footer border-0">
         <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Отмена</button>
-        <button type="submit" class="btn btn-success px-4">💾 Сохранить</button>
+        <button type="submit" class="btn btn-success px-4">Сохранить</button>
     </div>
 </form>

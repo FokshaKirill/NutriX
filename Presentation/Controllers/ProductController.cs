@@ -124,11 +124,40 @@ namespace Presentation.Controllers
             if (product == null) return NotFound();
 
             var vm = _mapper.Map<ProductViewModel>(product);
-            vm.CategoryName = product.Parent?.Name;
             vm.ImageUrl = product.ImageUrl;
+    
+            // Категория из enum, не из Parent
+            vm.CategoryName = product.Category != ProductCategory.Other
+                ? GetCategoryDisplayName(product.Category)
+                : null;
+
+            var recipes = await _productService.GetRecipesUsingProductAsync(id);
+            ViewBag.RelatedRecipes = recipes;
 
             return View(vm);
         }
+
+        private string GetCategoryDisplayName(ProductCategory category) => category switch
+        {
+            ProductCategory.Meat         => "Мясо",
+            ProductCategory.Poultry      => "Птица",
+            ProductCategory.Fish         => "Рыба и морепродукты",
+            ProductCategory.Dairy        => "Молочное",
+            ProductCategory.Eggs         => "Яйца",
+            ProductCategory.Grains       => "Крупы и зерновые",
+            ProductCategory.Bread        => "Хлеб и макароны",
+            ProductCategory.Vegetables   => "Овощи",
+            ProductCategory.Fruits       => "Фрукты",
+            ProductCategory.Nuts         => "Орехи и семена",
+            ProductCategory.Oils         => "Масла и жиры",
+            ProductCategory.Spices       => "Специи и приправы",
+            ProductCategory.Sweets       => "Сладкое",
+            ProductCategory.Canned       => "Консервы",
+            ProductCategory.SemiFinished => "Полуфабрикаты",
+            ProductCategory.Soy          => "Соевые продукты",
+            ProductCategory.Beverages    => "Напитки",
+            _                            => null
+        };
         
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -151,60 +180,60 @@ namespace Presentation.Controllers
 
             return Json(new { success = true, id = category.Id, name = category.Name });
         }
-        
+        // GET: /Product/EditModal?id=...
         [HttpGet]
         public async Task<IActionResult> EditModal(Guid id)
         {
             var product = await _productService.GetByIdAsync(id);
             if (product == null) return NotFound();
-            return PartialView("_EditProductModal", product);
+
+            // Передаем категории в ViewBag, если они нужны внутри формы редактирования
+            ViewBag.Products = await _productService.GetAllProductsAsync(); 
+
+            return PartialView("_EditProductModal", product); // Твой файл формы редактирования
         }
 
+        // POST: /Product/EditModal
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> EditModal(Product product, IFormFile? image)
+        public async Task<IActionResult> EditModal(Product model, IFormFile? image)
         {
+            if (!ModelState.IsValid)
+                return PartialView("_EditProductModal", model);
+
             if (image != null && image.Length > 0)
             {
+                if (image.Length > 5 * 1024 * 1024)
+                {
+                    ModelState.AddModelError("image", "Изображение не должно превышать 5 МБ.");
+                    return PartialView("_EditProductModal", model);
+                }
+
                 var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp" };
                 var extension = Path.GetExtension(image.FileName).ToLowerInvariant();
-                if (image.Length > 5 * 1024 * 1024)
-                    ModelState.AddModelError("image", "Изображение не должно превышать 5 МБ.");
-                else if (!allowedExtensions.Contains(extension))
+                if (!allowedExtensions.Contains(extension))
+                {
                     ModelState.AddModelError("image", "Допустимые форматы: JPG, PNG, GIF, WEBP.");
-            }
+                    return PartialView("_EditProductModal", model);
+                }
 
-            if (!ModelState.IsValid)
-                return PartialView("_EditProductModal", product);
-
-            var existing = await _productService.GetByIdAsync(product.Id);
-            if (existing == null) return NotFound();
-
-            existing.Name          = product.Name;
-            existing.PricePerUnit  = product.PricePerUnit;
-            existing.Unit          = product.Unit;
-            existing.WeightGrams   = product.WeightGrams;
-            existing.Category      = product.Category;
-            existing.CaloriesPer100 = product.CaloriesPer100;
-            existing.ProteinPer100  = product.ProteinPer100;
-            existing.FatPer100      = product.FatPer100;
-            existing.CarbsPer100    = product.CarbsPer100;
-            existing.UpdatedAt      = DateTime.UtcNow;
-
-            if (image != null && image.Length > 0)
-            {
-                var fileName      = Guid.NewGuid() + Path.GetExtension(image.FileName);
+                var fileName = Guid.NewGuid() + Path.GetExtension(image.FileName);
                 var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/images/products");
                 Directory.CreateDirectory(uploadsFolder);
-                await using var stream = new FileStream(Path.Combine(uploadsFolder, fileName), FileMode.Create);
-                await image.CopyToAsync(stream);
-                existing.ImageUrl = "/images/products/" + fileName;
+
+                var filePath = Path.Combine(uploadsFolder, fileName);
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await image.CopyToAsync(stream);
+                }
+
+                model.ImageUrl = "/images/products/" + fileName;
             }
 
-            await _productService.UpdateAsync(existing);
+            await _productService.UpdateAsync(model);
             return Json(new { success = true });
         }
-
+        
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(Guid id)

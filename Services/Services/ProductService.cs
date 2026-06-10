@@ -176,5 +176,20 @@ namespace Services.Services
             
             return name.Trim();
         }
+        
+        public async Task<List<Recipe>> GetRecipesUsingProductAsync(Guid productId)
+        {
+            return await _products.Query()
+                .Where(p => p.Id == productId)
+                .SelectMany(p => p.UsedInRecipeIngredients)
+                .Include(ri => ri.Recipe)
+                .ThenInclude(r => r.Author)
+                .Where(ri => ri.Recipe.IsPublic)
+                .Select(ri => ri.Recipe)
+                .Distinct()
+                .OrderByDescending(r => r.CreatedAt)
+                .Take(12)
+                .ToListAsync();
+        }
     }
 }

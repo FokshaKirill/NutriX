@@ -35,5 +35,10 @@ namespace Services.Interfaces
         /// Получить Enum-категории для фильтра в виде SelectList
         /// </summary>
         Task<List<SelectListItem>> GetCategorySelectListAsync();
+        
+        /// <summary>
+        /// Получить количество рецептов, в которых используется продукт
+        /// </summary>
+        Task<List<Recipe>> GetRecipesUsingProductAsync(Guid productId);
     }
 }

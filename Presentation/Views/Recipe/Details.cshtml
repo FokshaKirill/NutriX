@@ -781,7 +781,15 @@ title="@(Model.IsFavorite ? "Убрать из избранного" : "В из�
     data-base-amount="@ing.Amount"
     data-base-price="@ing.PricePerUnit.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)">
     <span>
-    <span class="ing-name">@ing.ProductName</span>
+        <span class="ing-name">
+            <a asp-controller="Product" asp-action="Details"
+               asp-route-id="@ing.ProductId"
+               style="color:inherit; border-bottom:1px dashed var(--border); transition:color .15s;"
+               onmouseover="this.style.color='var(--sage-d)'; this.style.borderBottomColor='var(--sage-d)'"
+               onmouseout="this.style.color='inherit'; this.style.borderBottomColor='var(--border)'">
+                @ing.ProductName
+            </a>
+        </span>
     @if (!string.IsNullOrEmpty(displayComment))
     {
     <span class="ing-comment">(@displayComment)</span>
