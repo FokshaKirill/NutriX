@@ -1,17 +1,18 @@
-@model List<Domain.Entities.PlannedMeal>
-@*
+@* 
     _DayMenuBody.cshtml
-    Отображает список блюд и прогресс-бары для раздела «Меню на сегодня».
-    Вызывается из Home/Index.cshtml только когда есть авторизованный пользователь
-    и список блюд не пуст.
+    Модель — список MealSlot (приёмы пищи с несколькими блюдами каждый).
+    Вызывается из Home/Index.cshtml.
     GOALS / MEAL_DATA уже объявлены в window.NutriX (data-bridge в Index.cshtml).
 *@
+@model List<Domain.Entities.MealSlot>
 
 @{
-    var totalKcal = Model.Sum(m => (int)(m.Recipe?.CaloriesPerServing ?? 0));
-    var totalProt = Model.Sum(m => (int)(m.Recipe?.ProteinPerServing  ?? 0));
-    var totalFat  = Model.Sum(m => (int)(m.Recipe?.FatPerServing      ?? 0));
-    var totalCarb = Model.Sum(m => (int)(m.Recipe?.CarbsPerServing    ?? 0));
+    // Агрегируем по всем слотам
+    var allItems = Model.SelectMany(s => s.Items).ToList();
+    var totalKcal = allItems.Sum(m => (int)((m.Recipe?.CaloriesPerServing ?? 0) * m.Servings));
+    var totalProt = allItems.Sum(m => (int)((m.Recipe?.ProteinPerServing  ?? 0) * m.Servings));
+    var totalFat  = allItems.Sum(m => (int)((m.Recipe?.FatPerServing      ?? 0) * m.Servings));
+    var totalCarb = allItems.Sum(m => (int)((m.Recipe?.CarbsPerServing    ?? 0) * m.Servings));
 }
 
 @* ── Итоговые показатели ────────────────────────────────────────────────────── *@
@@ -34,51 +35,66 @@
     </div>
 </div>
 
-@* ── Список блюд ─────────────────────────────────────────────────────────────── *@
+@* ── Список приёмов пищи (слотов) ───────────────────────────────────────────── *@
 <div class="meals-list">
-    @foreach (var meal in Model.OrderBy(m => m.MealType!.Order))
+    @foreach (var slot in Model.OrderBy(s => s.MealType?.Order ?? 0))
     {
-        <div class="meal-card" id="mealCard_@meal.Id">
-            <div class="meal-header">
-
-                <div class="meal-check" id="check_@meal.Id"
-                     onclick="toggleDone('@meal.Id')"
-                     title="Отметить как съедено"></div>
-
-                @if (!string.IsNullOrEmpty(meal.Recipe?.ImageUrl))
-                {
-                    <img src="@meal.Recipe.ImageUrl"
-                         class="meal-img" alt="@meal.Recipe.Name" />
-                }
-                else
-                {
-                    <div class="meal-img-ph">🍽</div>
-                }
-
-                <div class="meal-info">
-                    <div class="meal-type">@meal.MealType?.Name</div>
-                    <div class="meal-name" id="mealName_@meal.Id">
-                        @meal.Recipe?.Name
-                    </div>
-                    <div class="meal-macros-inline" id="mealMacros_@meal.Id">
-                        Б @((int)(meal.Recipe?.ProteinPerServing ?? 0))г ·
-                        Ж @((int)(meal.Recipe?.FatPerServing     ?? 0))г ·
-                        У @((int)(meal.Recipe?.CarbsPerServing   ?? 0))г
-                    </div>
-                </div>
-
-                <div class="meal-kcal" id="mealKcal_@meal.Id">
-                    @((int)(meal.Recipe?.CaloriesPerServing ?? 0)) ккал
-                </div>
-
-                <button class="meal-replace-btn"
-                        onclick="replaceMeal('@meal.Id', this)"
-                        title="Заменить рецепт"
-                        style="margin-left:.5rem;flex-shrink:0;background:none;border:1px solid #e4ede6;border-radius:8px;padding:.3rem .6rem;cursor:pointer;font-size:.75rem;color:#7a7168;transition:all .2s">
-                    <i class="fas fa-sync-alt"></i>
-                </button>
-            </div>
+        @* Заголовок приёма пищи (Завтрак / Обед / Ужин / Перекус) *@
+        <div class="meal-slot-header" style="font-weight:600;font-size:.85rem;color:#7a7168;
+             text-transform:uppercase;letter-spacing:.05em;margin:1rem 0 .4rem">
+            @slot.MealType?.Name
         </div>
+
+        @* Блюда внутри слота *@
+        @foreach (var meal in slot.Items)
+        {
+            <div class="meal-card" id="mealCard_@meal.Id">
+                <div class="meal-header">
+
+                    <div class="meal-check" id="check_@meal.Id"
+                         onclick="toggleDone('@meal.Id')"
+                         title="Отметить как съедено"></div>
+
+                    @if (!string.IsNullOrEmpty(meal.Recipe?.ImageUrl))
+                    {
+                        <img src="@meal.Recipe.ImageUrl"
+                             class="meal-img" alt="@meal.Recipe.Name" />
+                    }
+                    else
+                    {
+                        <div class="meal-img-ph">🍽</div>
+                    }
+
+                    <div class="meal-info">
+                        @* Роль блюда внутри приёма (суп, основное, салат…) *@
+                        <div class="meal-type" style="font-size:.75rem;color:#a0a09a">
+                            @meal.Role.ToString()
+                        </div>
+                        <div class="meal-name" id="mealName_@meal.Id">
+                            @meal.Recipe?.Name
+                        </div>
+                        <div class="meal-macros-inline" id="mealMacros_@meal.Id">
+                            Б @((int)((meal.Recipe?.ProteinPerServing  ?? 0) * meal.Servings))г ·
+                            Ж @((int)((meal.Recipe?.FatPerServing      ?? 0) * meal.Servings))г ·
+                            У @((int)((meal.Recipe?.CarbsPerServing    ?? 0) * meal.Servings))г
+                        </div>
+                    </div>
+
+                    <div class="meal-kcal" id="mealKcal_@meal.Id">
+                        @((int)((meal.Recipe?.CaloriesPerServing ?? 0) * meal.Servings)) ккал
+                    </div>
+
+                    <button class="meal-replace-btn"
+                            onclick="replaceMeal('@meal.Id', this)"
+                            title="Заменить рецепт"
+                            style="margin-left:.5rem;flex-shrink:0;background:none;border:1px solid #e4ede6;
+                                   border-radius:8px;padding:.3rem .6rem;cursor:pointer;font-size:.75rem;
+                                   color:#7a7168;transition:all .2s">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                </div>
+            </div>
+        }
     }
 </div>
 

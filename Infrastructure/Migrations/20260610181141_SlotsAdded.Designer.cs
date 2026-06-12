@@ -3,6 +3,7 @@ using System;
 using Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    partial class DatabaseContextModelSnapshot : ModelSnapshot
+    [Migration("20260610181141_SlotsAdded")]
+    partial class SlotsAdded
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -56,9 +59,6 @@ namespace Infrastructure.Migrations
                         .HasColumnType("boolean");
 
                     b.Property<bool>("HighProtein")
-                        .HasColumnType("boolean");
-
-                    b.Property<bool>("IsArchived")
                         .HasColumnType("boolean");
 
                     b.Property<bool>("LowCarb")
@@ -140,6 +140,9 @@ namespace Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<Guid?>("MealPlanId")
+                        .HasColumnType("uuid");
+
                     b.Property<Guid>("MealSlotId")
                         .HasColumnType("uuid");
 
@@ -156,6 +159,8 @@ namespace Infrastructure.Migrations
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("MealPlanId");
 
                     b.HasIndex("MealSlotId");
 
@@ -239,6 +244,9 @@ namespace Infrastructure.Migrations
 
                     b.Property<Guid?>("AuthorId")
                         .HasColumnType("uuid");
+
+                    b.Property<int>("Category")
+                        .HasColumnType("integer");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -337,12 +345,6 @@ namespace Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<string>("ActivityLevel")
-                        .HasColumnType("text");
-
-                    b.Property<int?>("Age")
-                        .HasColumnType("integer");
-
                     b.Property<string>("AvatarUrl")
                         .HasColumnType("text");
 
@@ -371,15 +373,9 @@ namespace Infrastructure.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
-                    b.Property<string>("Gender")
-                        .HasColumnType("text");
-
                     b.Property<string>("GoogleId")
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
-
-                    b.Property<decimal?>("HeightCm")
-                        .HasColumnType("numeric");
 
                     b.Property<bool>("IsEmailConfirmed")
                         .HasColumnType("boolean");
@@ -415,9 +411,6 @@ namespace Infrastructure.Migrations
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
-
-                    b.Property<decimal?>("WeightKg")
-                        .HasColumnType("numeric");
 
                     b.HasKey("Id");
 
@@ -481,6 +474,10 @@ namespace Infrastructure.Migrations
 
             modelBuilder.Entity("Domain.Entities.PlannedMeal", b =>
                 {
+                    b.HasOne("Domain.Entities.MealPlan", null)
+                        .WithMany("Meals")
+                        .HasForeignKey("MealPlanId");
+
                     b.HasOne("Domain.Entities.MealSlot", "MealSlot")
                         .WithMany("Items")
                         .HasForeignKey("MealSlotId")
@@ -554,6 +551,8 @@ namespace Infrastructure.Migrations
 
             modelBuilder.Entity("Domain.Entities.MealPlan", b =>
                 {
+                    b.Navigation("Meals");
+
                     b.Navigation("Slots");
                 });
 

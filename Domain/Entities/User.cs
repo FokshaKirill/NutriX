@@ -8,12 +8,16 @@ namespace Domain.Entities
         public string Username { get; set; } = null!;
         public string Email { get; set; } = null!;
 
-        // Пароль опционален — Google-пользователи его не имеют
         public string? PasswordHash { get; set; }
         public string? GoogleId { get; set; }
-        public string? AvatarUrl { get; set; }      // фото из Google
-        public string? Bio { get; set; }             // короткое описание себя
-        public string? TimeZone { get; set; }        // часовой пояс
+        public string? AvatarUrl { get; set; }  
+        public string? Bio { get; set; }             
+        public string? TimeZone { get; set; }
+        public decimal? WeightKg     { get; set; }
+        public decimal? HeightCm     { get; set; }
+        public int?     Age          { get; set; }
+        public string?  Gender       { get; set; } 
+        public string?  ActivityLevel { get; set; }
 
         public UserRole Role { get; set; } = UserRole.User;
         public SubscriptionType SubscriptionType { get; set; } = SubscriptionType.Free;
@@ -32,8 +36,8 @@ namespace Domain.Entities
         public DateTime? SubscriptionExpiresAt { get; set; }
 
         // Навигационные свойства
-        public ICollection<Recipe> Recipes { get; set; } = [];           // созданные рецепты
-        public ICollection<FavoriteRecipe> FavoriteRecipes { get; set; } = []; // избранные
+        public ICollection<Recipe> Recipes { get; set; } = [];    
+        public ICollection<FavoriteRecipe> FavoriteRecipes { get; set; } = []; 
         public ICollection<MealPlan> MealPlans { get; set; } = [];
     }
 }

@@ -1,4 +1,6 @@
-﻿using Services.DTO;
+﻿using Domain.Entities;
+using Domain.Enums;
+using Services.DTO;
 using Services.Interfaces;
 
 namespace Services.Services
@@ -10,70 +12,44 @@ namespace Services.Services
     ///
     /// 1. Фильтрация рецептов по диете и исключённым продуктам.
     ///
-    /// 2. Для каждого дня (0..6) и каждого типа приёма пищи:
-    ///    a. Определяем целевые калории для приёма.
-    ///    b. Собираем "группу кандидатов" — рецепты в диапазоне ±KCAL_WINDOW%
-    ///       от целевых калорий.
-    ///    c. Фильтруем кандидатов по:
-    ///       - дневному бюджету (оставшийся бюджет дня)
-    ///       - кулдауну повторов (рецепт не использовался MinDaysBetweenRepeats дней)
-    ///       - уникальности внутри дня
-    ///       - диете (Vegetarian / Vegan / GlutenFree / LowCarb / HighProtein / LowFat)
-    ///       - исключённым продуктам
-    ///    d. Из оставшихся — топ-N по score, затем случайный из них.
-    ///       score = w_kcal × kcal_score + w_cost × cost_score
+    /// 2. Для каждого дня (0..6) и каждого SlotTemplate:
+    ///    а. Создаём MealSlot.
+    ///    б. Для каждой RoleTemplate в слоте:
+    ///       - Фильтруем рецепты по тегу роли.
+    ///       - Фильтруем по ккал-окну (targetKcal = slot.TargetCalories × role.CalorieFraction).
+    ///       - Фильтруем по кулдауну, уникальности в слоте, бюджету.
+    ///       - Узкое окно → расширенное → если нет кандидатов:
+    ///           роль optional → пропускаем, required → логируем и пропускаем.
+    ///       - Из топ-5 по score берём случайный.
+    ///       - Добавляем PlannedMeal в слот.
+    ///    в. Добавляем слот в план (только если есть хоть одно блюдо).
     ///
-    /// 3. После заполнения дня проверяем суммарные калории.
-    ///    Если дефицит > CALORIE_DEFICIT_THRESHOLD% — увеличиваем порции
-    ///    ужина / обеда (проверяя бюджет).
-    ///
-    /// 4. Если в узком окне кандидатов нет — расширяем до KcalWindowFallback.
-    ///    Если снова нет — слот пропускается.
+    /// 3. Scale-up: после заполнения всех слотов дня проверяем дефицит ккал.
+    ///    Если дефицит > 12% от цели — увеличиваем Servings блюд ужина/обеда.
     ///
     /// ── Оценка качества ────────────────────────────────────────────────────────
-    /// Равномерность калорий:    9/10  (±15% через scale-up)
-    /// Разнообразие блюд:        8/10  (кулдаун + топ-N рандом)
-    /// Учёт бюджета:             9/10  (дневной + недельный бюджет)
-    /// Читаемость/расширяемость: 9/10  (изолированный сервис, константы вынесены)
+    /// Реалистичность меню:       10/10  (несколько блюд на приём)
+    /// Равномерность калорий:      9/10  (±15% через scale-up)
+    /// Разнообразие блюд:          8/10  (кулдаун + топ-N рандом)
+    /// Учёт бюджета:               9/10  (дневной + недельный)
+    /// Читаемость / расширяемость: 9/10
     /// </summary>
     public class MealPlanGeneratorService : IMealPlanGeneratorService
     {
-        // ── Настраиваемые константы алгоритма ─────────────────────────────────
+        // ── Константы алгоритма ────────────────────────────────────────────────
 
-        /// <summary>Начальное окно поиска кандидатов (±% от целевых ккал).</summary>
-        private const double KcalWindow = 0.30;
+        private const double KcalWindow              = 0.30;
+        private const double KcalWindowFallback      = 0.60;
+        private const int    TopCandidatesCount       = 5;
+        private const double CalorieDeficitThreshold  = 0.12;
+        private const int    MaxServings              = 3;
 
-        /// <summary>Расширенное окно если в узком кандидатов нет.</summary>
-        private const double KcalWindowFallback = 0.60;
-
-        /// <summary>
-        /// Сколько лучших кандидатов попадают в "финальный пул",
-        /// из которого берём случайный. Больше = разнообразнее.
-        /// </summary>
-        private const int TopCandidatesCount = 5;
-
-        /// <summary>
-        /// Если дефицит калорий за день превышает этот порог (% от цели)
-        /// — пробуем увеличить порции блюд.
-        /// </summary>
-        private const double CalorieDeficitThreshold = 0.12;
-
-        /// <summary>Максимальное количество порций для одного блюда.</summary>
-        private const int MaxServings = 3;
-
-        // Пороги макронутриентов для специальных диет
-        // (на 100 ккал блюда — нормализуем чтобы сравнение было честным)
-
-        /// <summary>LowCarb: не более X г углеводов на 100 ккал.</summary>
-        private const double LowCarbMaxCarbsPer100Kcal = 10.0;
-
-        /// <summary>HighProtein: не менее X г белка на 100 ккал.</summary>
+        // Пороги макронутриентов (на 100 ккал)
+        private const double LowCarbMaxCarbsPer100Kcal       = 10.0;
         private const double HighProteinMinProteinPer100Kcal = 7.0;
+        private const double LowFatMaxFatPer100Kcal          = 3.5;
 
-        /// <summary>LowFat: не более X г жиров на 100 ккал.</summary>
-        private const double LowFatMaxFatPer100Kcal = 3.5;
-
-        /// <summary>Веса при ConsiderBudget=true.</summary>
+        // Веса скора при ConsiderBudget=true
         private const double WKcalBudget = 0.55;
         private const double WCostBudget = 0.45;
 
@@ -83,7 +59,7 @@ namespace Services.Services
         {
             var rand = req.Seed.HasValue ? new Random(req.Seed.Value) : new Random();
 
-            // ── 1. Фильтрация: диета + исключения + наличие ингредиентов ──────
+            // 1. Фильтрация
             var filtered = req.AllRecipes
                 .Where(r => r.Ingredients.Any())
                 .Where(r => !HasExcluded(r, req.ExcludedProducts))
@@ -91,15 +67,17 @@ namespace Services.Services
                 .ToList();
 
             if (!filtered.Any()) return null;
-
-            // ── 2. Предвычисляем статистику для нормализации скора ────────────
+            
+            // 2. Статистика для нормализации скора
             var stats = ComputeStats(filtered);
 
-            // ── 3. Кулдаун: recipeId → последний день использования ───────────
-            // Рецепт нельзя использовать если (currentDay - lastUsedDay) < MinDaysBetweenRepeats
+            // 3. Кулдаун: recipeId → последний день использования
             var lastUsedDay = new Dictionary<Guid, int>();
 
-            // ── 4. Строим план ─────────────────────────────────────────────────
+            // 4. Шаблоны слотов
+            var slotTemplates = req.CustomSlotTemplates ?? DefaultSlotTemplates.Get(req);
+
+            // 5. Строим план
             var monday = GetMonday();
             var plan = new MealPlan
             {
@@ -107,7 +85,7 @@ namespace Services.Services
                 Name      = $"Меню на неделю с {monday:dd MMMM yyyy}",
                 StartDate = monday,
                 UserId    = req.UserId,
-                Meals     = new List<PlannedMeal>()
+                Slots     = new List<MealSlot>()
             };
 
             decimal weekBudgetLeft = req.ConsiderBudget ? req.WeeklyBudget : decimal.MaxValue;
@@ -118,83 +96,95 @@ namespace Services.Services
                     ? Math.Min(req.DailyBudget, weekBudgetLeft)
                     : decimal.MaxValue;
 
-                var usedToday = new HashSet<Guid>();
-                var dayMeals  = new List<PlannedMeal>();
+                var dayMeals = new List<PlannedMeal>();
 
-                // ── Приёмы пищи ───────────────────────────────────────────────
-                foreach (var (mealType, targetKcal) in BuildSlots(req))
+                foreach (var slotTemplate in slotTemplates)
                 {
-                    var meal = TryPickMeal(
-                        filtered, stats, req,
-                        mealType, targetKcal,
-                        day, lastUsedDay, usedToday,
-                        ref dayBudgetLeft, rand, plan.Id);
+                    var slot = new MealSlot
+                    {
+                        Id         = Guid.NewGuid(),
+                        MealPlanId = plan.Id,
+                        MealPlan   = plan,
+                        DayOffset  = day,
+                        MealTypeId = slotTemplate.MealType.Id,
+                        MealType   = slotTemplate.MealType,
+                        Items      = new List<PlannedMeal>()
+                    };
 
-                    if (meal == null) continue;
+                    // Рецепты уже использованные в этом слоте (уникальность внутри слота)
+                    var usedInSlot = new HashSet<Guid>();
 
-                    dayMeals.Add(meal);
-                    plan.Meals.Add(meal);
-                    usedToday.Add(meal.RecipeId);
-                    lastUsedDay[meal.RecipeId] = day;
+                    foreach (var role in slotTemplate.Roles)
+                    {
+                        if (role.IsAddon && rand.NextDouble() > role.AddonChance)
+                            continue;
+                        
+                        if (role.IsAddon && (!req.IncludeDrinks || rand.NextDouble() > role.AddonChance))
+                            continue;
+                        
+                        int targetKcal = (int)(slotTemplate.TargetCalories * role.CalorieFraction);
 
-                    if (req.ConsiderBudget)
-                        weekBudgetLeft -= meal.Recipe!.TotalCost * meal.Servings;
+                        // Кандидаты с тегом этой роли
+                        var tagFiltered = filtered.Where(r => r.HasTag(role.Tag)).ToList();
+                        // Если рецептов с нужным тегом нет — используем все без фильтра по тегу
+                        if (!tagFiltered.Any())
+                            tagFiltered = filtered;
+
+                        PlannedMeal? meal = null;
+
+                        foreach (var window in new[] { KcalWindow, KcalWindowFallback })
+                        {
+                            var candidates = GetCandidates(
+                                tagFiltered, req, targetKcal, window,
+                                day, lastUsedDay, usedInSlot, dayBudgetLeft);
+
+                            if (!candidates.Any()) continue;
+
+                            var recipe = PickFromTopN(candidates, stats, targetKcal, req, rand);
+                            if (recipe == null) continue;
+
+                            meal = new PlannedMeal
+                            {
+                                Id         = Guid.NewGuid(),
+                                MealSlotId = slot.Id,
+                                MealSlot   = slot,
+                                Role       = role.Tag,
+                                RecipeId   = recipe.Id,
+                                Recipe     = recipe,
+                                Servings   = 1
+                            };
+
+                            dayBudgetLeft -= recipe.TotalCost;
+                            if (req.ConsiderBudget)
+                                weekBudgetLeft -= recipe.TotalCost;
+
+                            break; // нашли — выходим из цикла окон
+                        }
+
+                        if (meal == null)
+                        {
+                            if (role.IsRequired)
+                                Console.WriteLine($"[MealPlanGenerator] День {day}, слот {slotTemplate.MealType.Name}, " +
+                                                  $"роль {role.Tag}: рецепт не найден (обязательная роль пропущена).");
+                            continue;
+                        }
+
+                        slot.Items.Add(meal);
+                        dayMeals.Add(meal);
+                        usedInSlot.Add(meal.RecipeId);
+                        lastUsedDay[meal.RecipeId] = day;
+                    }
+
+                    // Добавляем слот только если есть хоть одно блюдо
+                    if (slot.Items.Any())
+                        plan.Slots.Add(slot);
                 }
 
-                // ── 5. Доводим калории дня до цели через scale-up порций ──────
+                // Scale-up калорий дня
                 TryBalanceDayCalories(dayMeals, req, ref dayBudgetLeft, ref weekBudgetLeft);
             }
 
             return plan;
-        }
-
-        // ══════════════════════════════════════════════════════════════════════
-        // Выбор блюда для одного слота
-        // ══════════════════════════════════════════════════════════════════════
-
-        private PlannedMeal? TryPickMeal(
-            List<Recipe>          recipes,
-            RecipeStats           stats,
-            GenerateWeekRequest   req,
-            MealType              mealType,
-            int                   targetKcal,
-            int                   day,
-            Dictionary<Guid, int> lastUsedDay,
-            HashSet<Guid>         usedToday,
-            ref decimal           dayBudgetLeft,
-            Random                rand,
-            Guid                  planId)
-        {
-            // Пробуем сначала узкое окно, потом расширенное
-            foreach (var window in new[] { KcalWindow, KcalWindowFallback })
-            {
-                var candidates = GetCandidates(
-                    recipes, stats, req,
-                    targetKcal, window,
-                    day, lastUsedDay, usedToday, dayBudgetLeft);
-
-                if (!candidates.Any()) continue;
-
-                var recipe = PickFromTopN(candidates, stats, targetKcal, req, rand);
-                if (recipe == null) continue;
-
-                var meal = new PlannedMeal
-                {
-                    Id         = Guid.NewGuid(),
-                    MealPlanId = planId,
-                    MealTypeId = mealType.Id,
-                    MealType   = mealType,
-                    RecipeId   = recipe.Id,
-                    Recipe     = recipe,
-                    DayOffset  = day,
-                    Servings   = 1
-                };
-
-                dayBudgetLeft -= recipe.TotalCost;
-                return meal;
-            }
-
-            return null;
         }
 
         // ══════════════════════════════════════════════════════════════════════
@@ -203,24 +193,27 @@ namespace Services.Services
 
         private static List<Recipe> GetCandidates(
             List<Recipe>          recipes,
-            RecipeStats           stats,
             GenerateWeekRequest   req,
             int                   targetKcal,
             double                window,
             int                   day,
             Dictionary<Guid, int> lastUsedDay,
-            HashSet<Guid>         usedToday,
+            HashSet<Guid>         usedInSlot,
             decimal               dayBudgetLeft)
         {
-            double kcalLow  = targetKcal * (1 - window);
-            double kcalHigh = targetKcal * (1 + window);
+            double low  = targetKcal * (1 - window);
+            double high = targetKcal * (1 + window);
+
+            int cooldown = req.MinDaysBetweenRepeats > 0
+                ? req.MinDaysBetweenRepeats
+                : (int)req.Diversity;
 
             return recipes
-                .Where(r => (double)r.CaloriesPerServing >= kcalLow
-                         && (double)r.CaloriesPerServing <= kcalHigh)
-                .Where(r => !usedToday.Contains(r.Id))
+                .Where(r => (double)r.CaloriesPerServing >= low
+                         && (double)r.CaloriesPerServing <= high)
+                .Where(r => !usedInSlot.Contains(r.Id))
                 .Where(r => !lastUsedDay.TryGetValue(r.Id, out int lastDay)
-                         || (day - lastDay) >= req.MinDaysBetweenRepeats)
+                         || (day - lastDay) >= cooldown)
                 .Where(r => !req.ConsiderBudget || r.TotalCost <= dayBudgetLeft)
                 .ToList();
         }
@@ -248,7 +241,7 @@ namespace Services.Services
         }
 
         // ══════════════════════════════════════════════════════════════════════
-        // Балансировка калорий дня через scale-up порций
+        // Scale-up калорий дня
         // ══════════════════════════════════════════════════════════════════════
 
         private static void TryBalanceDayCalories(
@@ -262,22 +255,20 @@ namespace Services.Services
             int targetKcal = req.AdjustedDailyCalories;
             int threshold  = (int)(targetKcal * CalorieDeficitThreshold);
 
-            // Приоритет: сначала пробуем увеличить ужин, потом обед, потом завтрак
+            // Приоритет увеличения порций: ужин → обед → завтрак
             var priority = new[] { "Ужин", "Обед", "Завтрак", "Перекус" };
 
             for (int iter = 0; iter < 5; iter++)
             {
-                int currentKcal = dayMeals.Sum(m => (int)(m.Recipe!.CaloriesPerServing * m.Servings));
-                int deficit      = targetKcal - currentKcal;
+                int current = dayMeals.Sum(m => (int)(m.Recipe!.CaloriesPerServing * m.Servings));
+                if (targetKcal - current <= threshold) break;
 
-                if (deficit <= threshold) break;
-
-                // Локальные копии для LINQ (ref нельзя захватить в лямбду)
                 decimal capDay  = dayBudgetLeft;
                 decimal capWeek = weekBudgetLeft;
 
                 var candidate = priority
-                    .SelectMany(name => dayMeals.Where(m => m.MealType?.Name == name))
+                    .SelectMany(name => dayMeals.Where(m =>
+                        m.MealSlot?.MealType?.Name == name))
                     .FirstOrDefault(m =>
                         m.Servings < MaxServings
                         && (!req.ConsiderBudget || m.Recipe!.TotalCost <= capDay)
@@ -286,7 +277,6 @@ namespace Services.Services
                 if (candidate == null) break;
 
                 candidate.Servings++;
-
                 if (req.ConsiderBudget)
                 {
                     dayBudgetLeft  -= candidate.Recipe!.TotalCost;
@@ -299,12 +289,6 @@ namespace Services.Services
         // Scoring
         // ══════════════════════════════════════════════════════════════════════
 
-        /// <summary>
-        /// score = w_kcal × kcal_score + w_cost × cost_score   ∈ [0, 1]
-        ///
-        /// kcal_score = 1 − |kcal − target| / kcal_range
-        /// cost_score = 1 − (cost − cost_min) / cost_range   (чем дешевле — лучше)
-        /// </summary>
         private static double ComputeScore(
             Recipe              r,
             RecipeStats         stats,
@@ -316,7 +300,6 @@ namespace Services.Services
 
             double kcalDiff  = Math.Abs((double)r.CaloriesPerServing - targetKcal);
             double kcalScore = 1.0 - Math.Min(kcalDiff / stats.KcalRange, 1.0);
-
             double costScore = 1.0 - Math.Min(
                 ((double)r.TotalCost - stats.CostMin) / stats.CostRange, 1.0);
 
@@ -324,146 +307,72 @@ namespace Services.Services
         }
 
         // ══════════════════════════════════════════════════════════════════════
-        // Фильтр: диетические ограничения
+        // Диетические ограничения
         // ══════════════════════════════════════════════════════════════════════
 
-        /// <summary>
-        /// Проверяет соответствие рецепта всем активным диетическим флагам:
-        /// Vegetarian, Vegan, GlutenFree, LowCarb, HighProtein, LowFat.
-        ///
-        /// LowCarb / HighProtein / LowFat проверяются через нормализованные
-        /// показатели на 100 ккал, чтобы размер порции не влиял на результат.
-        /// </summary>
         private static bool MatchesDiet(Recipe r, GenerateWeekRequest req)
         {
             var names = r.Ingredients
                 .Select(i => i.Product.Name.ToLowerInvariant())
                 .ToList();
 
-            // ── Вегетарианство / веганство — по ингредиентам ─────────────────
             if (req.Vegetarian || req.Vegan)
             {
-                var meat = new[]
-                {
-                    "курица", "говядина", "свинина", "баранина",
-                    "индейка", "рыба", "тунец", "лосось", "фарш"
-                };
+                var meat = new[] { "курица", "говядина", "свинина", "баранина", "индейка", "рыба", "тунец", "лосось", "фарш" };
                 if (names.Any(n => meat.Any(k => n.Contains(k)))) return false;
             }
-
             if (req.Vegan)
             {
-                var animal = new[]
-                {
-                    "яйцо", "молоко", "сливки", "сыр", "творог",
-                    "масло сливочное", "мёд", "кефир"
-                };
+                var animal = new[] { "яйцо", "молоко", "сливки", "сыр", "творог", "масло сливочное", "мёд", "кефир" };
                 if (names.Any(n => animal.Any(k => n.Contains(k)))) return false;
             }
-
-            // ── Без глютена ───────────────────────────────────────────────────
             if (req.GlutenFree)
             {
                 var gluten = new[] { "мука", "хлеб", "макароны", "пшеница", "манка" };
                 if (names.Any(n => gluten.Any(k => n.Contains(k)))) return false;
             }
-
-            // ── LowCarb: углеводы ≤ LowCarbMaxCarbsPer100Kcal г на 100 ккал ──
-            // Защита от деления на ноль: если калорийность не задана — не фильтруем
             if (req.LowCarb && r.CaloriesPerServing > 0)
             {
-                double carbsPer100Kcal =
-                    (double)r.CarbsPerServing / (double)r.CaloriesPerServing * 100.0;
-
-                if (carbsPer100Kcal > LowCarbMaxCarbsPer100Kcal) return false;
+                double v = (double)r.CarbsPerServing / (double)r.CaloriesPerServing * 100.0;
+                if (v > LowCarbMaxCarbsPer100Kcal) return false;
             }
-
-            // ── HighProtein: белок ≥ HighProteinMinProteinPer100Kcal г на 100 ккал
             if (req.HighProtein && r.CaloriesPerServing > 0)
             {
-                double proteinPer100Kcal =
-                    (double)r.ProteinPerServing / (double)r.CaloriesPerServing * 100.0;
-
-                if (proteinPer100Kcal < HighProteinMinProteinPer100Kcal) return false;
+                double v = (double)r.ProteinPerServing / (double)r.CaloriesPerServing * 100.0;
+                if (v < HighProteinMinProteinPer100Kcal) return false;
             }
-
-            // ── LowFat: жиры ≤ LowFatMaxFatPer100Kcal г на 100 ккал ──────────
             if (req.LowFat && r.CaloriesPerServing > 0)
             {
-                double fatPer100Kcal =
-                    (double)r.FatPerServing / (double)r.CaloriesPerServing * 100.0;
-
-                if (fatPer100Kcal > LowFatMaxFatPer100Kcal) return false;
+                double v = (double)r.FatPerServing / (double)r.CaloriesPerServing * 100.0;
+                if (v > LowFatMaxFatPer100Kcal) return false;
             }
-
             return true;
         }
 
-        // ══════════════════════════════════════════════════════════════════════
-        // Фильтр: исключённые продукты
-        // ══════════════════════════════════════════════════════════════════════
-
-        /// <summary>
-        /// Возвращает true если рецепт содержит хотя бы один исключённый продукт.
-        /// Сравнение регистронезависимое, по подстроке (напр. "молоко" найдёт
-        /// "молоко цельное", "молоко обезжиренное" и т.д.).
-        /// </summary>
         private static bool HasExcluded(Recipe r, HashSet<string> excluded)
         {
             if (!excluded.Any()) return false;
             return r.Ingredients.Any(i =>
-                excluded.Any(ex =>
-                    i.Product.Name.ToLowerInvariant().Contains(ex.ToLowerInvariant())));
+                excluded.Any(ex => i.Product.Name.ToLowerInvariant().Contains(ex)));
         }
 
         // ══════════════════════════════════════════════════════════════════════
-        // Вспомогательные методы
+        // Утилиты
         // ══════════════════════════════════════════════════════════════════════
 
-        /// <summary>
-        /// Строит список слотов (тип приёма пищи → целевые ккал) на один день.
-        /// Перекус добавляется только если IncludeSnacks=true, SnackType задан
-        /// и MealsPerDay ≥ 4.
-        /// </summary>
-        private static List<(MealType MealType, int TargetKcal)> BuildSlots(GenerateWeekRequest req)
-        {
-            var slots = new List<(MealType, int)>
-            {
-                (req.BreakfastType, req.BreakfastTarget),
-                (req.LunchType,     req.LunchTarget),
-                (req.DinnerType,    req.DinnerTarget),
-            };
-
-            if (req.IncludeSnacks && req.SnackType != null && req.MealsPerDay >= 4)
-                slots.Add((req.SnackType, req.SnackTarget));
-
-            return slots;
-        }
-
-        /// <summary>
-        /// Предвычисляет диапазоны калорий и стоимости для нормализации скора.
-        /// Вызывается один раз до начала генерации.
-        /// </summary>
         private static RecipeStats ComputeStats(List<Recipe> recipes)
         {
             double kcalMin = double.MaxValue, kcalMax = double.MinValue;
             double costMin = double.MaxValue, costMax = double.MinValue;
-
             foreach (var r in recipes)
             {
                 double k = (double)r.CaloriesPerServing;
                 double c = (double)r.TotalCost;
-                if (k < kcalMin) kcalMin = k;
-                if (k > kcalMax) kcalMax = k;
-                if (c < costMin) costMin = c;
-                if (c > costMax) costMax = c;
+                if (k < kcalMin) kcalMin = k; if (k > kcalMax) kcalMax = k;
+                if (c < costMin) costMin = c; if (c > costMax) costMax = c;
             }
-
-            return new RecipeStats(
-                KcalMin:   kcalMin,
-                KcalRange: Math.Max(kcalMax - kcalMin, 1.0),
-                CostMin:   costMin,
-                CostRange: Math.Max(costMax - costMin, 0.01));
+            return new RecipeStats(kcalMin, Math.Max(kcalMax - kcalMin, 1.0),
+                                   costMin, Math.Max(costMax - costMin, 0.01));
         }
 
         private static DateTime GetMonday()

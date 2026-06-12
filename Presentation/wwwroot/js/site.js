@@ -1,8 +1,4 @@
 ﻿/**
- * favorites.js
- * Подключи в _Layout.cshtml или конкретной странице:
- *   <script src="~/js/favorites.js" asp-append-version="true"></script>
- *
  * Разметка кнопки (data-атрибуты):
  *   <button class="fav-btn"
  *           data-id="@recipe.Id"

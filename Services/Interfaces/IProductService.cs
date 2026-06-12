@@ -40,5 +40,10 @@ namespace Services.Interfaces
         /// Получить количество рецептов, в которых используется продукт
         /// </summary>
         Task<List<Recipe>> GetRecipesUsingProductAsync(Guid productId);
+        
+        /// <summary>
+        /// Получить количество рецептов, в которых используется продукт
+        /// </summary>
+        Task<List<Product>> GetAllAsync();
     }
 }

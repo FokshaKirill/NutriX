@@ -1,4 +1,5 @@
-﻿@model List<Presentation.Models.RecipeListViewModel>
+﻿@using Domain.Enums
+@model List<Presentation.Models.RecipeListViewModel>
 @{
 ViewData["Title"] = ViewData["Title"] ?? "Все рецепты";
 var isFavPage = ViewData["Title"]?.ToString() == "Избранные рецепты";
@@ -41,14 +42,16 @@ var isFavPage = ViewData["Title"]?.ToString() == "Избранные рецеп�
                 <input type="search" name="searchTerm" value="@ViewBag.SearchTerm"
                        class="form-control" placeholder="Поиск по названию или описанию..." />
             </div>
-
-            <!-- Фильтр по категории -->
+            
             <div style="min-width: 200px;">
-                <select name="category" class="form-select">
-                    <option value="">Все категории</option>
-                    @foreach (var cat in ViewBag.Categories)
+                <select name="tag" class="form-select">
+                    <option value="">Все приёмы пищи</option>
+                    @foreach (var (tagVal, label) in ViewBag.Tags as (RecipeTag, string)[])
                     {
-                    <option value="@cat.Value" selected="@cat.Selected">@cat.Text</option>
+                        var isSelected = (int)tagVal == (int?)ViewBag.SelectedTag;
+                        <option value="@((int)tagVal)" selected="@isSelected">
+                            @label
+                        </option>
                     }
                 </select>
             </div>
@@ -135,8 +138,7 @@ var isFavPage = ViewData["Title"]?.ToString() == "Избранные рецеп�
             <li class="page-item">
                 <a class="page-link" asp-action="Index"
                    asp-route-page="@(ViewBag.CurrentPage - 1)"
-                   asp-route-searchTerm="@ViewBag.SearchTerm"
-                   asp-route-category="@ViewBag.SelectedCategory">
+                   asp-route-searchTerm="@ViewBag.SearchTerm">
                     &laquo; Назад
                 </a>
             </li>
@@ -148,8 +150,7 @@ var isFavPage = ViewData["Title"]?.ToString() == "Избранные рецеп�
             <li class="page-item @(i == ViewBag.CurrentPage ? "active" : "")">
                 <a class="page-link" asp-action="Index"
                    asp-route-page="@i"
-                   asp-route-searchTerm="@ViewBag.SearchTerm"
-                   asp-route-category="@ViewBag.SelectedCategory">
+                   asp-route-searchTerm="@ViewBag.SearchTerm">
                     @i
                 </a>
             </li>
@@ -160,8 +161,7 @@ var isFavPage = ViewData["Title"]?.ToString() == "Избранные рецеп�
             <li class="page-item">
                 <a class="page-link" asp-action="Index"
                    asp-route-page="@(ViewBag.CurrentPage + 1)"
-                   asp-route-searchTerm="@ViewBag.SearchTerm"
-                   asp-route-category="@ViewBag.SelectedCategory">
+                   asp-route-searchTerm="@ViewBag.SearchTerm">
                     Вперед &raquo;
                 </a>
             </li>

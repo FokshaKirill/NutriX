@@ -1,0 +1,94 @@
+@model dynamic
+@{ ViewData["Title"] = "История планов питания"; }
+
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@500;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+
+<style>
+:root { --sage:#7aab84; --sage-d:#4e7d58; --sage-pale:#f2f7f2; --bark:#2d2417; --muted:#7a7168; --border:#e4ede6; }
+.hist-page { max-width:860px; margin:0 auto; padding:2rem 1rem 5rem; font-family:'DM Sans',sans-serif; }
+.hist-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:1.75rem; }
+.hist-title { font-family:'Lora',serif; font-size:1.5rem; color:var(--sage-d); margin:0; }
+.hist-empty { text-align:center; padding:4rem 1rem; color:var(--muted); }
+.hist-empty .ico { font-size:3rem; margin-bottom:.75rem; }
+.hist-list { display:flex; flex-direction:column; gap:.75rem; }
+.hist-card {
+    background:#fff; border:1.5px solid var(--border); border-radius:14px;
+    padding:1.1rem 1.4rem; display:flex; justify-content:space-between;
+    align-items:center; gap:1rem; flex-wrap:wrap; transition:border-color .15s;
+}
+.hist-card:hover { border-color:var(--sage); }
+.hist-dates { font-family:'Lora',serif; font-size:1rem; color:var(--bark); font-weight:600; }
+.hist-sub { font-size:.78rem; color:var(--muted); margin-top:.2rem; }
+.hist-stats { display:flex; gap:1rem; flex-wrap:wrap; }
+.hist-stat { text-align:center; }
+.hist-stat-val { font-size:1.1rem; font-weight:700; color:var(--sage-d); display:block; }
+.hist-stat-lbl { font-size:.65rem; color:var(--muted); text-transform:uppercase; letter-spacing:.04em; }
+.hist-tags { display:flex; gap:.3rem; flex-wrap:wrap; }
+.htag { font-size:.62rem; font-weight:600; padding:.1rem .4rem; border-radius:999px; background:#eef7f0; color:#3b6d11; border:1px solid #c8e6cc; }
+.btn-view {
+    display:inline-flex; align-items:center; gap:.35rem;
+    padding:.4rem .9rem; border-radius:8px; font-size:.8rem; font-weight:500;
+    background:var(--sage); color:#fff; border:none; text-decoration:none; cursor:pointer;
+    transition:background .15s;
+}
+.btn-view:hover { background:var(--sage-d); }
+</style>
+
+<div class="hist-page">
+    <div class="hist-head">
+        <h1 class="hist-title">История планов</h1>
+        <a asp-action="GenerateWeek" class="btn-view">+ Новый план</a>
+    </div>
+    
+    @if (Model.Count == 0)
+    {
+        <div class="hist-empty">
+            <i class="fas fa-calendar-times fs-1 text-muted mb-4"></i>
+            <p>Архивных планов пока нет.<br>После генерации нового плана старый сохранится здесь.</p>
+        </div>
+    }
+    else
+    {
+        <div class="hist-list">
+            @foreach (var p in Model)
+            {
+                <div class="hist-card">
+                    <div>
+                        <div class="hist-dates">
+                            @p.StartDate.ToString("d MMMM") — @p.EndDate.ToString("d MMMM yyyy")
+                        </div>
+                        <div class="hist-sub">@p.MealCount блюд · @p.AvgKcal ккал/день в среднем</div>
+                        @if (p.Vegetarian || p.Vegan || p.HighProtein || p.LowCarb)
+                        {
+                            <div class="hist-tags" style="margin-top:.4rem">
+                                @if (p.Vegetarian)  { <span class="htag">Вегетарианское</span> }
+                                @if (p.Vegan)       { <span class="htag">Веганское</span> }
+                                @if (p.HighProtein) { <span class="htag">Высокий белок</span> }
+                                @if (p.LowCarb)     { <span class="htag">Low-carb</span> }
+                            </div>
+                        }
+                    </div>
+                    <div style="display:flex;gap:1.5rem;align-items:center;flex-wrap:wrap">
+                        <div class="hist-stats">
+                            <div class="hist-stat">
+                                <span class="hist-stat-val">@p.AvgKcal</span>
+                                <span class="hist-stat-lbl">ккал/день</span>
+                            </div>
+                            <div class="hist-stat">
+                                <span class="hist-stat-val">@p.MealCount</span>
+                                <span class="hist-stat-lbl">блюд</span>
+                            </div>
+                        </div>
+                        <form asp-action="DeletePlan" method="post" style="display:inline"
+                              onsubmit="return confirm('Удалить этот план?')">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@p.Id" />
+                            <button type="submit" class="btn-view" style="background:#c85c5c">Удалить</button>
+                        </form>
+                        <a asp-action="ViewArchived" asp-route-id="@p.Id" class="btn-view">Смотреть</a>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>

@@ -563,6 +563,24 @@
     font-size: .7rem;
     color: var(--muted);
 }
+ .tag-pill {
+     display: inline-flex;
+     align-items: center;
+     gap: .25rem;
+     padding: .28rem .65rem;
+     border-radius: 999px;
+     border: 1.5px solid var(--border);
+     background: #fff;
+     color: var(--muted);
+     font-size: .76rem;
+     font-weight: 500;
+     cursor: pointer;
+     transition: all .15s;
+     font-family: 'DM Sans', sans-serif;
+ }
+ .tag-pill:hover { border-color: var(--sage); color: var(--sage-d); background: var(--sage-pale); }
+ .tag-pill.active { background: var(--sage); color: #fff; border-color: var(--sage); }
+ .tag-pill.active:hover { background: var(--sage-d); border-color: var(--sage-d); }
 </style>
 
 <div class="rd-page">
@@ -688,23 +706,97 @@ title="@(Model.IsFavorite ? "Убрать из избранного" : "В из�
 
     @if (Model.TotalCost > 0)
     {
-    <div class="rd-card">
-        <p class="rd-card-title">Стоимость</p>
-        <div class="cost-big" style="color:var(--sage-d)">
-            <span id="calcCost">@Math.Round(Model.TotalCost, 2)</span> ₽
+        <div class="rd-card">
+            <p class="rd-card-title">Стоимость</p>
+            <div class="cost-big" style="color:var(--sage-d)">
+                <span id="calcCost">@Math.Round(Model.TotalCost, 2)</span> ₽
+            </div>
+            <div class="cost-sub">
+                <span id="sbCostPerServing">@Math.Round(Model.CostPerServing, 2)</span> ₽ за порцию
+            </div>
         </div>
-        <div class="cost-sub">
-            <span id="sbCostPerServing">@Math.Round(Model.CostPerServing, 2)</span> ₽ за порцию
-        </div>
-    </div>
     }
-    
-</aside>
-</div>
+    </aside>
+    </div>
 
 <!-- ── Пилюли-статы ── -->
 <div class="rd-stats">
-<div class="rd-stat">
+
+
+    @if (Model.IsOwner)
+    {
+    <div class="rd-card" id="tagsCard" style="width: -webkit-fill-available">
+        <p class="rd-card-title">🏷 Теги рецепта</p>
+
+        @{
+        // Группы тегов для отображения
+        var mealTimeTags = new[] {
+        (Domain.Enums.RecipeTag.Breakfast, "Завтрак",  "🌅"),
+        (Domain.Enums.RecipeTag.Lunch,     "Обед",     "🍽"),
+        (Domain.Enums.RecipeTag.Dinner,    "Ужин",     "🌙"),
+        (Domain.Enums.RecipeTag.Snack,     "Перекус",  "🍎"),
+        };
+        var roleTags = new[] {
+        (Domain.Enums.RecipeTag.Soup,       "Суп",          "🥣"),
+        (Domain.Enums.RecipeTag.MainCourse, "Основное",     "🥩"),
+        (Domain.Enums.RecipeTag.Salad,      "Салат",        "🥗"),
+        (Domain.Enums.RecipeTag.Garnish,    "Гарнир",       "🍚"),
+        (Domain.Enums.RecipeTag.Drink,      "Напиток",      "🥤"),
+        (Domain.Enums.RecipeTag.Dessert,    "Десерт",       "🍰"),
+        (Domain.Enums.RecipeTag.Quick,      "Быстрое",      "⚡"),
+        (Domain.Enums.RecipeTag.Festive,    "Праздничное",  "🎉"),
+        };
+        }
+
+        <div style="font-size:.7rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.4rem">
+            Приём пищи
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:.35rem;margin-bottom:.85rem" id="mealTimePills">
+            @foreach (var (tag, label, icon) in mealTimeTags)
+            {
+            var active = Model.Tags.HasFlag(tag);
+            <button type="button"
+                    class="tag-pill @(active ? "active" : "")"
+                    data-tag="@((int)tag)"
+                    title="@label">
+                @icon @label
+            </button>
+            }
+        </div>
+
+        <div style="font-size:.7rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.4rem">
+            Роль блюда
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:.35rem;margin-bottom:1rem" id="rolePills">
+            @foreach (var (tag, label, icon) in roleTags)
+            {
+            var active = Model.Tags.HasFlag(tag);
+            <button type="button"
+                    class="tag-pill @(active ? "active" : "")"
+                    data-tag="@((int)tag)"
+                    title="@label">
+                @icon @label
+            </button>
+            }
+        </div>
+
+        <div style="display:flex;gap:.5rem;align-items:center">
+            <button type="button" class="btn-soft primary" id="saveTagsBtn"
+                    style="padding:.45rem 1rem;font-size:.8rem"
+                    onclick="saveTags('@Model.Id')">
+                Сохранить теги
+            </button>
+            <button type="button" class="btn-soft" id="autoTagBtn"
+                    style="padding:.45rem 1rem;font-size:.8rem"
+                    onclick="autoTag('@Model.Id', '@Html.Raw(Model.Name.Replace("'","\\'"  ))')">
+                ✨ Автоподбор
+            </button>
+            <span id="tagsSaveStatus" style="font-size:.78rem;color:var(--sage-d);display:none">✓ Сохранено</span>
+        </div>
+    </div>
+    }
+
+    <div class="rd-stat">
 <span class="stat-ico">🍽</span>
 @Model.DefaultServings порц.
 </div>
@@ -989,6 +1081,81 @@ document.getElementById('srvPlus') .addEventListener('click', () => updateServin
          }
      }
  });
+let _currentTags = @((int)Model.Tags);
 
+// Переключить тег по клику
+document.querySelectorAll('.tag-pill').forEach(btn => {
+    btn.addEventListener('click', function () {
+        const val = parseInt(this.dataset.tag);
+        _currentTags ^= val;   // XOR — включить/выключить бит
+        this.classList.toggle('active');
+        document.getElementById('tagsSaveStatus').style.display = 'none';
+    });
+});
+
+// Сохранить теги через AJAX
+async function saveTags(recipeId) {
+    const btn = document.getElementById('saveTagsBtn');
+    btn.disabled = true;
+    btn.textContent = '...';
+
+    try {
+        const params = new URLSearchParams({
+            id: recipeId,
+            tags: _currentTags,
+            __RequestVerificationToken: document.querySelector('input[name="__RequestVerificationToken"]')?.value ?? ''
+        });
+        const res  = await fetch('/Recipe/SetTags', { method: 'POST', body: params });
+        const data = await res.json();
+
+        if (data.success) {
+            _currentTags = data.tags;
+            const status = document.getElementById('tagsSaveStatus');
+            status.style.display = 'inline';
+            setTimeout(() => status.style.display = 'none', 2000);
+        }
+    } catch (e) {
+        alert('Ошибка сохранения');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Сохранить теги';
+    }
+}
+
+// Автоподбор тегов по названию — вызывает SeedTags только для этого рецепта
+async function autoTag(recipeId, recipeName) {
+    // Простой клиентский автотег по названию (зеркало серверной логики)
+    const n = recipeName.toLowerCase();
+    let tags = 0;
+
+    const Soup=16, Salad=32, Drink=512, Dessert=256, Garnish=128,
+          MainCourse=64, Breakfast=1, Lunch=2, Dinner=4, Snack=8;
+
+    if (/суп|борщ|щи|солянк|уха|рассольник/.test(n)) tags |= Soup;
+    if (/салат/.test(n))                                tags |= Salad;
+    if (/чай|кофе|сок|компот|смузи|какао|морс|кисель|напиток/.test(n)) tags |= Drink;
+    if (/торт|пирожн|десерт|мороженое|пудинг|желе|вафл/.test(n)) tags |= Dessert;
+    if (/рис|гречк|пюре|картофел|макарон|лапш|гарнир|перловк|булгур/.test(n)) tags |= Garnish;
+    if (/каша|омлет|яичниц|мюсли|тост|запеканк|сырник|творог|блин/.test(n)) tags |= Breakfast;
+
+    const isAux = tags & (Soup | Salad | Drink | Dessert | Garnish);
+    if (!isAux) tags |= MainCourse;
+
+    if (tags & Drink || tags & Dessert) tags |= Breakfast | Lunch | Dinner | Snack;
+    if (tags & MainCourse || tags & Garnish) tags |= Lunch | Dinner;
+    if (tags & Soup || tags & Salad) tags |= Lunch | Dinner;
+    if (tags & Salad || tags & Dessert || tags & Drink) tags |= Snack;
+    if (!(tags & (Breakfast | Lunch | Dinner | Snack))) tags |= Lunch | Dinner;
+
+    _currentTags = tags;
+
+    // Обновляем кнопки
+    document.querySelectorAll('.tag-pill').forEach(btn => {
+        const val = parseInt(btn.dataset.tag);
+        btn.classList.toggle('active', !!(tags & val));
+    });
+
+    await saveTags(recipeId);
+}
 </script>
 }

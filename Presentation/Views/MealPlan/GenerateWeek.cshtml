@@ -9,7 +9,7 @@
     
     .gw-page {
         min-height: 100vh;
-        padding: 2rem 1rem 5rem;
+        padding: 3rem 0;
     }
     .gw-inner { max-width: 860px; margin: 0 auto; }
 
@@ -231,6 +231,7 @@
     .gw-preview {
         background: var(--sage-light); border-radius: 12px;
         padding: 1rem 1.2rem; display: flex; gap: 1.2rem;
+        justify-content: space-around;
         flex-wrap: wrap; margin-top: .2rem;
     }
     .gw-preview-item { font-size: .84rem; color: var(--brown-lt); }
@@ -267,13 +268,13 @@
                 <div class="gw-card-body">
                     <div class="gw-goal-grid">
                         @foreach (var (val, icon, name, sub) in new[]
-                        {
-                            ("maintain",  "⚖️", "Поддержание",       "Стабильный вес"),
-                            ("lose",      "📉", "Похудение",         "−400 ккал/день"),
-                            ("lose_fast", "🔥", "Быстрое похудение", "−700 ккал"),
-                            ("gain",      "💪", "Набор массы",       "+400 ккал/день"),
-                            ("gain_lean", "🌿", "Сухая масса",       "+200 ккал")
-                        })
+                                  {
+                                      ("maintain",  "⚖️", "Поддержание",       "Стабильный вес"),
+                                      ("lose",      "📉", "Похудение",         "−400 ккал/день"),
+                                      ("lose_fast", "🔥", "Быстрое похудение", "−700 ккал"),
+                                      ("gain",      "💪", "Набор массы",       "+400 ккал/день"),
+                                      ("gain_lean", "🌿", "Сухая масса",       "+200 ккал")
+                                  })
                         {
                             <div>
                                 <input type="radio" asp-for="Goal" value="@val"
@@ -285,6 +286,68 @@
                                 </label>
                             </div>
                         }
+                    </div>
+                </div>
+            </div>
+            
+            <!-- ── Параметры тела ── -->
+            <div class="gw-card">
+                <div class="gw-card-head">
+                    <div class="gw-card-icon icon-teal">🧮</div>
+                    <div><h3>Параметры тела <span style="font-weight:400;color:var(--muted)">(для авторасчёта ккал)</span></h3>
+                         <p>Заполните — калории рассчитаются автоматически</p></div>
+                </div>
+                <div class="gw-card-body">
+                    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:.8rem;margin-bottom:1rem">
+                        <div>
+                            <label class="gw-label">Вес</label>
+                            <div class="gw-macro-input-wrap">
+                                <input asp-for="WeightKg" type="number" class="gw-input" placeholder="70" min="30" max="250" step="0.5" style="padding-right:2.5rem" id="bodyWeight"/>
+                                <span class="gw-macro-unit">кг</span>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="gw-label">Рост</label>
+                            <div class="gw-macro-input-wrap">
+                                <input asp-for="HeightCm" type="number" class="gw-input" placeholder="175" min="100" max="250" id="bodyHeight" style="padding-right:2.5rem"/>
+                                <span class="gw-macro-unit">см</span>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="gw-label">Возраст</label>
+                            <div class="gw-macro-input-wrap">
+                                <input asp-for="Age" type="number" class="gw-input" placeholder="30" min="10" max="100" id="bodyAge" style="padding-right:2.8rem"/>
+                                <span class="gw-macro-unit">лет</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.8rem">
+                        <div>
+                            <label class="gw-label">Пол</label>
+                            <select asp-for="Gender" class="gw-select" id="bodyGender">
+                                <option value="">— выберите —</option>
+                                <option value="male">Мужской</option>
+                                <option value="female">Женский</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="gw-label">Активность</label>
+                            <select asp-for="ActivityLevel" class="gw-select" id="bodyActivity">
+                                <option value="">— выберите —</option>
+                                <option value="sedentary">Сидячий образ жизни</option>
+                                <option value="light">Лёгкая активность (1-3 дня/нед)</option>
+                                <option value="moderate">Умеренная (3-5 дней/нед)</option>
+                                <option value="active">Высокая (6-7 дней/нед)</option>
+                                <option value="veryactive">Очень высокая (спортсмены)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="calcResult" style="display:none;margin-top:1rem;background:var(--sage-light);border-radius:10px;padding:.8rem 1rem;font-size:.88rem;color:var(--brown)">
+                        <strong id="calcResultText"></strong>
+                        <button type="button" onclick="applyCalcResult()" 
+                                style="margin-left:1rem;background:var(--sage);color:#fff;border:none;border-radius:6px;padding:.25rem .7rem;font-size:.8rem;cursor:pointer">
+                            Применить
+                        </button>
                     </div>
                 </div>
             </div>
@@ -315,7 +378,7 @@
                         <div class="gw-preview-item">🌅 Завтрак: <strong id="pvBreakfast">500</strong> ккал</div>
                         <div class="gw-preview-item">☀️ Обед: <strong id="pvLunch">700</strong> ккал</div>
                         <div class="gw-preview-item">🌙 Ужин: <strong id="pvDinner">600</strong> ккал</div>
-                        <div class="gw-preview-item">🍎 Перекус: <strong id="pvSnack">200</strong> ккал</div>
+                        <div class="gw-preview-item" data-snack>🍎 Перекус: <strong id="pvSnack">200</strong> ккал</div>
                     </div>
                 </div>
             </div>
@@ -480,40 +543,34 @@
                     <div class="gw-card-icon icon-blue">⚙️</div>
                     <div><h3>Настройки плана</h3><p>Количество приёмов пищи и повторы</p></div>
                 </div>
+                <!-- вместо степпера MealsPerDay + тоггла IncludeSnacks -->
                 <div class="gw-card-body">
-                    <div style="display:flex;flex-wrap:wrap;gap:2rem;align-items:flex-start">
-                        <div>
-                            <label class="gw-label">Приёмов пищи в день</label>
-                            <div class="gw-stepper">
-                                <button type="button" onclick="stepMeals(-1)">−</button>
-                                <input asp-for="MealsPerDay" id="mealsInput" type="number"
-                                       min="3" max="6" readonly />
-                                <button type="button" onclick="stepMeals(1)">+</button>
-                            </div>
-                        </div>
-                        <div style="display:flex;flex-direction:column;gap:.7rem;padding-top:1.8rem">
-                            <div class="gw-budget-toggle" style="margin:0">
-                                <label class="gw-switch">
-                                    <input asp-for="IncludeSnacks" type="checkbox" id="snackToggle" />
-                                    <span class="gw-switch-slider"></span>
+                    <div class="gw-goal-grid" style="grid-template-columns: repeat(3, 1fr)">
+                        @foreach (var (val, icon, name, sub) in new[]
+                                  {
+                                      (3, "🍽", "3 приёма",        "Завтрак · Обед · Ужин"),
+                                      (4, "🥗", "3 + перекус",     "Завтрак · Обед · Перекус · Ужин"),
+                                      (5, "⚡", "5 приёмов",       "Завтрак · 2 Перекуса · Обед · Ужин"),
+                                  })
+                        {
+                            <div>
+                                <input type="radio" asp-for="MealsPerDay" value="@val"
+                                       class="gw-goal-option" id="meals_@val" />
+                                <label class="gw-goal-label" for="meals_@val">
+                                    <span class="gl-icon">@icon</span>
+                                    <span class="gl-name">@name</span>
+                                    <span class="gl-sub" style="font-size:.7rem">@sub</span>
                                 </label>
-                                <span style="font-size:.92rem;color:var(--brown-lt)">Включать перекусы</span>
                             </div>
-                            <div class="gw-budget-toggle" style="margin:0">
-                                <!--
-                                    ИСПРАВЛЕНО: AvoidRepeats теперь asp-for вместо безымянного чекбокса.
-                                    Раньше значение не передавалось в контроллер вообще — форма отправляла
-                                    только bool=true при наличии поля, но без asp-for MVC не биндил его.
-                                    Теперь корректно маппится в GenerateWeekViewModel.AvoidRepeats,
-                                    откуда контроллер читает MinDaysBetweenRepeats = AvoidRepeats ? 2 : 0.
-                                -->
-                                <label class="gw-switch">
-                                    <input asp-for="AvoidRepeats" type="checkbox" id="repeatToggle" />
-                                    <span class="gw-switch-slider"></span>
-                                </label>
-                                <span style="font-size:.92rem;color:var(--brown-lt)">Не повторять рецепты</span>
-                            </div>
-                        </div>
+                        }
+                    </div>
+                    <input type="hidden" asp-for="IncludeSnacks" value="false" />
+                    <div style="margin-top:1rem;display:flex;align-items:center;gap:.7rem">
+                        <label class="gw-switch">
+                            <input asp-for="IncludeDrinks" type="checkbox" id="drinksToggle" />
+                            <span class="gw-switch-slider"></span>
+                        </label>
+                        <span style="font-size:.92rem;color:var(--brown-lt)">Добавлять напитки к приёмам пищи</span>
                     </div>
                 </div>
             </div>
@@ -563,25 +620,35 @@ function goalAdjust(base) {
 }
 
 function updateSlider() {
-    const base = +slider.value;
-    const pct  = ((base - +slider.min) / (+slider.max - +slider.min) * 100).toFixed(1);
-    slider.style.setProperty('--pct', pct + '%');
+    const base     = +slider.value;
+    const adj      = goalAdjust(base);
+    const meals    = +document.querySelector('input[name="MealsPerDay"]:checked')?.value || 3;
+    const hasSnack = meals >= 4;
+
     display.textContent = base.toLocaleString('ru-RU');
 
-    const adj  = goalAdjust(base);
     const diff = adj - base;
     adjusted.textContent = diff !== 0
         ? `С учётом цели: ${adj.toLocaleString('ru-RU')} ккал (${diff > 0 ? '+' : ''}${diff})`
         : '';
 
-    pvBreak.textContent  = Math.round(adj * .25);
-    pvLunch.textContent  = Math.round(adj * .35);
-    pvDinner.textContent = Math.round(adj * .30);
-    pvSnack.textContent  = Math.round(adj * .10);
+    if (hasSnack) {
+        pvBreak.textContent  = Math.round(adj * 0.25);
+        pvLunch.textContent  = Math.round(adj * 0.35);
+        pvDinner.textContent = Math.round(adj * 0.30);
+        pvSnack.textContent  = Math.round(adj * 0.10);
+        document.querySelector('[data-snack]').style.display = '';
+    } else {
+        pvBreak.textContent  = Math.round(adj * 0.25);
+        pvLunch.textContent  = Math.round(adj * 0.40);
+        pvDinner.textContent = Math.round(adj * 0.35);
+        document.querySelector('[data-snack]').style.display = 'none';
+    }
 }
 
 slider.addEventListener('input', updateSlider);
-document.querySelectorAll('.gw-goal-option').forEach(r =>
+
+document.querySelectorAll('input[name="MealsPerDay"]').forEach(r =>
     r.addEventListener('change', updateSlider));
 updateSlider();
 
@@ -648,17 +715,49 @@ tagWrap.addEventListener('click', () => tagInput.focus());
 // Рендерим начальные теги из модели
 renderTags();
 
-// ── Степпер приёмов пищи ────────────────────────────────────────────────────
-function stepMeals(delta) {
-    const inp = document.getElementById('mealsInput');
-    inp.value = Math.min(6, Math.max(3, +inp.value + delta));
-}
-
 // ── Спиннер при отправке формы ──────────────────────────────────────────────
 document.getElementById('generateForm').addEventListener('submit', function () {
     const btn = document.getElementById('submitBtn');
     btn.classList.add('loading');
     btn.disabled = true;
 });
+
+// ── Калькулятор КБЖУ по параметрам тела ────────────────────────────────────
+const bodyFields = ['bodyWeight','bodyHeight','bodyAge','bodyGender','bodyActivity'];
+let _calcKcal = 0;
+
+function tryCalcBmr() {
+    const w = parseFloat(document.getElementById('bodyWeight')?.value);
+    const h = parseFloat(document.getElementById('bodyHeight')?.value);
+    const a = parseInt(document.getElementById('bodyAge')?.value);
+    const g = document.getElementById('bodyGender')?.value;
+    const act = document.getElementById('bodyActivity')?.value;
+
+    if (!w || !h || !a || !g || !act) {
+        document.getElementById('calcResult').style.display = 'none';
+        return;
+    }
+
+    const bmr = 10*w + 6.25*h - 5*a + (g === 'male' ? 5 : -161);
+    const actMult = {sedentary:1.2, light:1.375, moderate:1.55, active:1.725, veryactive:1.9};
+    const tdee = Math.round(bmr * (actMult[act] || 1));
+    _calcKcal = tdee;
+
+    document.getElementById('calcResultText').textContent =
+        `Ваша норма: ~${tdee} ккал/день (BMR ${Math.round(bmr)} × коэф. активности)`;
+    document.getElementById('calcResult').style.display = 'block';
+}
+
+function applyCalcResult() {
+    if (!_calcKcal) return;
+    slider.value = Math.min(4500, Math.max(1000, _calcKcal));
+    updateSlider();
+}
+
+bodyFields.forEach(id => {
+    document.getElementById(id)?.addEventListener('change', tryCalcBmr);
+    document.getElementById(id)?.addEventListener('input', tryCalcBmr);
+});
+tryCalcBmr(); 
 </script>
 }

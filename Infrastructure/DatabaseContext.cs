@@ -1,6 +1,7 @@
 ﻿using Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using System;
+using Domain.Enums;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace Infrastructure
@@ -18,6 +19,7 @@ namespace Infrastructure
         public DbSet<PlannedMeal> PlannedMeals => Set<PlannedMeal>();
         public DbSet<FavoriteRecipe> FavoriteRecipes { get; set; }
         public DbSet<User> Users => Set<User>();
+        public DbSet<MealSlot> MealSlots => Set<MealSlot>();
         
         // Infrastructure/DatabaseContext.cs
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -60,13 +62,6 @@ namespace Infrastructure
                 entity.Property(e => e.LastLoginAt).HasDefaultValueSql("NOW() AT TIME ZONE 'UTC'");
             });
                 
-            // Product hierarchy (остаётся)
-            modelBuilder.Entity<Product>()
-                .HasOne(p => p.Parent)
-                .WithMany(p => p.Children)
-                .HasForeignKey(p => p.ParentId)
-                .OnDelete(DeleteBehavior.Restrict);
-
             // Остальные настройки
             modelBuilder.Entity<RecipeIngredient>()
                 .HasOne(ri => ri.Product)
@@ -117,6 +112,36 @@ namespace Infrastructure
                 .WithMany(u => u.Recipes)
                 .HasForeignKey(r => r.AuthorId)
                 .OnDelete(DeleteBehavior.SetNull); 
+            
+            modelBuilder.Entity<MealPlan>()
+                .Ignore(p => p.Meals);
+            
+            modelBuilder.Entity<MealSlot>()
+                .HasOne(s => s.MealPlan)
+                .WithMany(p => p.Slots)
+                .HasForeignKey(s => s.MealPlanId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<MealSlot>()
+                .HasOne(s => s.MealType)
+                .WithMany()
+                .HasForeignKey(s => s.MealTypeId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<PlannedMeal>()
+                .HasOne(m => m.MealSlot)
+                .WithMany(s => s.Items)
+                .HasForeignKey(m => m.MealSlotId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // RecipeTag как int
+            modelBuilder.Entity<PlannedMeal>()
+                .Property(m => m.Role)
+                .HasConversion<int>();
+
+            modelBuilder.Entity<Recipe>()
+                .Property(r => r.Tags)
+                .HasConversion<int>();
         }
     }
 }

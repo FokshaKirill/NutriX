@@ -10,7 +10,7 @@
     --heart:     #e05c5c;
 }
 
-.recipes-page { padding: 3rem 0 5rem; }
+.recipes-page { padding: 3rem 0; }
 
 /* ── шапка страницы ── */
 .page-head {
@@ -24,7 +24,7 @@
 
 .page-head h1 {
     font-family: 'Lora', serif;
-    font-size: 2.2rem;
+    font-size: 2rem;
     color: var(--bark);
     margin: 0;
     line-height: 1.2;
@@ -46,7 +46,7 @@
     background: var(--sage);
     color: #fff;
     border: none;
-    border-radius: 10px;
+    border-radius: 5px;
     font-family: 'DM Sans', sans-serif;
     font-size: .875rem;
     font-weight: 500;
@@ -64,7 +64,7 @@
     background: transparent;
     color: var(--sage-d);
     border: 1.5px solid var(--sage);
-    border-radius: 10px;
+    border-radius: 5px;
     font-family: 'DM Sans', sans-serif;
     font-size: .875rem;
     font-weight: 500;
@@ -236,7 +236,7 @@
 .btn-card {
     flex: 1;
     padding: .5rem .5rem;
-    border-radius: 8px;
+    border-radius: 5px;
     border: 1.5px solid var(--border);
     background: transparent;
     font-size: .8rem;

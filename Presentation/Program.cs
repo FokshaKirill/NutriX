@@ -29,7 +29,6 @@ builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IJwtService, JwtService>();
-builder.Services.AddScoped<IMealService, MealService>();
 builder.Services.AddScoped<IMealPlanService, MealPlanService>();
 builder.Services.AddScoped<IMealTypeService, MealTypeService>();
 builder.Services.AddScoped<IProductService, ProductService>();
@@ -73,16 +72,7 @@ builder.Services.AddSession(options =>
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
     options.Cookie.SameSite = SameSiteMode.Lax;
-    options.Cookie.SecurePolicy = CookieSecurePolicy.None; // HTTP localhost
-});
-
-builder.Services.AddDistributedMemoryCache();
-builder.Services.AddSession(options =>
-{
-    options.Cookie.HttpOnly = true;
-    options.Cookie.IsEssential = true;
-    options.Cookie.SameSite = SameSiteMode.Lax;
-    options.Cookie.SecurePolicy = CookieSecurePolicy.None;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.None; 
 });
 
 builder.Services.AddAuthentication(options =>
@@ -118,27 +108,23 @@ var app = builder.Build();
 // Hangfire Dashboard (только для разработки или для админов)
 app.UseHangfireDashboard("/hangfire", new DashboardOptions
 {
-    // Разрешаем только локально, или добавь авторизацию
     Authorization = new[] { new HangfireAdminFilter() }
 });
  
-// Регистрируем recurring job — каждые 5 дней в 3:00
 RecurringJob.AddOrUpdate<PriceUpdateJob>(
     "update-prices-every-5-days",
     job => job.ExecuteAsync(5m, 15m),
-    "0 3 */5 * *"   // cron: каждые 5 дней в 03:00
+    "0 3 */5 * *" 
 );
 
-// Применяем миграции при старте (с обработкой ошибок)
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
     try
     {
         var context = services.GetRequiredService<DatabaseContext>();
-        context.Database.Migrate(); // Применяет все pending миграции
+        context.Database.Migrate();
         
-        // Опционально: добавьте seed-данные
         // DatabaseInitializer.Seed(context);
         var mealTypes = new[]
         {

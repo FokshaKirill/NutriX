@@ -17,8 +17,9 @@
         @if (Model.TotalCalories > 0)
         {
             <div class="fav-card-meta">
-                🔥 @((int)Model.CaloriesPerServing) ккал ·
-                @Model.DefaultServings порц.
+                @((int)Model.CaloriesPerServing) ккал ·
+                @Model.DefaultServings порц. ·
+                @Math.Round(Model.TotalCost, 2) ₽
             </div>
         }
         <div class="fav-card-actions">

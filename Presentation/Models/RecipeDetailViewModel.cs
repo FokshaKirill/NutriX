@@ -15,6 +15,7 @@ public class RecipeDetailViewModel
 
     public List<RecipeIngredientViewModel> Ingredients { get; set; } = [];
     public List<RecipeStepViewModel> Steps { get; set; } = [];
+    public Domain.Enums.RecipeTag Tags { get; set; } = Domain.Enums.RecipeTag.None;
 
     public decimal TotalCalories => DefaultServings > 0 ? Ingredients.Sum(i => i.Calories ?? 0) : 0;
     public decimal ProteinPerServing { get; set; } = 0;

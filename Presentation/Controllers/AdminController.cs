@@ -1,11 +1,14 @@
 using Hangfire;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Services.Interfaces;
 using Services.Jobs;
 using Services.Services;
 
 namespace Presentation.Controllers;
 
+[Authorize(Roles = "Admin")]
 [Route("Admin/[action]")]
 public class AdminController : Controller
 {
@@ -29,7 +32,6 @@ public class AdminController : Controller
 
     // POST /Admin/SeedProducts — импортирует статичную базу ~500 продуктов
     [HttpPost("/Admin/ParseAll")]
-    [ValidateAntiForgeryToken]
     public async Task<IActionResult> SeedProducts()
     {
         if (!User.IsInRole("Admin"))
@@ -51,7 +53,6 @@ public class AdminController : Controller
 
     // POST /Admin/UpdatePrices — обновляет цены вручную
     [HttpPost]
-    [ValidateAntiForgeryToken]
     public async Task<IActionResult> UpdatePrices(decimal minPct = 5, decimal maxPct = 15)
     {
         if (!User.IsInRole("Admin"))
@@ -74,5 +75,13 @@ public class AdminController : Controller
             _log.LogError(ex, "Ошибка при обновлении цен");
             return Json(new { error = ex.Message });
         }
+    }
+    
+    // GET /Admin/Prices
+    [HttpGet("/Admin/Prices")]
+    public async Task<IActionResult> Prices([FromServices] IProductService productService)
+    {
+        var products = await productService.GetAllAsync();
+        return View(products.OrderBy(p => p.Category).ThenBy(p => p.Name).ToList());
     }
 }

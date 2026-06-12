@@ -1,88 +1,118 @@
-﻿namespace Services.DTO
+﻿using Domain.Entities;
+using Domain.Enums;
+
+namespace Services.DTO
 {
     /// <summary>
-    /// Входные данные для генерации меню на неделю.
-    /// Передаётся из контроллера в MealPlanGeneratorService.
+    /// Запрос на генерацию плана питания на неделю.
+    /// Передаётся в <see cref="IMealPlanGeneratorService.Generate"/>.
     /// </summary>
     public class GenerateWeekRequest
     {
         // ── Пользователь ──────────────────────────────────────────────────────
-        public Guid UserId { get; init; }
 
-        // ── Калории и цель ────────────────────────────────────────────────────
+        public Guid UserId { get; set; }
 
+        // ── Калории и цели ────────────────────────────────────────────────────
+
+        public int DailyCalories { get; set; } = 2000;
+
+        public NutritionGoal Goal { get; set; } = NutritionGoal.Maintain;
+        public bool IncludeDrinks { get; set; } = true;
+        
         /// <summary>
-        /// Базовые калории в день (до поправки на цель).
+        /// Скорректированная дневная норма калорий с учётом цели.
+        /// Deficit −15%, Surplus +15%, Maintain — без изменений.
         /// </summary>
-        public int DailyCalories { get; init; } = 2000;
-
-        /// <summary>
-        /// Цель: "maintain" | "lose" | "lose_fast" | "gain" | "gain_lean"
-        /// Применяется как поправочный коэффициент к DailyCalories.
-        /// </summary>
-        public string Goal { get; init; } = "maintain";
-
-        // ── Бюджет ────────────────────────────────────────────────────────────
-        public bool    ConsiderBudget { get; init; } = false;
-        public decimal WeeklyBudget   { get; init; } = 3500m;
-
-        // ── Диетические предпочтения ──────────────────────────────────────────
-        public bool Vegetarian { get; init; }
-        public bool Vegan      { get; init; }
-        public bool GlutenFree { get; init; }
-        public bool LowCarb    { get; init; }
-        public bool HighProtein{ get; init; }
-        public bool LowFat     { get; init; }
-
-        // ── Исключения ────────────────────────────────────────────────────────
-
-        /// <summary>Продукты, которые нельзя включать в план.</summary>
-        public HashSet<string> ExcludedProducts { get; init; } = new();
-
-        // ── Параметры плана ───────────────────────────────────────────────────
-        public int  MealsPerDay   { get; init; } = 3;
-        public bool IncludeSnacks { get; init; } = true;
-
-        /// <summary>
-        /// Минимальное количество дней между повторным использованием одного рецепта.
-        /// 0 = повторы запрещены в рамках всей недели.
-        /// 2 = рецепт может повториться не раньше чем через 2 дня.
-        /// </summary>
-        public int MinDaysBetweenRepeats { get; init; } = 2;
-
-        /// <summary>Seed для воспроизводимой генерации. null = случайный.</summary>
-        public int? Seed { get; init; } = null;
-
-        // ── Все доступные рецепты (передаются снаружи, не грузятся внутри) ───
-        public List<Recipe> AllRecipes { get; init; } = new();
-
-        // ── Типы приёма пищи ─────────────────────────────────────────────────
-        public MealType BreakfastType { get; init; } = null!;
-        public MealType LunchType     { get; init; } = null!;
-        public MealType DinnerType    { get; init; } = null!;
-        public MealType? SnackType    { get; init; }
-
-        // ── Вычисляемые свойства ──────────────────────────────────────────────
-
-        /// <summary>Целевые ккал/день с учётом цели (похудение/набор).</summary>
         public int AdjustedDailyCalories => Goal switch
         {
-            "lose"      => DailyCalories - 400,
-            "lose_fast" => DailyCalories - 700,
-            "gain"      => DailyCalories + 400,
-            "gain_lean" => DailyCalories + 200,
-            _           => DailyCalories
+            NutritionGoal.Deficit => (int)(DailyCalories * 0.85),
+            NutritionGoal.Surplus => (int)(DailyCalories * 1.15),
+            _                     => DailyCalories
         };
 
+        // ── Целевые макросы (опциональные) ───────────────────────────────────
+
+        public int?  ProteinGoal { get; set; }
+        public int?  FatGoal     { get; set; }
+        public int?  CarbsGoal   { get; set; }
+
+        // ── Распределение калорий по приёмам пищи ────────────────────────────
+
         public int BreakfastTarget => (int)(AdjustedDailyCalories * 0.25);
-        public int LunchTarget     => (int)(AdjustedDailyCalories * 0.35);
+        public int LunchTarget     => (int)(AdjustedDailyCalories * 0.40);
         public int DinnerTarget    => (int)(AdjustedDailyCalories * 0.30);
-        public int SnackTarget     => (int)(AdjustedDailyCalories * 0.10);
+        public int SnackTarget     => (int)(AdjustedDailyCalories * 0.05);
 
-        /// <summary>Бюджет на один день.</summary>
-        public decimal DailyBudget => ConsiderBudget ? WeeklyBudget / 7m : decimal.MaxValue;
+        // ── Бюджет ────────────────────────────────────────────────────────────
 
-        /// <summary>Допустимое отклонение калорий по дням (±15% от цели).</summary>
-        public int DailyCalorieTolerance => (int)(AdjustedDailyCalories * 0.15);
+        public bool    ConsiderBudget { get; set; } = false;
+        public decimal WeeklyBudget   { get; set; } = 3500m;
+        public decimal DailyBudget    => WeeklyBudget / 7m;
+
+        /// <summary>Строгость соблюдения бюджета.</summary>
+        public BudgetStrictness BudgetMode { get; set; } = BudgetStrictness.Flexible;
+
+        // ── Диетические предпочтения ──────────────────────────────────────────
+
+        public bool Vegetarian  { get; set; } = false;
+        public bool Vegan       { get; set; } = false;
+        public bool GlutenFree  { get; set; } = false;
+        public bool LowCarb     { get; set; } = false;
+        public bool HighProtein { get; set; } = false;
+        public bool LowFat      { get; set; } = false;
+
+        /// <summary>
+        /// Исключённые продукты (нижний регистр, нормализованные).
+        /// Пример: { "молоко", "орехи", "рыба" }
+        /// </summary>
+        public HashSet<string> ExcludedProducts { get; set; } = [];
+
+        // ── Структура приёмов пищи ────────────────────────────────────────────
+
+        public int  MealsPerDay   { get; set; } = 3;
+
+        /// <summary>
+        /// Количество дней между повторами одного рецепта.
+        /// 0 = повторы разрешены.
+        /// </summary>
+        public int MinDaysBetweenRepeats { get; set; } = 3;
+
+        /// <summary>Уровень разнообразия — определяет кулдаун повторений.</summary>
+        public DiversityLevel Diversity { get; set; } = DiversityLevel.Normal;
+
+        /// <summary>
+        /// Пользовательские шаблоны слотов.
+        /// Если null — генератор использует <see cref="DefaultSlotTemplates"/>.
+        /// </summary>
+        public List<SlotTemplate>? CustomSlotTemplates { get; set; }
+
+        // ── Типы приёмов пищи из БД ───────────────────────────────────────────
+
+        public MealType  BreakfastType { get; set; } = null!;
+        public MealType  LunchType     { get; set; } = null!;
+        public MealType  DinnerType    { get; set; } = null!;
+        public MealType? SnackType     { get; set; }
+
+        // ── Источник рецептов ─────────────────────────────────────────────────
+
+        public List<Recipe> AllRecipes { get; set; } = [];
+
+        // ── Сид для воспроизводимости (тесты) ────────────────────────────────
+
+        public int? Seed { get; set; }
+
+        // ── Вспомогательный метод ─────────────────────────────────────────────
+
+        /// <summary>
+        /// Парсит строку исключений "молоко, орехи, рыба" в HashSet.
+        /// Используется контроллером при построении запроса.
+        /// </summary>
+        public static HashSet<string> ParseExcluded(string? raw) =>
+            string.IsNullOrWhiteSpace(raw)
+                ? []
+                : raw.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                     .Select(s => s.Trim().ToLowerInvariant())
+                     .ToHashSet();
     }
 }

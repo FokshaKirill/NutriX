@@ -9,13 +9,16 @@ namespace Services.Services
     {
         private readonly IRepository<MealPlan>    _plans;
         private readonly IRepository<PlannedMeal> _plannedMeals;
+        private readonly IRepository<MealSlot>    _slots;
 
         public MealPlanService(
             IRepository<MealPlan>    plans,
-            IRepository<PlannedMeal> plannedMeals)
+            IRepository<PlannedMeal> plannedMeals,
+            IRepository<MealSlot>    slots)
         {
             _plans        = plans;
             _plannedMeals = plannedMeals;
+            _slots        = slots;
         }
 
         // ══════════════════════════════════════════════════════════════════════
@@ -29,12 +32,11 @@ namespace Services.Services
             var monday = today.AddDays(-diff).Date;
 
             return await _plans.Query()
-                .Include(p => p.Meals)
-                    .ThenInclude(m => m.MealType)
-                .Include(p => p.Meals)
+                .Include(p => p.Slots).ThenInclude(s => s.MealType)
+                .Include(p => p.Slots).ThenInclude(s => s.Items)
                     .ThenInclude(m => m.Recipe)
-                        .ThenInclude(r => r.Ingredients)
-                            .ThenInclude(i => i.Product)
+                    .ThenInclude(r => r.Ingredients)
+                    .ThenInclude(i => i.Product)
                 .Where(p => p.UserId    == userId
                          && p.StartDate >= monday
                          && p.StartDate <  monday.AddDays(7))
@@ -49,15 +51,13 @@ namespace Services.Services
             var monday = today.AddDays(-diff).Date;
             var offset = (today - monday).Days;
 
-            return await _plans.Query()
-                .Where(p => p.UserId    == userId
-                         && p.StartDate >= monday
-                         && p.StartDate <  monday.AddDays(1))
-                .SelectMany(p => p.Meals)
-                .Where(m => m.DayOffset == offset)
-                .Include(m => m.MealType)
-                .Include(m => m.Recipe)
-                .ToListAsync();
+            var plan = await GetCurrentWeekPlanAsync(userId);
+            if (plan == null) return [];
+
+            return plan.Slots
+                .Where(s => s.DayOffset == offset)
+                .SelectMany(s => s.Items)
+                .ToList();
         }
 
         public async Task<List<MealPlan>> GetAllPlansAsync()
@@ -70,12 +70,11 @@ namespace Services.Services
         public async Task<MealPlan?> GetByIdAsync(Guid id)
         {
             return await _plans.Query()
-                .Include(p => p.Meals)
-                    .ThenInclude(pm => pm.Recipe)
-                        .ThenInclude(r => r.Ingredients)
-                            .ThenInclude(i => i.Product)
-                .Include(p => p.Meals)
-                    .ThenInclude(pm => pm.MealType)
+                .Include(p => p.Slots).ThenInclude(s => s.MealType)
+                .Include(p => p.Slots).ThenInclude(s => s.Items)
+                    .ThenInclude(m => m.Recipe)
+                    .ThenInclude(r => r.Ingredients)
+                    .ThenInclude(i => i.Product)
                 .FirstOrDefaultAsync(p => p.Id == id);
         }
 
@@ -85,9 +84,8 @@ namespace Services.Services
 
         public async Task<MealPlan> CreateAsync(MealPlan plan)
         {
-            // Если на эту дату уже есть план — удаляем его перед созданием нового
             var existing = await _plans.Query()
-                .Include(p => p.Meals)
+                .Include(p => p.Slots)
                 .FirstOrDefaultAsync(p =>
                     p.UserId         == plan.UserId &&
                     p.StartDate.Date == plan.StartDate.Date);
@@ -123,21 +121,36 @@ namespace Services.Services
         }
 
         // ══════════════════════════════════════════════════════════════════════
-        // Операции с отдельными PlannedMeal
+        // Операции с MealSlot
+        // ══════════════════════════════════════════════════════════════════════
+
+        /// <summary>Добавляет новый слот (приём пищи) в план.</summary>
+        public async Task AddSlotAsync(MealSlot slot)
+        {
+            if (slot.Id == Guid.Empty) slot.Id = Guid.NewGuid();
+            await _slots.AddAsync(slot);
+            await _slots.SaveChangesAsync();
+        }
+
+        // ══════════════════════════════════════════════════════════════════════
+        // Операции с PlannedMeal
         // ══════════════════════════════════════════════════════════════════════
 
         public async Task<PlannedMeal?> GetPlannedMealByIdAsync(Guid id)
         {
             return await _plannedMeals.Query()
                 .Include(m => m.Recipe)
-                .Include(m => m.MealType)
+                    .ThenInclude(r => r.Ingredients)
+                    .ThenInclude(i => i.Product)
+                .Include(m => m.MealSlot)
+                    .ThenInclude(s => s.MealType)
+                .Include(m => m.MealSlot)
+                    .ThenInclude(s => s.MealPlan)
                 .FirstOrDefaultAsync(m => m.Id == id);
         }
 
         /// <summary>
-        /// Добавляет новое блюдо в существующий план.
-        /// Вызывается из MealPlanController.AddMeal когда пользователь
-        /// вручную добавляет рецепт через UI.
+        /// Добавляет новое блюдо в существующий слот.
         /// </summary>
         public async Task AddPlannedMealAsync(PlannedMeal meal)
         {
@@ -150,7 +163,6 @@ namespace Services.Services
 
         /// <summary>
         /// Заменяет рецепт в уже существующем PlannedMeal.
-        /// Вызывается из MealPlanController.ReplaceMeal.
         /// </summary>
         public async Task ReplaceMealRecipeAsync(Guid plannedMealId, Guid newRecipeId)
         {
@@ -170,45 +182,71 @@ namespace Services.Services
 
         /// <summary>
         /// Генерирует сводный список покупок для плана.
-        /// Количество каждого ингредиента умножается на количество порций
-        /// конкретного PlannedMeal (Servings), а не на DefaultServings рецепта.
+        /// Количество каждого ингредиента умножается на Servings конкретного PlannedMeal.
         /// Одинаковые продукты в одних единицах измерения суммируются.
         /// </summary>
         public async Task<List<RecipeIngredient>> GenerateShoppingListAsync(Guid mealPlanId)
         {
-            var plannedMeals = await _plannedMeals.Query()
-                .Where(pm => pm.MealPlanId == mealPlanId)
-                .Include(pm => pm.Recipe)
+            var plan = await _plans.Query()
+                .Include(p => p.Slots)
+                    .ThenInclude(s => s.Items)
+                    .ThenInclude(m => m.Recipe)
                     .ThenInclude(r => r.Ingredients)
-                        .ThenInclude(i => i.Product)
-                .ToListAsync();
+                    .ThenInclude(i => i.Product)
+                .FirstOrDefaultAsync(p => p.Id == mealPlanId);
 
-            if (!plannedMeals.Any())
-                return new List<RecipeIngredient>();
+            if (plan == null) return [];
 
-            var grouped = plannedMeals
-                .Where(pm => pm.Recipe != null)
-                .SelectMany(pm => pm.Recipe!.Ingredients.Select(ing => new
-                {
-                    Ingredient         = ing,
-                    ServingsMultiplier = pm.Servings
-                }))
-                .GroupBy(x => new { x.Ingredient.ProductId, x.Ingredient.Unit })
+            var allMeals = plan.Slots
+                .SelectMany(s => s.Items)
+                .Where(m => m.Recipe != null);
+
+            return allMeals
+                .SelectMany(pm => pm.Recipe!.Ingredients.Select(ing => new { ing, pm.Servings }))
+                .GroupBy(x => new { x.ing.ProductId, x.ing.Unit })
                 .Select(g => new RecipeIngredient
                 {
                     ProductId = g.Key.ProductId,
-                    Product   = g.First().Ingredient.Product,
-                    Amount    = g.Sum(x => x.Ingredient.Amount * x.ServingsMultiplier),
+                    Product   = g.First().ing.Product,
+                    Amount    = g.Sum(x => x.ing.Amount * x.Servings),
                     Unit      = g.Key.Unit,
                     Comment   = string.Join("; ", g
-                        .Where(x => !string.IsNullOrWhiteSpace(x.Ingredient.Comment))
-                        .Select(x => x.Ingredient.Comment)
-                        .Distinct())
+                        .Where(x => !string.IsNullOrWhiteSpace(x.ing.Comment))
+                        .Select(x => x.ing.Comment!).Distinct())
                 })
                 .OrderBy(i => i.Product?.Name)
                 .ToList();
+        }
+        
+        public async Task UpdateServingsAsync(Guid plannedMealId, int servings)
+        {
+            var meal = await _plannedMeals.Query()
+                .FirstOrDefaultAsync(m => m.Id == plannedMealId);
+            if (meal == null) return;
+            meal.Servings = Math.Max(1, servings);
+            await _plannedMeals.UpdateAsync(meal);
+            await _plannedMeals.SaveChangesAsync();
+        }
 
-            return grouped;
+        public async Task RemoveMealAsync(Guid plannedMealId)
+        {
+            var meal = await _plannedMeals.Query()
+                .FirstOrDefaultAsync(m => m.Id == plannedMealId);
+            if (meal == null) return;
+            await _plannedMeals.DeleteAsync(meal);
+            await _plannedMeals.SaveChangesAsync();
+        }
+
+        
+        public async Task<List<MealPlan>> GetHistoryAsync(Guid userId)
+        {
+            return await _plans.Query()
+                .Where(p => p.UserId == userId && p.IsArchived)
+                .OrderByDescending(p => p.StartDate)
+                .Include(p => p.Slots)
+                .ThenInclude(s => s.Items)
+                .ThenInclude(m => m.Recipe)
+                .ToListAsync();
         }
     }
 }

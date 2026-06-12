@@ -58,5 +58,14 @@ namespace Services.Interfaces
         /// Добавляет новое блюдо в существующий план (ручное добавление)
         /// </summary>
         Task AddPlannedMealAsync(PlannedMeal meal);
+        
+        /// <summary>
+        /// Добавляет новый слот для блюда в существующий план (ручное добавление)
+        /// </summary>
+        Task AddSlotAsync(MealSlot slot);
+        
+        Task UpdateServingsAsync(Guid plannedMealId, int servings);
+        Task RemoveMealAsync(Guid plannedMealId);
+        Task<List<MealPlan>> GetHistoryAsync(Guid userId);
     }
 }

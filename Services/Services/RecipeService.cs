@@ -108,10 +108,10 @@ namespace Services.Services
         }
         
         public async Task<(List<Recipe> Recipes, int TotalCount)> GetPagedRecipesAsync(
-            int page, 
-            int pageSize, 
+            int page,
+            int pageSize,
             string? searchTerm = null,
-            RecipeCategory? category = null)
+            RecipeTag? tag = null)      
         {
             IQueryable<Recipe> query = _recipes.Query()
                 .Include(r => r.Ingredients)
@@ -124,13 +124,13 @@ namespace Services.Services
                                          (r.Description != null && r.Description.ToLower().Contains(term)));
             }
 
-            if (category.HasValue && category.Value != RecipeCategory.Other)
+            if (tag.HasValue && tag.Value != RecipeTag.None)
             {
-                query = query.Where(r => r.Category == category.Value);
+                var tagInt = (int)tag.Value;
+                query = query.Where(r => ((int)r.Tags & tagInt) == tagInt);
             }
 
             var totalCount = await query.CountAsync();
-
             var recipes = await query
                 .OrderByDescending(r => r.CreatedAt)
                 .Skip((page - 1) * pageSize)
@@ -138,6 +138,17 @@ namespace Services.Services
                 .ToListAsync();
 
             return (recipes, totalCount);
+        }
+        
+        public async Task UpdateTagsAsync(Guid id, RecipeTag tags)
+        {
+            var recipe = await _recipes.Query()
+                .FirstOrDefaultAsync(r => r.Id == id);
+            if (recipe == null) return;
+
+            recipe.Tags = tags;
+            await _recipes.UpdateAsync(recipe);
+            await _recipes.SaveChangesAsync();
         }
     }
 }

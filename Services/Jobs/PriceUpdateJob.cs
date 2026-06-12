@@ -38,11 +38,10 @@ namespace Services.Jobs
                 var delta = product.PricePerUnit * pct * sign;
 
                 product.PricePerUnit = Math.Max(1m, Math.Round(product.PricePerUnit + delta, 2));
-                await _products.UpdateAsync(product);
                 updated++;
             }
 
-            await _products.SaveChangesAsync();
+            await _products.SaveChangesAsync(); 
             _log.LogInformation("[PriceUpdateJob] Готово. Обновлено: {Count}", updated);
         }
     }

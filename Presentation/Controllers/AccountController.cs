@@ -95,8 +95,10 @@ public class AccountController : Controller
             var monday = today.AddDays(-diff).Date;
             var offset = (today - monday).Days;
 
-            var todayMeals = todayPlan.Meals
-                .Where(m => m.DayOffset == offset && m.Recipe != null)
+            var todayMeals = todayPlan.Slots
+                .Where(s => s.DayOffset == offset)
+                .SelectMany(s => s.Items)
+                .Where(m => m.Recipe != null)
                 .ToList();
 
             todayKcal = (int)Math.Round(todayMeals.Sum(m => m.Recipe!.CaloriesPerServing * m.Servings));

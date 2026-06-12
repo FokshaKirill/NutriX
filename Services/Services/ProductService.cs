@@ -18,7 +18,6 @@ namespace Services.Services
         public async Task<List<Product>> GetAllProductsAsync()
         {
             return await _products.Query()
-                .Include(p => p.Parent)  
                 .OrderBy(p => p.Name)
                 .ToListAsync();
         }
@@ -75,8 +74,6 @@ namespace Services.Services
         public async Task<Product?> GetByIdAsync(Guid id)
         {
             return await _products.Query()
-                .Include(p => p.Parent)
-                .Include(p => p.Children)
                 .FirstOrDefaultAsync(p => p.Id == id);
         }
 
@@ -109,7 +106,6 @@ namespace Services.Services
         public async Task<List<Product>> GetCategoriesAsync()
         {
             return await _products.Query()
-                .Where(p => p.ParentId == null)
                 .OrderBy(p => p.Name)
                 .ToListAsync();
         }
@@ -191,5 +187,8 @@ namespace Services.Services
                 .Take(12)
                 .ToListAsync();
         }
+        
+        public async Task<List<Product>> GetAllAsync() =>
+            await _products.Query().OrderBy(p => p.Name).ToListAsync();
     }
 }

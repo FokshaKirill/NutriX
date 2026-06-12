@@ -9,7 +9,9 @@
         public Guid UserId { get; set; }
         public User? User { get; set; }
 
-        public ICollection<PlannedMeal> Meals { get; set; } = [];
+        public ICollection<MealSlot> Slots { get; set; } = [];
+
+        public IEnumerable<PlannedMeal> Meals => Slots.SelectMany(s => s.Items);
 
         // ── Настройки генерации ───────────────────────────────────────────
         // Сохраняются при генерации чтобы ReplaceMeal использовал те же
@@ -30,5 +32,10 @@
         /// Хранится как строка — парсится в HashSet при использовании.
         /// </summary>
         public string? ExcludedProducts { get; set; }
+        
+        /// <summary>
+        /// Архивированный план или ещё действует
+        /// </summary>
+        public bool IsArchived { get; set; } = false;
     }
 }

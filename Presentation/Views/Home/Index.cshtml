@@ -4,20 +4,21 @@
 
     var recipes    = ViewBag.LatestRecipes as List<Presentation.Models.RecipeListViewModel> ?? new();
     var user       = ViewBag.CurrentUser as Domain.Entities.User;
-    var todayMeals = ViewBag.TodayMeals as List<Domain.Entities.PlannedMeal> ?? new();
+    var todaySlots = ViewBag.TodaySlots as List<Domain.Entities.MealSlot> ?? new();
+    var allItems   = todaySlots.SelectMany(s => s.Items).ToList();
 
-    var calGoal  = (int)(todayMeals.Sum(m => (int)(m.Recipe?.CaloriesPerServing ?? 0)));
-    var protGoal = (int)(todayMeals.Sum(m => (int)(m.Recipe?.ProteinPerServing  ?? 0)));
-    var fatGoal  = (int)(todayMeals.Sum(m => (int)(m.Recipe?.FatPerServing      ?? 0)));
-    var carbGoal = (int)(todayMeals.Sum(m => (int)(m.Recipe?.CarbsPerServing    ?? 0)));
+    var calGoal  = allItems.Sum(m => (int)((m.Recipe?.CaloriesPerServing ?? 0) * m.Servings));
+    var protGoal = allItems.Sum(m => (int)((m.Recipe?.ProteinPerServing  ?? 0) * m.Servings));
+    var fatGoal  = allItems.Sum(m => (int)((m.Recipe?.FatPerServing      ?? 0) * m.Servings));
+    var carbGoal = allItems.Sum(m => (int)((m.Recipe?.CarbsPerServing    ?? 0) * m.Servings));
 
     var mealsJson = System.Text.Json.JsonSerializer.Serialize(
-        todayMeals.Select(m => new {
+        allItems.Select(m => new {
             id       = m.Id.ToString(),
-            calories = (int)(m.Recipe?.CaloriesPerServing ?? 0),
-            protein  = (int)(m.Recipe?.ProteinPerServing  ?? 0),
-            fat      = (int)(m.Recipe?.FatPerServing      ?? 0),
-            carbs    = (int)(m.Recipe?.CarbsPerServing    ?? 0)
+            calories = (int)((m.Recipe?.CaloriesPerServing ?? 0) * m.Servings),
+            protein  = (int)((m.Recipe?.ProteinPerServing  ?? 0) * m.Servings),
+            fat      = (int)((m.Recipe?.FatPerServing      ?? 0) * m.Servings),
+            carbs    = (int)((m.Recipe?.CarbsPerServing    ?? 0) * m.Servings)
         })
     );
 }
@@ -118,7 +119,7 @@
                 чтобы видеть своё меню
             </div>
         }
-        else if (!todayMeals.Any())
+        else if (!todaySlots.Any())
         {
             <div style="text-align:center;padding:2rem;color:#9a9a94">
                 <div style="font-size:2.5rem;margin-bottom:.75rem">📋</div>
@@ -131,7 +132,7 @@
         }
         else
         {
-            @await Html.PartialAsync("_DayMenuBody", todayMeals)
+            @await Html.PartialAsync("_DayMenuBody", todaySlots)
         }
     </div>
 
@@ -148,6 +149,66 @@
             </span>
         </div>
     }
+</section>
+
+<section>
+    <div class="nx-banner">
+        <svg class="nx-bg-circles" viewBox="0 0 680 280" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="560" cy="-30" r="160" fill="rgba(122,171,132,.05)"/>
+        <circle cx="80" cy="300" r="180" fill="rgba(78,125,88,.07)"/>
+        <circle cx="340" cy="140" r="260" fill="rgba(45,36,23,.15)"/>
+        <circle cx="600" cy="220" r="90" fill="rgba(122,171,132,.04)"/>
+        <circle cx="50" cy="60" r="70" fill="rgba(122,171,132,.04)"/>
+        </svg>
+
+        <svg class="nx-leaf nx-leaf1" width="38" height="52" viewBox="0 0 38 52">
+        <path d="M19 50 C10 40, 2 28, 4 14 C6 4, 19 2, 19 2 C19 2, 32 4, 34 14 C36 28, 28 40, 19 50Z" fill="rgba(122,171,132,.18)" stroke="rgba(122,171,132,.35)" stroke-width="1" fill-rule="evenodd"/>
+        <line x1="19" y1="6" x2="19" y2="46" stroke="rgba(122,171,132,.3)" stroke-width="1"/>
+        </svg>
+
+        <svg class="nx-leaf nx-leaf2" width="42" height="56" viewBox="0 0 42 56">
+        <path d="M21 54 C11 43, 2 30, 4 14 C6 3, 21 2, 21 2 C21 2, 36 3, 38 14 C40 30, 31 43, 21 54Z" fill="rgba(78,125,88,.2)" stroke="rgba(78,125,88,.35)" stroke-width="1"/>
+        <line x1="21" y1="6" x2="21" y2="50" stroke="rgba(78,125,88,.3)" stroke-width="1"/>
+        </svg>
+
+        <svg class="nx-leaf nx-leaf3" width="26" height="34" viewBox="0 0 26 34">
+        <path d="M13 33 C7 26, 2 18, 3 9 C4 3, 13 2, 13 2 C13 2, 22 3, 23 9 C24 18, 19 26, 13 33Z" fill="rgba(122,171,132,.13)" stroke="rgba(122,171,132,.25)" stroke-width="1"/>
+        </svg>
+
+        <svg class="nx-leaf nx-leaf4" width="30" height="40" viewBox="0 0 30 40">
+        <path d="M15 38 C8 30, 2 20, 3 10 C4 3, 15 2, 15 2 C15 2, 26 3, 27 10 C28 20, 22 30, 15 38Z" fill="rgba(78,125,88,.15)" stroke="rgba(78,125,88,.28)" stroke-width="1"/>
+        </svg>
+
+        <span class="nx-tag">
+        <span class="nx-dot"></span>
+        Умное питание
+        </span>
+
+        <h2 class="nx-headline">
+        Еда — это забота<br>о себе. <em>Каждый день.</em>
+        </h2>
+
+        <div class="nx-divider"></div>
+
+        <p class="nx-sub">
+        Планируйте рацион осознанно — с учётом калорий, бюджета и ваших целей
+        </p>
+
+        <div class="nx-pills">
+        <div class="nx-pill">
+          <span class="nx-dot" style="animation-delay:.0s"></span>
+          КБЖУ под контролем
+        </div>
+        <div class="nx-pill">
+          <span class="nx-dot" style="animation-delay:.4s"></span>
+          Бюджет недели
+        </div>
+        <div class="nx-pill">
+          <span class="nx-dot" style="animation-delay:.8s"></span>
+          AI-генерация меню
+        </div>
+        </div>
+    </div>
 </section>
 
 @section Scripts {
