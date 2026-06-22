@@ -154,9 +154,9 @@ public class MealPlanController : Controller
             if (user != null)
             {
                 if (user.DailyCalorieGoal.HasValue) vm.DailyCalories = user.DailyCalorieGoal.Value;
-                if (user.DailyProteinGoal.HasValue) vm.ProteinGoal   = (int)user.DailyProteinGoal.Value;
-                if (user.DailyFatGoal.HasValue)     vm.FatGoal       = (int)user.DailyFatGoal.Value;
-                if (user.DailyCarbsGoal.HasValue)   vm.CarbsGoal     = (int)user.DailyCarbsGoal.Value;
+                // if (user.DailyProteinGoal.HasValue) vm.ProteinGoal   = (int)user.DailyProteinGoal.Value;
+                // if (user.DailyFatGoal.HasValue)     vm.FatGoal       = (int)user.DailyFatGoal.Value;
+                // if (user.DailyCarbsGoal.HasValue)   vm.CarbsGoal     = (int)user.DailyCarbsGoal.Value;
                 vm.WeightKg      = user.WeightKg;
                 vm.HeightCm      = user.HeightCm;
                 vm.Age           = user.Age;
@@ -267,7 +267,7 @@ public class MealPlanController : Controller
                 await _userService.UpdateAsync(user);
             }
         }
-        catch { /* план уже создан, не прерываем редирект */ }
+        catch { }
 
         TempData["GenerateSuccess"] = "true";
         return RedirectToAction("Week");

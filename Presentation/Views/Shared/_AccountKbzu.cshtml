@@ -1,30 +1,20 @@
 @*
     _AccountKbzu.cshtml
-    Секция «КБЖУ на сегодня» для страницы аккаунта.
-    Данные читаются account.js из localStorage.
-    Razor нужен только для отображения целей в подписях.
+    Секция «КБЖУ на сегодня» + стрик, в одной карточке.
+
+    Важно: реальный прогресс по КБЖУ и значение стрика считаются на клиенте
+    в home-index.js, на основе того, какие блюда из плана отмечены как
+    "съедено" в localStorage (серверу это состояние не известно, поэтому
+    Razor здесь НЕ вычисляет процент — только дневные цели для подписей).
 *@
 @{
-    var calGoal  = ViewData["calGoal"]  as string ?? "2000";
+    var calGoal  = ViewData["calGoal"]  as string ?? "2000"; 
     var protGoal = ViewData["protGoal"] as string ?? "120";
     var fatGoal  = ViewData["fatGoal"]  as string ?? "70";
     var carbGoal = ViewData["carbGoal"] as string ?? "250";
 
-    // ← новые серверные факты
-    var todayKcal = (int)(ViewData["todayKcal"] ?? 0);
-    var todayP    = (int)(ViewData["todayP"]    ?? 0);
-    var todayF    = (int)(ViewData["todayF"]    ?? 0);
-    var todayC    = (int)(ViewData["todayC"]    ?? 0);
-
-    double kcalGoalD = double.TryParse(calGoal,  out var kg) ? kg : 2000;
-    double pGoalD    = double.TryParse(protGoal, out var pg) ? pg : 120;
-    double fGoalD    = double.TryParse(fatGoal,  out var fg) ? fg : 70;
-    double cGoalD    = double.TryParse(carbGoal, out var cg) ? cg : 250;
-
-    double pctKcal = kcalGoalD > 0 ? Math.Min(100, todayKcal / kcalGoalD * 100) : 0;
-    double pctP    = pGoalD    > 0 ? Math.Min(100, todayP    / pGoalD    * 100) : 0;
-    double pctF    = fGoalD    > 0 ? Math.Min(100, todayF    / fGoalD    * 100) : 0;
-    double pctC    = cGoalD    > 0 ? Math.Min(100, todayC    / cGoalD    * 100) : 0;
+    var monday   = DateTime.Today.AddDays(-(((int)DateTime.Today.DayOfWeek + 6) % 7));
+    var dayNames = new[] { "пн", "вт", "ср", "чт", "пт", "сб", "вс" };
 }
 
 <div class="kbzu-section">
@@ -32,19 +22,19 @@
 
     <div class="kbzu-totals">
         <div class="kbzu-bubble">
-            <div class="kbzu-bubble-val">@todayKcal</div>
+            <div class="kbzu-bubble-val"><span id="eatenKcal">0</span></div>
             <div class="kbzu-bubble-label">ккал</div>
         </div>
         <div class="kbzu-bubble">
-            <div class="kbzu-bubble-val" style="color:#1d4ed8">@todayP г</div>
+            <div class="kbzu-bubble-val" style="color:#1d4ed8"><span id="eatenProt">0</span> г</div>
             <div class="kbzu-bubble-label">белки</div>
         </div>
         <div class="kbzu-bubble">
-            <div class="kbzu-bubble-val" style="color:#c2410c">@todayF г</div>
+            <div class="kbzu-bubble-val" style="color:#c2410c"><span id="eatenFat">0</span> г</div>
             <div class="kbzu-bubble-label">жиры</div>
         </div>
         <div class="kbzu-bubble">
-            <div class="kbzu-bubble-val" style="color:#a16207">@todayC г</div>
+            <div class="kbzu-bubble-val" style="color:#a16207"><span id="eatenCarb">0</span> г</div>
             <div class="kbzu-bubble-label">углеводы</div>
         </div>
     </div>
@@ -52,34 +42,61 @@
     <div class="prog-row">
         <span class="prog-label">Калории</span>
         <div class="prog-bar-wrap">
-            <div class="prog-bar" style="width:@pctKcal.ToString("F1", System.Globalization.CultureInfo.InvariantCulture)%;background:#86bf92"></div>
+            <div class="prog-bar" id="barKcal" style="width:0%;"></div>
         </div>
-        <span class="prog-val">@todayKcal / @calGoal</span>
+        <span class="prog-val">Цель: @calGoal</span>
     </div>
     <div class="prog-row">
         <span class="prog-label">Белки</span>
         <div class="prog-bar-wrap">
-            <div class="prog-bar" style="width:@pctP.ToString("F1", System.Globalization.CultureInfo.InvariantCulture)%;background:#3b82f6"></div>
+            <div class="prog-bar" id="barProt" style="width:0%;"></div>
         </div>
-        <span class="prog-val">@todayP / @protGoal г</span>
+        <span class="prog-val">Цель: @protGoal г</span>
     </div>
     <div class="prog-row">
         <span class="prog-label">Жиры</span>
         <div class="prog-bar-wrap">
-            <div class="prog-bar" style="width:@pctF.ToString("F1", System.Globalization.CultureInfo.InvariantCulture)%;background:#f97316"></div>
+            <div class="prog-bar" id="barFat" style="width:0%;"></div>
         </div>
-        <span class="prog-val">@todayF / @fatGoal г</span>
+        <span class="prog-val">Цель: @fatGoal г</span>
     </div>
     <div class="prog-row">
         <span class="prog-label">Углеводы</span>
         <div class="prog-bar-wrap">
-            <div class="prog-bar" style="width:@pctC.ToString("F1", System.Globalization.CultureInfo.InvariantCulture)%;background:#eab308"></div>
+            <div class="prog-bar" id="barCarb" style="width:0%;"></div>
         </div>
-        <span class="prog-val">@todayC / @carbGoal г</span>
+        <span class="prog-val">Цель: @carbGoal г</span>
     </div>
 
+    @* ── Стрик внутри той же карточки ──────────────────────────────────────── *@
+    
+    <section class="streak-section">
+        <div class="streak-card">
+            <div class="streak-flame">🔥</div>
+            <div class="streak-info">
+                <div class="streak-count-row">
+                    <span id="streakCount" class="streak-num">0</span>
+                    <span class="streak-label">дней подряд</span>
+                </div>
+                <div class="streak-dots">
+                    @for (int i = 0; i < 7; i++)
+                    {
+                        var date    = monday.AddDays(i);
+                        var dateStr = date.ToString("yyyy-MM-dd");
+                        var isToday = date.Date == DateTime.Today;
+                        var isPast  = date.Date < DateTime.Today;
+                        <div class="streak-dot @(isToday ? "today" : "") @(isPast ? "past" : "")"
+                             data-date="@dateStr">
+                            <span class="dot-day">@dayNames[i]</span>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </section>
+    
     <p style="font-size:.75rem;color:var(--muted);margin-top:.75rem;margin-bottom:0">
         Плановые значения на сегодня из
-        <a href="/MealPlan/Week" style="color:var(--sage-d)">плана питания</a>
+        <a asp-action="Week" asp-controller="MealPlan" style="color:var(--sage-d)">плана питания</a>
     </p>
 </div>

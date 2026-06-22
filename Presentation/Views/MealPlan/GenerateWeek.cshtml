@@ -6,245 +6,6 @@
 
 <style>
     @@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap');
-    
-    .gw-page {
-        min-height: 100vh;
-        padding: 3rem 0;
-    }
-    .gw-inner { max-width: 860px; margin: 0 auto; }
-
-    /* Hero */
-    .gw-hero { text-align: center; margin-bottom: 2.8rem; }
-    .gw-hero-badge {
-        display: inline-flex; align-items: center; gap: .45rem;
-        background: var(--sage-light); color: var(--sage);
-        font-size: .78rem; font-weight: 600; letter-spacing: .08em;
-        text-transform: uppercase; padding: .3rem .9rem;
-        border-radius: 20px; margin-bottom: 1rem;
-    }
-    .gw-hero h1 {
-        font-family: 'Playfair Display', serif;
-        font-size: clamp(2rem, 5vw, 3rem);
-        color: var(--brown); margin: 0 0 .6rem; line-height: 1.15;
-    }
-    .gw-hero p { color: var(--muted); font-size: 1.05rem; margin: 0; }
-
-    /* Cards */
-    .gw-card {
-        background: #fff; border-radius: 20px;
-        box-shadow: var(--shadow); margin-bottom: 1.4rem;
-        overflow: hidden; transition: box-shadow .2s;
-    }
-    .gw-card:hover { box-shadow: var(--shadow-lg); }
-    .gw-card-head {
-        display: flex; align-items: center; gap: .8rem;
-        padding: 1.2rem 1.6rem 1rem;
-        border-bottom: 1px solid var(--border);
-    }
-    .gw-card-icon {
-        width: 38px; height: 38px; border-radius: 10px;
-        display: grid; place-items: center; font-size: 1.1rem; flex-shrink: 0;
-    }
-    .icon-green  { background: var(--sage-light);  color: var(--sage);   }
-    .icon-brown  { background: var(--accent-lt);   color: var(--accent); }
-    .icon-blue   { background: #e3eef9;            color: #3a7cc8;       }
-    .icon-purple { background: #ede8f5;            color: #7c5cbf;       }
-    .icon-red    { background: #fde8e8;            color: #c85c5c;       }
-    .icon-teal   { background: #e1f4f1;            color: #3aad97;       }
-    .gw-card-head h3 { font-size: 1rem; font-weight: 600; margin: 0; color: var(--brown); }
-    .gw-card-head p  { font-size: .82rem; color: var(--muted); margin: .1rem 0 0; }
-    .gw-card-body { padding: 1.4rem 1.6rem 1.6rem; }
-
-    /* Form elements */
-    .gw-label {
-        display: block; font-size: .83rem; font-weight: 600;
-        color: var(--brown-lt); margin-bottom: .45rem;
-        text-transform: uppercase; letter-spacing: .04em;
-    }
-    .gw-input, .gw-select {
-        width: 100%; padding: .7rem 1rem;
-        border: 1.5px solid var(--border); border-radius: 10px;
-        font-family: 'DM Sans', sans-serif; font-size: .95rem;
-        color: var(--text); background: #fefefe;
-        transition: border-color .2s, box-shadow .2s; appearance: none;
-    }
-    .gw-input:focus, .gw-select:focus {
-        outline: none; border-color: var(--sage);
-        box-shadow: 0 0 0 3px rgba(122,158,126,.15);
-    }
-
-    /* Goal pills */
-    .gw-goal-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-        gap: .7rem;
-    }
-    .gw-goal-option { display: none; }
-    .gw-goal-label {
-        display: flex; flex-direction: column; align-items: center;
-        gap: .35rem; padding: .85rem .6rem;
-        border: 2px solid var(--border); border-radius: 14px;
-        cursor: pointer; text-align: center; transition: all .18s; background: #fefefe;
-    }
-    .gw-goal-label .gl-icon { font-size: 1.5rem; }
-    .gw-goal-label .gl-name { font-size: .82rem; font-weight: 600; color: var(--brown); }
-    .gw-goal-label .gl-sub  { font-size: .72rem; color: var(--muted); }
-    .gw-goal-option:checked + .gw-goal-label {
-        border-color: var(--sage); background: var(--sage-light);
-        box-shadow: 0 0 0 3px rgba(122,158,126,.15);
-    }
-    .gw-goal-option:checked + .gw-goal-label .gl-name { color: var(--sage); }
-
-    /* Calorie slider */
-    .kcal-display { text-align: center; margin-bottom: .8rem; }
-    .kcal-value   { font-family: 'Playfair Display', serif; font-size: 2.6rem; color: var(--brown); line-height: 1; }
-    .kcal-unit    { font-size: .85rem; color: var(--muted); font-weight: 500; }
-    .kcal-adjusted { font-size: .82rem; color: var(--accent); margin-top: .2rem; min-height: 1.1em; font-weight: 500; }
-    input[type=range].gw-slider {
-        width: 100%; appearance: none; height: 6px; border-radius: 3px;
-        background: linear-gradient(to right, 
-        var(--sage) 0%, 
-        /*var(--sage) var(--pct, 37%), */
-        /*var(--border) var(--pct, 37%), */
-        var(--border) 100%);
-        outline: none;
-    }
-    input[type=range].gw-slider::-webkit-slider-thumb {
-        appearance: none; width: 20px; height: 20px; border-radius: 50%;
-        background: #fff; border: 2px solid var(--sage);
-        box-shadow: 0 2px 8px rgba(122,158,126,.3); cursor: pointer;
-    }
-    .kcal-marks {
-        display: flex; justify-content: space-between;
-        font-size: .72rem; color: var(--muted); margin-top: .3rem;
-    }
-
-    /* Diet toggles */
-    .gw-diet-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-        gap: .6rem;
-    }
-    .gw-diet-chk { display: none; }
-    .gw-diet-btn {
-        display: flex; align-items: center; justify-content: center;
-        gap: .4rem; padding: .55rem .7rem;
-        border: 1.5px solid var(--border); border-radius: 10px;
-        cursor: pointer; font-size: .85rem; font-weight: 500;
-        color: var(--brown-lt); transition: all .16s; background: #fefefe; text-align: center;
-    }
-    .gw-diet-chk:checked + .gw-diet-btn {
-        border-color: var(--sage); background: var(--sage-light);
-        color: var(--sage); font-weight: 600;
-    }
-
-    /* Macro row */
-    .gw-macro-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: .8rem; }
-    .gw-macro-input-wrap { position: relative; }
-    .gw-macro-unit {
-        position: absolute; right: .9rem; top: 50%;
-        transform: translateY(-50%); font-size: .78rem;
-        color: var(--muted); pointer-events: none;
-    }
-    .gw-macro-color { display: block; width: 100%; height: 3px; border-radius: 2px; margin-top: .4rem; }
-
-    /* Budget toggle */
-    .gw-budget-toggle { display: flex; align-items: center; gap: .7rem; margin-bottom: 1rem; }
-    .gw-switch { position: relative; width: 42px; height: 24px; }
-    .gw-switch input { display: none; }
-    .gw-switch-slider {
-        position: absolute; inset: 0; background: var(--border);
-        border-radius: 12px; cursor: pointer; transition: background .2s;
-    }
-    .gw-switch-slider::before {
-        content: ''; position: absolute; left: 3px; top: 3px;
-        width: 18px; height: 18px; border-radius: 50%; background: #fff;
-        transition: transform .2s; box-shadow: 0 1px 4px rgba(0,0,0,.15);
-    }
-    .gw-switch input:checked ~ .gw-switch-slider { background: var(--sage); }
-    .gw-switch input:checked ~ .gw-switch-slider::before { transform: translateX(18px); }
-    #budgetDetails { transition: opacity .3s; }
-    #budgetDetails.hidden { opacity: 0; pointer-events: none; height: 0; overflow: hidden; margin: 0; }
-
-    /* Exclusions tag input */
-    .tag-field-wrap {
-        border: 1.5px solid var(--border); border-radius: 10px;
-        padding: .5rem .7rem; display: flex; flex-wrap: wrap; gap: .4rem;
-        cursor: text; background: #fefefe; min-height: 48px;
-        transition: border-color .2s, box-shadow .2s;
-    }
-    .tag-field-wrap:focus-within {
-        border-color: var(--sage); box-shadow: 0 0 0 3px rgba(122,158,126,.15);
-    }
-    .tag-pill {
-        display: inline-flex; align-items: center; gap: .3rem;
-        background: var(--accent-lt); color: var(--accent);
-        border-radius: 6px; padding: .2rem .55rem;
-        font-size: .82rem; font-weight: 500;
-    }
-    .tag-pill button {
-        background: none; border: none; color: var(--accent);
-        cursor: pointer; padding: 0; line-height: 1; font-size: .9rem;
-    }
-    #tagInput {
-        border: none; outline: none;
-        font-family: 'DM Sans', sans-serif; font-size: .92rem;
-        color: var(--text); background: transparent; min-width: 120px; flex: 1;
-    }
-
-    /* Meals stepper */
-    .gw-stepper {
-        display: inline-flex; align-items: center;
-        border: 1.5px solid var(--border); border-radius: 10px; overflow: hidden;
-    }
-    .gw-stepper button {
-        width: 38px; height: 38px; background: #f7f4ef; border: none;
-        cursor: pointer; font-size: 1.1rem; color: var(--brown); transition: background .15s;
-    }
-    .gw-stepper button:hover { background: var(--sage-light); }
-    .gw-stepper input {
-        width: 50px; border: none; outline: none; text-align: center;
-        font-family: 'DM Sans', sans-serif; font-size: 1rem;
-        font-weight: 600; color: var(--brown); background: #fff;
-    }
-
-    /* Submit */
-    .gw-submit-wrap { text-align: center; padding: 1.4rem 1.6rem 2rem; }
-    .gw-btn-generate {
-        display: inline-flex; align-items: center; gap: .6rem;
-        background: var(--sage); color: #fff; border: none; border-radius: 14px;
-        padding: 1rem 2.4rem; font-family: 'DM Sans', sans-serif;
-        font-size: 1.05rem; font-weight: 600; cursor: pointer;
-        box-shadow: 0 4px 20px rgba(122,158,126,.35);
-        transition: transform .15s, box-shadow .15s, background .15s;
-    }
-    .gw-btn-generate:hover {
-        transform: translateY(-2px); box-shadow: 0 8px 28px rgba(122,158,126,.45);
-        background: #6a8e6e;
-    }
-    .gw-btn-generate:active { transform: translateY(0); }
-    .gw-btn-generate .btn-spinner { display: none; }
-    .gw-btn-generate.loading .btn-icon    { display: none; }
-    .gw-btn-generate.loading .btn-spinner { display: inline-block; }
-
-    /* Preview */
-    .gw-preview {
-        background: var(--sage-light); border-radius: 12px;
-        padding: 1rem 1.2rem; display: flex; gap: 1.2rem;
-        justify-content: space-around;
-        flex-wrap: wrap; margin-top: .2rem;
-    }
-    .gw-preview-item { font-size: .84rem; color: var(--brown-lt); }
-    .gw-preview-item strong { color: var(--brown); }
-
-    /* Validation */
-    .text-danger { color: #c85c5c; font-size: .8rem; margin-top: .25rem; }
-    .field-validation-error { color: #c85c5c; font-size: .8rem; }
-
-    @@media (max-width: 600px) {
-        .gw-macro-grid { grid-template-columns: 1fr; }
-        .gw-goal-grid  { grid-template-columns: repeat(2, 1fr); }
-    }
 </style>
 
 <div class="gw-page">
@@ -429,13 +190,6 @@
             </div>
 
             <!-- ── 4. Диетические предпочтения ── -->
-            <!--
-                ИСПРАВЛЕНО: все чекбоксы теперь используют asp-for для корректного
-                model binding. Раньше использовался только name="field" без asp-for,
-                что не учитывало текущее состояние модели при возврате формы (ValidationError).
-                Также добавлены скрытые поля value="false" — стандартная практика ASP.NET Core
-                для bool checkbox, чтобы false тоже отправлялось при снятой галочке.
-            -->
             <div class="gw-card">
                 <div class="gw-card-head">
                     <div class="gw-card-icon icon-purple">🥦</div>
@@ -456,21 +210,14 @@
                             <label class="gw-diet-btn" for="chkGF">🌾 Без глютена</label>
                         </div>
                         <div>
-                            <!--
-                                ИСПРАВЛЕНО: LowCarb ранее имел name="LowCarb" без asp-for —
-                                значение не биндилось на модель при повторном открытии формы
-                                после ошибки валидации, и не передавалось в GenerateWeekRequest.
-                            -->
                             <input asp-for="LowCarb" type="checkbox" id="chkLC" class="gw-diet-chk" />
                             <label class="gw-diet-btn" for="chkLC">📉 Мало углеводов</label>
                         </div>
                         <div>
-                            <!-- ИСПРАВЛЕНО: аналогично LowCarb -->
                             <input asp-for="HighProtein" type="checkbox" id="chkHP" class="gw-diet-chk" />
                             <label class="gw-diet-btn" for="chkHP">💪 Высокий белок</label>
                         </div>
                         <div>
-                            <!-- ИСПРАВЛЕНО: аналогично LowCarb -->
                             <input asp-for="LowFat" type="checkbox" id="chkLF" class="gw-diet-chk" />
                             <label class="gw-diet-btn" for="chkLF">🫗 Мало жиров</label>
                         </div>
@@ -490,11 +237,6 @@
                                placeholder="Введите продукт и нажмите Enter…"
                                autocomplete="off" />
                     </div>
-                    <!--
-                        ИСПРАВЛЕНО: asp-for="ExcludedProducts" биндит hidden-поле
-                        к строковому свойству модели. GetExcludedSet() парсит его обратно.
-                        При инициализации страницы JS читает это поле и восстанавливает теги.
-                    -->
                     <input type="hidden" asp-for="ExcludedProducts" id="excludedHidden" />
                     <p style="font-size:.78rem;color:var(--muted);margin:.5rem 0 0">
                         Быстрые варианты:
@@ -543,14 +285,16 @@
                     <div class="gw-card-icon icon-blue">⚙️</div>
                     <div><h3>Настройки плана</h3><p>Количество приёмов пищи и повторы</p></div>
                 </div>
-                <!-- вместо степпера MealsPerDay + тоггла IncludeSnacks -->
                 <div class="gw-card-body">
-                    <div class="gw-goal-grid" style="grid-template-columns: repeat(3, 1fr)">
+                    <div class="gw-goal-grid" style="grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));">
                         @foreach (var (val, icon, name, sub) in new[]
                                   {
-                                      (3, "🍽", "3 приёма",        "Завтрак · Обед · Ужин"),
-                                      (4, "🥗", "3 + перекус",     "Завтрак · Обед · Перекус · Ужин"),
-                                      (5, "⚡", "5 приёмов",       "Завтрак · 2 Перекуса · Обед · Ужин"),
+                                      (2, "🌙", "2 приёма",   "Завтрак · Ужин"),
+                                      (3, "🍽", "3 приёма",   "Завтрак · Обед · Ужин"),
+                                      (4, "🥗", "4 приёма",   "Завтрак · Перекус · Обед · Ужин"),
+                                      (5, "⚡", "5 приёмов",  "Завтрак · 2 перекуса · Обед · Ужин"),
+                                      (6, "📋", "6 приёмов",  "Дробное питание"),
+                                      (7, "🏋", "7 приёмов",  "Максимальная дробность"),
                                   })
                         {
                             <div>

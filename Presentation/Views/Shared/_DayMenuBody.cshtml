@@ -1,13 +1,6 @@
-@* 
-    _DayMenuBody.cshtml
-    Модель — список MealSlot (приёмы пищи с несколькими блюдами каждый).
-    Вызывается из Home/Index.cshtml.
-    GOALS / MEAL_DATA уже объявлены в window.NutriX (data-bridge в Index.cshtml).
-*@
 @model List<Domain.Entities.MealSlot>
 
 @{
-    // Агрегируем по всем слотам
     var allItems = Model.SelectMany(s => s.Items).ToList();
     var totalKcal = allItems.Sum(m => (int)((m.Recipe?.CaloriesPerServing ?? 0) * m.Servings));
     var totalProt = allItems.Sum(m => (int)((m.Recipe?.ProteinPerServing  ?? 0) * m.Servings));
@@ -15,37 +8,14 @@
     var totalCarb = allItems.Sum(m => (int)((m.Recipe?.CarbsPerServing    ?? 0) * m.Servings));
 }
 
-@* ── Итоговые показатели ────────────────────────────────────────────────────── *@
-<div class="day-total">
-    <div class="day-total-item">
-        <div class="day-total-val">@totalKcal</div>
-        <div class="day-total-label">ккал план</div>
-    </div>
-    <div class="day-total-item">
-        <div class="day-total-val" style="color:#1d4ed8">@totalProt г</div>
-        <div class="day-total-label">белки план</div>
-    </div>
-    <div class="day-total-item">
-        <div class="day-total-val" style="color:#c2410c">@totalFat г</div>
-        <div class="day-total-label">жиры план</div>
-    </div>
-    <div class="day-total-item">
-        <div class="day-total-val" style="color:#a16207">@totalCarb г</div>
-        <div class="day-total-label">углеводы план</div>
-    </div>
-</div>
-
-@* ── Список приёмов пищи (слотов) ───────────────────────────────────────────── *@
 <div class="meals-list">
     @foreach (var slot in Model.OrderBy(s => s.MealType?.Order ?? 0))
     {
-        @* Заголовок приёма пищи (Завтрак / Обед / Ужин / Перекус) *@
         <div class="meal-slot-header" style="font-weight:600;font-size:.85rem;color:#7a7168;
              text-transform:uppercase;letter-spacing:.05em;margin:1rem 0 .4rem">
             @slot.MealType?.Name
         </div>
 
-        @* Блюда внутри слота *@
         @foreach (var meal in slot.Items)
         {
             <div class="meal-card" id="mealCard_@meal.Id">
@@ -66,7 +36,6 @@
                     }
 
                     <div class="meal-info">
-                        @* Роль блюда внутри приёма (суп, основное, салат…) *@
                         <div class="meal-type" style="font-size:.75rem;color:#a0a09a">
                             @meal.Role.ToString()
                         </div>
@@ -96,59 +65,4 @@
             </div>
         }
     }
-</div>
-
-@* ── Прогресс-бары: факт (отмечено) vs цель ─────────────────────────────────── *@
-<div class="day-progress" style="margin-top:1.25rem">
-    <div class="day-progress-title"
-         style="font-size:.8rem;font-weight:600;color:#9a9a94;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.75rem">
-        Съедено / цель на день
-    </div>
-    <div class="progress-rows">
-
-        <div class="prog-row">
-            <span class="prog-label">Калории</span>
-            <div class="prog-bar-wrap">
-                <div class="prog-bar" id="barKcal"
-                     style="width:0%;background:#86bf92;transition:width .4s ease"></div>
-            </div>
-            <span class="prog-val">
-                <span id="eatenKcal">0</span> / @totalKcal ккал
-            </span>
-        </div>
-
-        <div class="prog-row">
-            <span class="prog-label">Белки</span>
-            <div class="prog-bar-wrap">
-                <div class="prog-bar" id="barProt"
-                     style="width:0%;background:#3b82f6;transition:width .4s ease"></div>
-            </div>
-            <span class="prog-val">
-                <span id="eatenProt">0</span> / @totalProt г
-            </span>
-        </div>
-
-        <div class="prog-row">
-            <span class="prog-label">Жиры</span>
-            <div class="prog-bar-wrap">
-                <div class="prog-bar" id="barFat"
-                     style="width:0%;background:#f97316;transition:width .4s ease"></div>
-            </div>
-            <span class="prog-val">
-                <span id="eatenFat">0</span> / @totalFat г
-            </span>
-        </div>
-
-        <div class="prog-row">
-            <span class="prog-label">Углеводы</span>
-            <div class="prog-bar-wrap">
-                <div class="prog-bar" id="barCarb"
-                     style="width:0%;background:#eab308;transition:width .4s ease"></div>
-            </div>
-            <span class="prog-val">
-                <span id="eatenCarb">0</span> / @totalCarb г
-            </span>
-        </div>
-
-    </div>
 </div>

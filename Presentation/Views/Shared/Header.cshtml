@@ -17,8 +17,17 @@
             <!-- Контент навбара -->
             <div class="collapse navbar-collapse" id="navbarContent">
                 <!-- Поиск -->
-                <form class="d-flex search-form my-3 my-lg-0 me-lg-3" style="max-width: -webkit-fill-available;"role="search">
-                    <input class="form-control me-2" type="search" placeholder="Поиск рецептов..." aria-label="Search">
+                <form class="d-flex search-form my-3 my-lg-0 me-lg-3"
+                      style="max-width:-webkit-fill-available;"
+                      role="search"
+                      action="/Recipe"
+                      method="get">
+                    <input class="form-control me-2"
+                           type="search"
+                           name="searchTerm"
+                           placeholder="Поиск рецептов..."
+                           aria-label="Search"
+                           autocomplete="off"/>
                     <button class="btn btn-outline-success" type="submit">
                         <i class="fas fa-search"></i>
                     </button>
@@ -26,25 +35,25 @@
 
                 <!-- Меню навигации -->
                 <ul class="navbar-nav ms-auto">
-                    <li class="nav-item br-5">
+                    <li class="nav-item">
                         <a class="nav-link" asp-controller="Recipe" asp-action="Index">
                             <i class="fas fa-book me-2"></i>
                             <span>Рецепты</span>
                         </a>
                     </li>
-                    <li class="nav-item br-5">
+                    <li class="nav-item">
                         <a class="nav-link" asp-controller="MealPlan" asp-action="Week">
                             <i class="fas fa-calendar-week me-2"></i>
                             <span>План</span>
                         </a>
                     </li>
-                    <li class="nav-item br-5">
+                    <li class="nav-item">
                         <a class="nav-link" asp-controller="Product" asp-action="Index">
                             <i class="fas fa-carrot me-2"></i>
                             <span>Продукты</span>
                         </a>
                     </li>
-                    <li class="nav-item br-5">
+                    <li class="nav-item">
                         <a class="nav-link" asp-controller="Account" asp-action="Account">
                             <i class="fas fa-user me-2"></i>
                             <span>Аккаунт</span>

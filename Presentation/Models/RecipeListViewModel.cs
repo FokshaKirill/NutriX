@@ -18,6 +18,7 @@ public class RecipeListViewModel
     public decimal? ProteinPerServing { get; set; }
     public decimal? FatPerServing { get; set; }
     public decimal? CarbsPerServing { get; set; }
+    public decimal CostPerServing { get; set; }
 
     public DateTime CreatedAt { get; set; }
 }

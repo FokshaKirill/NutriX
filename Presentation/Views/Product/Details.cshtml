@@ -5,174 +5,6 @@
     var relatedRecipes = ViewBag.RelatedRecipes as List<Recipe> ?? new();
 }
 
-<style>
-.pd-wrap {
-    max-width: 960px;
-    margin: 2.5rem auto;
-    padding: 0 1.5rem 4rem;
-    font-family: 'DM Sans', sans-serif;
-}
-
-.pd-hero { display: flex; gap: 2rem; align-items: flex-start; }
-@@media(max-width: 680px) { .pd-hero { flex-direction: column; } }
-
-.pd-photo {
-    width: 260px; height: 260px; flex-shrink: 0;
-    border-radius: 18px; overflow: hidden;
-    border: 1px solid var(--border);
-    background: var(--primary-light);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 80px;
-}
-@@media(max-width: 680px) { .pd-photo { width: 100%; height: 220px; } }
-.pd-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
-
-.pd-info { flex: 1; min-width: 0; }
-
-.pd-category {
-    font-size: .68rem; font-weight: 700;
-    letter-spacing: .1em; text-transform: uppercase;
-    color: var(--primary); margin: 0 0 .35rem;
-}
-
-.pd-name {
-    font-family: 'Lora', serif;
-    font-size: 1.9rem; font-weight: 600;
-    color: var(--ink); margin: 0; line-height: 1.2;
-}
-
-.pd-accent {
-    width: 36px; height: 3px;
-    background: var(--primary); border-radius: 2px;
-    margin: .75rem 0 1.1rem;
-}
-
-.pd-price-row { display: flex; align-items: baseline; gap: .5rem; margin-bottom: 1.25rem; }
-.pd-price {
-    font-family: 'Lora', serif;
-    font-size: 2.2rem; font-weight: 600;
-    color: var(--sage-dark); line-height: 1;
-}
-.pd-price-unit { font-size: .85rem; color: var(--ink-faint); }
-
-.pd-macros { display: flex; gap: .5rem; flex-wrap: wrap; margin-bottom: 1.25rem; }
-.pd-macro {
-    display: flex; flex-direction: column; align-items: center;
-    background: var(--primary-light); border: 1px solid var(--border);
-    border-radius: 12px; padding: .6rem .85rem; min-width: 62px;
-}
-.pd-macro-val { font-size: 1.05rem; font-weight: 700; color: var(--ink); line-height: 1; }
-.pd-macro-lbl { font-size: .65rem; color: var(--ink-faint); margin-top: 3px; text-transform: uppercase; letter-spacing: .05em; }
-.pd-macro.is-kcal .pd-macro-val { color: var(--sage-dark); }
-.pd-macro.is-p    .pd-macro-val { color: #1d4ed8; }
-.pd-macro.is-f    .pd-macro-val { color: #c2410c; }
-.pd-macro.is-c    .pd-macro-val { color: #a16207; }
-
-.pd-actions { display: flex; gap: .55rem; margin-top: .25rem; }
-.pd-btn {
-    display: inline-flex; align-items: center; gap: .35rem;
-    padding: .5rem 1.1rem; border-radius: 9px;
-    font-size: .82rem; font-weight: 600; cursor: pointer;
-    border: 1.5px solid var(--border); background: #fff;
-    color: var(--ink-muted); font-family: 'DM Sans', sans-serif;
-    transition: all .15s;
-}
-.pd-btn:hover { border-color: var(--primary); color: var(--sage-dark); background: var(--primary-light); }
-.pd-btn.danger:hover { border-color: var(--danger); color: var(--danger); background: #fef2f2; }
-
-.pd-sections {
-    display: grid; grid-template-columns: 1fr 1fr;
-    gap: 1rem; margin-top: 1.75rem;
-}
-@@media(max-width: 600px) { .pd-sections { grid-template-columns: 1fr; } }
-
-.pd-card {
-    background: #fff; border: 1px solid var(--border);
-    border-radius: 14px; padding: 1.15rem 1.25rem;
-}
-.pd-card-full { grid-column: 1 / -1; }
-
-.pd-card-title {
-    font-size: .68rem; font-weight: 700;
-    letter-spacing: .09em; text-transform: uppercase;
-    color: var(--ink-faint); margin: 0 0 .85rem;
-}
-
-.pd-bar-row { display: flex; align-items: center; gap: .65rem; margin-bottom: .6rem; }
-.pd-bar-row:last-child { margin-bottom: 0; }
-.pd-bar-lbl { font-size: .8rem; color: var(--ink-muted); min-width: 72px; }
-.pd-bar-track { flex: 1; height: 6px; background: #f0f0ee; border-radius: 999px; overflow: hidden; }
-.pd-bar-fill { height: 100%; border-radius: 999px; transition: width .6s ease; }
-.pd-bar-val { font-size: .78rem; font-weight: 600; color: var(--ink); min-width: 40px; text-align: right; }
-
-.pd-row {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: .55rem 0; border-bottom: 1px solid var(--border); font-size: .85rem;
-}
-.pd-row:last-child { border-bottom: none; }
-.pd-row-key { color: var(--ink-muted); }
-.pd-row-val { font-weight: 600; color: var(--ink); }
-
-.pd-calc-row { display: flex; align-items: center; gap: .75rem; margin-bottom: .85rem; }
-.pd-calc-input {
-    width: 80px; border: 1.5px solid var(--border); border-radius: 8px;
-    padding: .4rem .6rem; font-size: .9rem; font-family: 'DM Sans', sans-serif;
-    color: var(--ink); outline: none; transition: border-color .15s; text-align: center;
-}
-.pd-calc-input:focus { border-color: var(--primary); }
-.pd-calc-unit { font-size: .85rem; color: var(--ink-muted); }
-.pd-calc-result { margin-top: .5rem; display: flex; gap: .6rem; flex-wrap: wrap; }
-.pd-calc-chip {
-    background: var(--primary-light); border-radius: 8px;
-    padding: .5rem .85rem; font-size: .8rem; color: var(--ink-muted);
-}
-.pd-calc-chip b { color: var(--ink); font-size: .92rem; }
-
-/* ── Рецепты ── */
-.pd-recipes-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    gap: .85rem;
-    margin-top: .25rem;
-}
-.pd-rc {
-    background: var(--primary-light);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    overflow: hidden;
-    text-decoration: none;
-    display: flex; flex-direction: column;
-    transition: transform .15s, box-shadow .15s;
-}
-.pd-rc:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,.08); }
-.pd-rc-thumb {
-    height: 100px; background: linear-gradient(135deg, #d6eadb, #b5d9bc);
-    overflow: hidden; display: flex; align-items: center; justify-content: center;
-    font-size: 2.5rem;
-}
-.pd-rc-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.pd-rc-body { padding: .65rem .75rem; }
-.pd-rc-name {
-    font-size: .82rem; font-weight: 600;
-    color: var(--ink); line-height: 1.3;
-    display: -webkit-box; -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical; overflow: hidden;
-}
-.pd-rc-meta { font-size: .72rem; color: var(--ink-faint); margin-top: .25rem; }
-
-.pd-empty {
-    text-align: center; padding: 1.5rem;
-    color: var(--ink-faint); font-size: .85rem;
-}
-
-.pd-back {
-    display: inline-flex; align-items: center; gap: .3rem;
-    font-size: .82rem; color: var(--ink-faint);
-    text-decoration: none; margin-top: 1.5rem; transition: color .15s;
-}
-.pd-back:hover { color: var(--sage-dark); }
-</style>
-
 <div class="pd-wrap">
     <a asp-action="Index" class="pd-back mb-2">← Вернуться к каталогу</a>
     
@@ -225,11 +57,11 @@
             @if (User.IsInRole("Admin"))
             {
                 <div class="pd-actions">
-                    <button type="button" class="btn btn-sm btn-outline-primary edit-product-btn" 
+                    <button type="button" class="btn btn-sm btn-outline-primary edit-product-btn"
                             data-bs-toggle="modal" data-bs-target="#editProductModal" data-id="@Model.Id">
-                        ✏️ Редактировать
+                        Редактировать
                     </button>
-                    <button class="pd-btn danger btn-delete-product" data-id="@Model.Id" data-name="@Model.Name">🗑 Удалить</button>
+                    <button class="pd-btn danger btn-delete-product" data-id="@Model.Id" data-name="@Model.Name">Удалить</button>
                 </div>
             }
         </div>
@@ -367,11 +199,11 @@ function calcUpdate() {
     const k    = amt / 100;
     const cost = (PRICE * amt / 100).toFixed(2);
     document.getElementById('calcResult').innerHTML = `
-        <div class="pd-calc-chip">💰 Стоимость: <b>${cost} ₽</b></div>
-        <div class="pd-calc-chip">🔥 Калории: <b>${(KCAL * k).toFixed(0)} ккал</b></div>
-        <div class="pd-calc-chip">💪 Белки: <b>${(PROTEIN * k).toFixed(1)} г</b></div>
-        <div class="pd-calc-chip">🧈 Жиры: <b>${(FAT * k).toFixed(1)} г</b></div>
-        <div class="pd-calc-chip">🌾 Углеводы: <b>${(CARBS * k).toFixed(1)} г</b></div>
+        <div class="pd-calc-chip">Стоимость: <b>${cost} ₽</b></div>
+        <div class="pd-calc-chip">Калории: <b>${(KCAL * k).toFixed(0)} ккал</b></div>
+        <div class="pd-calc-chip">Белки: <b>${(PROTEIN * k).toFixed(1)} г</b></div>
+        <div class="pd-calc-chip">Жиры: <b>${(FAT * k).toFixed(1)} г</b></div>
+        <div class="pd-calc-chip">Углеводы: <b>${(CARBS * k).toFixed(1)} г</b></div>
     `;
 }
 document.getElementById('calcAmt').addEventListener('input', calcUpdate);

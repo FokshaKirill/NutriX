@@ -1,13 +1,4 @@
-﻿/**
- * Разметка кнопки (data-атрибуты):
- *   <button class="fav-btn"
- *           data-id="@recipe.Id"
- *           data-fav="@recipe.IsFavorite.ToString().ToLower()">
- *     <i class="@(recipe.IsFavorite ? "fas" : "far") fa-heart"></i>
- *   </button>
- */
-
-(function () {
+﻿(function () {
     "use strict";
 
     // Токен антиподделки — берём один раз из DOM

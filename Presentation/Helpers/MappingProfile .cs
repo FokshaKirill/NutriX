@@ -40,7 +40,9 @@ public class MappingProfile : Profile
         // ── Recipe → read ViewModels ─────────────────────────────────────────
         CreateMap<Recipe, RecipeListViewModel>()
             .ForMember(d => d.CaloriesPerServing,
-                opt => opt.MapFrom(s => (int)Math.Round(s.CaloriesPerServing)));
+                opt => opt.MapFrom(s => (int)Math.Round(s.CaloriesPerServing)))
+            .ForMember(d => d.CostPerServing,
+                opt => opt.MapFrom(s => s.CostPerServing));
 
         CreateMap<Recipe, RecipeDetailViewModel>();
 

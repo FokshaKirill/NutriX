@@ -24,7 +24,6 @@ builder.Services.AddDbContext<DatabaseContext>(options =>
 
 builder.Services.AddAutoMapper(cfg => cfg.AddMaps(typeof(MappingProfile).Assembly));
 
-
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 
 builder.Services.AddScoped<IUserService, UserService>();
@@ -35,6 +34,8 @@ builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<IRecipeService, RecipeService>();
 builder.Services.AddScoped<IFavoriteService, FavoriteService>();
 builder.Services.AddScoped<IMealPlanGeneratorService, MealPlanGeneratorService>();
+
+builder.Services.AddScoped<INutritionSummaryService, NutritionSummaryService>();
 
 builder.Services.AddScoped<SeedService>();
 builder.Services.AddScoped<PriceUpdateJob>();
@@ -78,7 +79,7 @@ builder.Services.AddSession(options =>
 builder.Services.AddAuthentication(options =>
     {
         options.DefaultScheme          = CookieAuthenticationDefaults.AuthenticationScheme;
-        options.DefaultChallengeScheme = CookieAuthenticationDefaults.AuthenticationScheme; // ← было Google
+        options.DefaultChallengeScheme = CookieAuthenticationDefaults.AuthenticationScheme;
     })
     .AddCookie(options =>
     {
@@ -141,7 +142,6 @@ using (var scope = app.Services.CreateScope())
     {
         var logger = services.GetRequiredService<ILogger<Program>>();
         logger.LogError(ex, "An error occurred while migrating or seeding the database.");
-        // В продакшене можно добавить уведомление админу и т.п.
     }
 }
 

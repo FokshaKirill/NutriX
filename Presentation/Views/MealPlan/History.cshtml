@@ -3,37 +3,6 @@
 
 <link href="https://fonts.googleapis.com/css2?family=Lora:wght@500;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
 
-<style>
-:root { --sage:#7aab84; --sage-d:#4e7d58; --sage-pale:#f2f7f2; --bark:#2d2417; --muted:#7a7168; --border:#e4ede6; }
-.hist-page { max-width:860px; margin:0 auto; padding:2rem 1rem 5rem; font-family:'DM Sans',sans-serif; }
-.hist-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:1.75rem; }
-.hist-title { font-family:'Lora',serif; font-size:1.5rem; color:var(--sage-d); margin:0; }
-.hist-empty { text-align:center; padding:4rem 1rem; color:var(--muted); }
-.hist-empty .ico { font-size:3rem; margin-bottom:.75rem; }
-.hist-list { display:flex; flex-direction:column; gap:.75rem; }
-.hist-card {
-    background:#fff; border:1.5px solid var(--border); border-radius:14px;
-    padding:1.1rem 1.4rem; display:flex; justify-content:space-between;
-    align-items:center; gap:1rem; flex-wrap:wrap; transition:border-color .15s;
-}
-.hist-card:hover { border-color:var(--sage); }
-.hist-dates { font-family:'Lora',serif; font-size:1rem; color:var(--bark); font-weight:600; }
-.hist-sub { font-size:.78rem; color:var(--muted); margin-top:.2rem; }
-.hist-stats { display:flex; gap:1rem; flex-wrap:wrap; }
-.hist-stat { text-align:center; }
-.hist-stat-val { font-size:1.1rem; font-weight:700; color:var(--sage-d); display:block; }
-.hist-stat-lbl { font-size:.65rem; color:var(--muted); text-transform:uppercase; letter-spacing:.04em; }
-.hist-tags { display:flex; gap:.3rem; flex-wrap:wrap; }
-.htag { font-size:.62rem; font-weight:600; padding:.1rem .4rem; border-radius:999px; background:#eef7f0; color:#3b6d11; border:1px solid #c8e6cc; }
-.btn-view {
-    display:inline-flex; align-items:center; gap:.35rem;
-    padding:.4rem .9rem; border-radius:8px; font-size:.8rem; font-weight:500;
-    background:var(--sage); color:#fff; border:none; text-decoration:none; cursor:pointer;
-    transition:background .15s;
-}
-.btn-view:hover { background:var(--sage-d); }
-</style>
-
 <div class="hist-page">
     <div class="hist-head">
         <h1 class="hist-title">История планов</h1>

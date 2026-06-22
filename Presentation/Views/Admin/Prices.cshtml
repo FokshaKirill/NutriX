@@ -1,26 +1,6 @@
 @model List<Domain.Entities.Product>
 @{ ViewData["Title"] = "Цены на продукты"; }
 
-<style>
-.prices-page { max-width: 1100px; margin: 0 auto; padding: 2rem 1rem; }
-.prices-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
-.prices-title { font-size: 1.5rem; font-weight: 700; color: var(--brown); }
-.prices-updated { font-size: .8rem; color: var(--muted); }
-.category-block { margin-bottom: 2rem; }
-.category-title { font-size: 1rem; font-weight: 700; color: var(--sage); 
-                  border-bottom: 2px solid var(--sage-light); padding-bottom: .4rem; margin-bottom: .8rem; }
-.prices-table { width: 100%; border-collapse: collapse; font-size: .88rem; }
-.prices-table th { text-align: left; padding: .5rem .8rem; color: var(--muted); 
-                   font-weight: 600; font-size: .75rem; text-transform: uppercase; }
-.prices-table td { padding: .5rem .8rem; border-bottom: 1px solid var(--border); color: var(--text); }
-.prices-table tr:hover td { background: var(--sage-light); }
-.price-val { font-weight: 600; color: var(--brown); }
-.btn-update { background: var(--sage); color: #fff; border: none; border-radius: 10px;
-              padding: .6rem 1.4rem; font-size: .9rem; cursor: pointer; }
-.btn-update:hover { background: #6a8e6e; }
-.next-run { font-size: .78rem; color: var(--muted); margin-top: .3rem; }
-</style>
-
 <div class="prices-page">
     <div class="prices-head">
         <div>

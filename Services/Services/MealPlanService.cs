@@ -245,7 +245,9 @@ namespace Services.Services
                 .OrderByDescending(p => p.StartDate)
                 .Include(p => p.Slots)
                 .ThenInclude(s => s.Items)
-                .ThenInclude(m => m.Recipe)
+                .ThenInclude(i => i.Recipe)
+                .ThenInclude(r => r.Ingredients)
+                .ThenInclude(ri => ri.Product)
                 .ToListAsync();
         }
     }

@@ -1,5 +1,8 @@
 @model Presentation.Models.RecipeListViewModel
-@* _RecipeCard.cshtml — карточка рецепта для главной страницы *@
+@* _RecipeCard.cshtml — универсальная карточка рецепта (главная + список рецептов) *@
+@{
+    bool showActions = ViewData["ShowActions"] as bool? ?? true;
+}
 
 <div class="rc">
     <div class="rc-thumb">
@@ -11,25 +14,55 @@
         {
             <div class="rc-thumb-ph">🥘</div>
         }
+        
+        <button class="favorite-btn fav-btn rc-fav @(Model.IsFavorite ? "is-fav liked" : "")"
+                data-id="@Model.Id" type="button"
+                aria-label="@(Model.IsFavorite ? "Убрать из избранного" : "В избранное")">
+            <i class="@(Model.IsFavorite ? "fas" : "far") fa-heart"></i>
+        </button>
+
+        <div class="rc-servings-badge">@Model.DefaultServings порц.</div>
     </div>
+
     <div class="rc-body">
         <a asp-action="Details" asp-controller="Recipe"
            asp-route-id="@Model.Id" class="rc-name">@Model.Name</a>
 
-        <div class="rc-macros">
-            @if (Model.CaloriesPerServing > 0)
-            { <span class="rc-macro kcal">🔥 @((int)Model.CaloriesPerServing!) ккал</span> }
-            @if (Model.ProteinPerServing > 0)
-            { <span class="rc-macro p">Б @((int)Model.ProteinPerServing!)г</span> }
-            @if (Model.FatPerServing > 0)
-            { <span class="rc-macro f">Ж @((int)Model.FatPerServing!)г</span> }
-            @if (Model.CarbsPerServing > 0)
-            { <span class="rc-macro c">У @((int)Model.CarbsPerServing!)г</span> }
+        @if (!string.IsNullOrEmpty(Model.Description))
+        {
+            <p class="rc-desc">@(Model.Description.Length > 70 ? Model.Description[..70] + "…" : Model.Description)</p>
+        }
+
+        <div class="rc-kbzu-grid">
+            <div class="rc-kbzu-cell">
+                <div class="rc-kbzu-val">@((int)Model.CaloriesPerServing)</div>
+                <div class="rc-kbzu-label">ккал</div>
+            </div>
+            <div class="rc-kbzu-cell">
+                <div class="rc-kbzu-val">@((int)Model.ProteinPerServing) г</div>
+                <div class="rc-kbzu-label">белки</div>
+            </div>
+            <div class="rc-kbzu-cell">
+                <div class="rc-kbzu-val">@((int)Model.FatPerServing) г</div>
+                <div class="rc-kbzu-label">жиры</div>
+            </div>
+            <div class="rc-kbzu-cell">
+                <div class="rc-kbzu-val">@((int)Model.CarbsPerServing) г</div>
+                <div class="rc-kbzu-label">углеводы</div>
+            </div>
         </div>
 
-        <a asp-action="Details" asp-controller="Recipe"
-           asp-route-id="@Model.Id" class="rc-open">
-            Открыть <i class="fas fa-arrow-right" style="font-size:.7rem"></i>
-        </a>
+        <div class="rc-footer">
+            <span class="rc-price">
+                @Model.CostPerServing.ToString("0") ₽
+                <span class="rc-price-note">/ порция</span>
+            </span>
+
+            <div class="rc-footer-actions">
+                <a asp-action="Details" asp-controller="Recipe" asp-route-id="@Model.Id" class="rc-open">
+                    Открыть <i class="fas fa-arrow-right" style="font-size:.7rem"></i>
+                </a>
+            </div>
+        </div>
     </div>
 </div>

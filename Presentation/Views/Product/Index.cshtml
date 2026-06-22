@@ -1,9 +1,15 @@
 @model IEnumerable<Presentation.Models.ProductViewModel>
-@*
-    Product/Index.cshtml
-    JS вынесен в wwwroot/js/product-index.js.
-    URL для AJAX передаются через window.ProductIndex (data bridge ниже).
-*@
+
+<style>
+    .btn {
+        border-radius: 5px;
+        padding: 0.5rem 0.75rem;
+        font-weight: 500;
+        font-size: medium;
+        transition: all 0.15s ease;
+        display: flow;
+    }
+</style>
 
 @* ── Data bridge ───────────────────────────────────────────────────────────── *@
 <script>

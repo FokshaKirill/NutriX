@@ -5,584 +5,6 @@
 
 <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
 
-<style>
- :root {
-     --sage:      #7aab84;
-     --sage-d:    #4e7d58;
-     --sage-pale: #f0f7f2;
-     --bark:      #2d2417;
-     --muted:     #7a7168;
-     --border:    #e4ede6;
-     --heart:     #e05c5c;
- }
-
-* { box-sizing: border-box; }
-
-.rd-page {
-    margin: 0 auto;
-    padding: 2.5rem 1.5rem 6rem;
-    font-family: 'DM Sans', sans-serif;
-    max-width: 72vw;
-}
-
-.rd-header {
-    flex-direction: row;
-    display: flex;
-    gap: 1.5rem;
-    justify-content: space-between;
-}
-
-/* ── Hero ── */
-.rd-hero {
-    position: relative;
-    overflow: hidden;
-    margin-bottom: 2rem;
-    background: linear-gradient(135deg, #d6eadb, #b5d9bc);
-    width: -webkit-fill-available;
-    max-height: 41rem;
-}
-
-.rd-hero img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-}
-
-.rd-hero-placeholder {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 5rem;
-}
-
-.rd-hero-overlay {
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(to top, rgba(20,12,5,.72) 0%, transparent 55%);
-}
-
-.rd-hero-content {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    padding: 2rem 2.5rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
-    gap: 1rem;
-}
-
-.rd-hero-content {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    padding: 2rem 2.5rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
-    gap: 1rem;
-}
-
-.rd-title {
-    font-family: 'Lora', serif;
-    font-size: clamp(1.6rem, 3.5vw, 2.4rem);
-    color: #fff;
-    margin: 0 0 .4rem;
-    line-height: 1.2;
-    text-shadow: 0 2px 12px rgba(0,0,0,.3);
-}
-
-.rd-desc {
-    color: rgba(255,255,255,.75);
-    font-size: .95rem;
-    margin: 0;
-    max-width: 520px;
-    line-height: 1.5;
-}
-
-/* избранное на hero */
-.fav-hero-btn {
-    flex-shrink: 0;
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    border: none;
-    background: rgba(255,255,255,.18);
-    backdrop-filter: blur(8px);
-    color: #fff;
-    font-size: 1.3rem;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background .2s, transform .2s;
-}
-.fav-hero-btn:hover { background: rgba(255,255,255,.32); transform: scale(1.1); }
-.fav-hero-btn.is-fav { color: var(--heart); }
-
-/* pop анимация */
-@@keyframes favPop {
-     0%  { transform: scale(1); }
-     40% { transform: scale(1.45); }
-     70% { transform: scale(.88); }
-     100%{ transform: scale(1); }
- }
-.fav-pop { animation: favPop .35s cubic-bezier(.36,.07,.19,.97); }
-
-/* ── Пилюли-статы под hero ── */
-.rd-stats {
-    display: flex;
-    flex-wrap: wrap;
-    gap: .75rem;
-    margin-bottom: 2.5rem;
-}
-
-.rd-stat {
-    display: flex;
-    align-items: center;
-    gap: .5rem;
-    background: var(--sage-pale);
-    border: 1px solid var(--border);
-    padding: .45rem 1rem;
-    font-size: .85rem;
-    font-weight: 500;
-    color: var(--bark);
-}
-
-.rd-stat .stat-ico { font-size: 1rem; }
-
-/* ── Основной грид ── */
-.rd-body {
-    display: grid;
-    gap: 2rem;
-    align-items: start;
-}
-
-/* ── Сайдбар ── */
-.rd-sidebar {
-    width: 400px;
-}
-
-.rd-card {
-    background: #fff;
-    border: 1px solid var(--border);
-    padding: 1.5rem;
-    margin-bottom: 1.25rem;
-}
-
-.rd-card-title {
-    font-size: .72rem;
-    font-weight: 600;
-    letter-spacing: .06em;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin: 0 0 1rem;
-}
-
-/* макронутриенты */
-.macro-list { display: flex; flex-direction: column; gap: .55rem; }
-
-.macro-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: .875rem;
-}
-
-.macro-label { color: var(--muted); }
-
-.macro-val { font-weight: 600; color: var(--bark); }
-
-.macro-bar-wrap {
-    height: 5px;
-    background: #edf0eb;
-    border-radius: 999px;
-    overflow: hidden;
-    margin-top: .25rem;
-}
-
-.macro-bar { height: 100%; border-radius: 999px; }
-.bar-kcal  { background: var(--sage); }
-.bar-p     { background: #5b9bd5; }
-.bar-f     { background: #e07a5f; }
-.bar-c     { background: #f4a32a; }
-.bar-m     { background: #adf42a; }
-
-/* стоимость */
-.cost-big {
-    font-family: 'Lora', serif;
-    font-size: 2rem;
-    font-weight: 600;
-    color: var(--sage-d);
-    text-align: center;
-    line-height: 1;
-}
-
-.cost-sub {
-    text-align: center;
-    font-size: .8rem;
-    color: var(--muted);
-    margin-top: .3rem;
-}
-
-/* ── Контент ── */
-.rd-content {}
-
-/* Секция */
-.rd-section { margin-bottom: 2.5rem; }
-
-.rd-section-title {
-    font-family: 'Lora', serif;
-    font-size: 1.3rem;
-    color: var(--bark);
-    margin: 0 0 1.1rem;
-    display: flex;
-    align-items: center;
-    gap: .6rem;
-}
-
-.rd-section-title::after {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: var(--border);
-}
-
-/* Ингредиенты */
-.ing-list {
-    display: flex;
-    flex-direction: column;
-    gap: .5rem;
-    list-style: none;
-    margin: 0;
-    padding: 0;
-}
-
-.ing-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: .7rem .9rem;
-    border-radius: 10px;
-    background: var(--sage-pale);
-    font-size: .9rem;
-    transition: background .2s;
-}
-
-.ing-item:hover { background: #e4f0e7; }
-
-.ing-name { font-weight: 500; color: var(--bark); }
-
-.ing-comment { font-size: .78rem; color: var(--muted); margin-left: .3rem; }
-
-.ing-amount {
-    font-size: .82rem;
-    color: var(--muted);
-    white-space: nowrap;
-    margin-left: 1rem;
-    text-align: right;
-}
-
-/* Шаги */
-.steps-list {
-    display: flex;
-    flex-direction: column;
-    gap: 1.25rem;
-}
-
-.step-item {
-    display: flex;
-    gap: 1.1rem;
-    align-items: flex-start;
-}
-
-.step-num {
-    flex-shrink: 0;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background: var(--sage);
-    color: #fff;
-    font-family: 'Lora', serif;
-    font-weight: 600;
-    font-size: 1rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 4px 12px rgba(122,171,132,.35);
-    margin-top: .1rem;
-}
-
-.step-body { flex: 1; }
-
-.step-text {
-    font-size: .95rem;
-    line-height: 1.7;
-    color: var(--bark);
-    margin: 0 0 .5rem;
-}
-
-.step-img {
-    width: 100%;
-    max-height: 300px;
-    object-fit: cover;
-    border-radius: 12px;
-    margin-top: .6rem;
-}
-
-.step-timer {
-    display: inline-flex;
-    align-items: center;
-    gap: .35rem;
-    font-size: .78rem;
-    color: var(--sage-d);
-    background: var(--sage-pale);
-    border-radius: 999px;
-    padding: .2rem .75rem;
-}
-
-/* ── Кнопки внизу ── */
-.rd-footer-actions {
-    display: flex;
-    gap: .75rem;
-    flex-wrap: wrap;
-    margin-top: 2.5rem;
-    padding-top: 2rem;
-    border-top: 1px solid var(--border);
-}
-
-.btn-soft {
-    display: inline-flex;
-    align-items: center;
-    gap: .5rem;
-    padding: .65rem 1.3rem;
-    border-radius: 10px;
-    font-family: 'DM Sans', sans-serif;
-    font-size: .875rem;
-    font-weight: 500;
-    text-decoration: none;
-    border: 1.5px solid var(--border);
-    color: var(--muted);
-    background: #fff;
-    cursor: pointer;
-    transition: all .2s;
-}
-.btn-soft:hover { border-color: var(--sage); color: var(--sage-d); background: var(--sage-pale); }
-.btn-soft.primary { background: var(--sage); color: #fff; border-color: var(--sage); }
-.btn-soft.primary:hover { background: var(--sage-d); }
-.btn-soft.danger:hover { border-color: var(--heart); color: var(--heart); background: #fdf0f0; }
-
-/* ── Mobile ── */
-@@media (max-width: 700px) {
-    .rd-hero { height: 280px; }
-    .rd-hero-content { padding: 1.2rem 1.5rem; }
-    .rd-body { grid-template-columns: 1fr; }
-    .rd-sidebar { order: 2; }
-    .rd-content { order: 1; }
-}
-
-.servings-control {
-    display: flex;
-    align-items: center;
-    gap: .75rem;
-    margin-bottom: 1.25rem;
-    flex-wrap: wrap;
-}
-.servings-label { font-weight: 600; color: var(--bark); font-size: .9rem; }
-.srv-btn {
-    width: 34px; height: 34px;
-    border-radius: 50%;
-    border: 1.5px solid var(--border);
-    background: #fff;
-    color: var(--sage-d);
-    font-size: 1.2rem;
-    cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-    transition: all .15s;
-}
-.srv-btn:hover { background: var(--sage-pale); border-color: var(--sage); }
-#srvInput {
-    width: 56px;
-    text-align: center;
-    border: 1.5px solid var(--border);
-    border-radius: 8px;
-    padding: .3rem;
-    font-size: 1rem;
-    font-weight: 600;
-    color: var(--bark);
-}
-#srvSlider {
-    flex: 1; min-width: 120px; max-width: 220px;
-    accent-color: var(--sage);
-}
-.steps-grid {
-    display: grid;
-    gap: 1.25rem;
-    grid-template-columns: 1fr 1fr 1fr;
-}
-
-@@media (max-width: 700px) {
-    .steps-grid { grid-template-columns: 1fr; }
-}
-
-
-.ing-group-title {
-    font-size: .75rem;
-    font-weight: 600;
-    letter-spacing: .06em;
-    text-transform: uppercase;
-    color: var(--sage-d);
-    margin: 1rem 0 .4rem;
-    padding-left: .9rem;
-    border-left: 3px solid var(--sage);
-}
-
-/* ── Ingredient row ── */
-.ing-row {
-    display: flex;
-    align-items: center;
-    gap: .5rem;
-    margin-bottom: .5rem;
-}
-.ing-select {
-    flex: 2;
-    min-width: 0;
-    padding: .35rem .6rem;
-    font-size: .875rem;
-    border: 1px solid #ced4da;
-    border-radius: 8px;
-    background: #fff;
-}
-.ing-amount-input {
-    width: 72px;
-    flex-shrink: 0;
-    padding: .35rem .5rem;
-    font-size: .875rem;
-    border: 1px solid #ced4da;
-    border-radius: 8px;
-    text-align: right;
-}
-.ing-comment-input {
-    flex: 1;
-    min-width: 0;
-    padding: .35rem .6rem;
-    font-size: .875rem;
-    border: 1px solid #ced4da;
-    border-radius: 8px;
-    color: #6c757d;
-}
-.ing-remove {
-    flex-shrink: 0;
-    width: 28px; height: 28px;
-    border-radius: 50%;
-    border: none;
-    background: #fee2e2;
-    color: #dc2626;
-    font-size: 1.1rem;
-    line-height: 1;
-    cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-    transition: background .15s;
-}
-.ing-remove:hover { background: #fecaca; }
-
-/* ── Step row ── */
-.step-row-edit {
-    display: flex;
-    align-items: flex-start;
-    gap: .5rem;
-    margin-bottom: .5rem;
-    background: var(--primary-light, #f0f7f2);
-    border-radius: 10px;
-    padding: .6rem .75rem;
-}
-.step-row-num {
-    flex-shrink: 0;
-    width: 26px; height: 26px;
-    border-radius: 50%;
-    background: var(--primary, #7aab84);
-    color: #fff;
-    font-weight: 700;
-    font-size: .85rem;
-    display: flex; align-items: center; justify-content: center;
-    margin-top: .2rem;
-}
-.step-row-text {
-    flex: 1;
-    min-width: 0;
-    padding: .35rem .6rem;
-    font-size: .875rem;
-    border: 1px solid #ced4da;
-    border-radius: 8px;
-    resize: vertical;
-}
-.step-row-timer {
-    width: 72px;
-    flex-shrink: 0;
-    padding: .35rem .5rem;
-    font-size: .875rem;
-    border: 1px solid #ced4da;
-    border-radius: 8px;
-    text-align: right;
-}
-
-.calc-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: .6rem;
-}
-.calc-item {
-    background: var(--sage-pale);
-    border-radius: 8px;
-    padding: .5rem .75rem;
-    display: flex;
-    flex-direction: column;
-    gap: .1rem;
-}
-.calc-item--wide {
-    grid-column: 1 / -1;
-}
-.calc-label {
-    font-size: .7rem;
-    color: var(--muted);
-    font-weight: 500;
-}
-.calc-val {
-    font-family: 'Lora', serif;
-    font-size: 1.3rem;
-    font-weight: 600;
-    color: var(--bark);
-    line-height: 1;
-}
-.calc-unit {
-    font-size: .7rem;
-    color: var(--muted);
-}
- .tag-pill {
-     display: inline-flex;
-     align-items: center;
-     gap: .25rem;
-     padding: .28rem .65rem;
-     border-radius: 999px;
-     border: 1.5px solid var(--border);
-     background: #fff;
-     color: var(--muted);
-     font-size: .76rem;
-     font-weight: 500;
-     cursor: pointer;
-     transition: all .15s;
-     font-family: 'DM Sans', sans-serif;
- }
- .tag-pill:hover { border-color: var(--sage); color: var(--sage-d); background: var(--sage-pale); }
- .tag-pill.active { background: var(--sage); color: #fff; border-color: var(--sage); }
- .tag-pill.active:hover { background: var(--sage-d); border-color: var(--sage-d); }
-</style>
-
 <div class="rd-page">
 
 <!-- ── Header ── -->
@@ -940,7 +362,7 @@ title="@(Model.IsFavorite ? "Убрать из избранного" : "В из�
 <i class="fas fa-arrow-left"></i> Все рецепты
 </a>
 
-@if (Model.IsOwner)
+@if (Model.IsOwner || User.IsInRole("Admin"))
 {
 <a asp-action="Edit" asp-route-id="@Model.Id" class="btn-soft primary">
 <i class="fas fa-pen"></i> Редактировать
@@ -999,163 +421,253 @@ style="width:100%;justify-content:center;background:#fdf0f0;border-color:var(--h
 </style>
 
 <script>
- const BASE_SERVINGS   = @Model.DefaultServings;
-const BASE_TOTAL_COST = @Model.TotalCost.ToString("F2", System.Globalization.CultureInfo.InvariantCulture);
-const BASE_KCAL = @Model.CaloriesPerServing.ToString("F2", System.Globalization.CultureInfo.InvariantCulture);
-const BASE_P    = @Model.ProteinPerServing.ToString("F2", System.Globalization.CultureInfo.InvariantCulture);
-const BASE_F    = @Model.FatPerServing.ToString("F2", System.Globalization.CultureInfo.InvariantCulture);
-const BASE_C    = @Model.CarbsPerServing.ToString("F2", System.Globalization.CultureInfo.InvariantCulture);
-let currentServings = BASE_SERVINGS;
+(function() {
+    'use strict';
 
-function setText(id, val) {
-    const el = document.getElementById(id);
-    if (el) el.textContent = val;
-}
+    // ── Базовые константы из Razor ──────────────────────────────────────────
+    const BASE_SERVINGS   = @Model.DefaultServings;
+    const BASE_TOTAL_COST = @Model.TotalCost.ToString("F2", System.Globalization.CultureInfo.InvariantCulture);
+    const BASE_KCAL = @Model.CaloriesPerServing.ToString("F2", System.Globalization.CultureInfo.InvariantCulture);
+    const BASE_P    = @Model.ProteinPerServing.ToString("F2", System.Globalization.CultureInfo.InvariantCulture);
+    const BASE_F    = @Model.FatPerServing.ToString("F2", System.Globalization.CultureInfo.InvariantCulture);
+    const BASE_C    = @Model.CarbsPerServing.ToString("F2", System.Globalization.CultureInfo.InvariantCulture);
+    
+    let currentServings = BASE_SERVINGS;
+    let _currentTags = @((int)Model.Tags);
 
-function updateServings(val) {
-    val = Math.max(1, Math.min(100, val));
-    currentServings = val;
-    const ratio = val / BASE_SERVINGS;
-
-setText('srvDisplay', val);
-
-// Калькулятор (суммарно на все порции)
-setText('calcKcal', Math.round(BASE_KCAL * val));
-setText('calcP',    (BASE_P * val).toFixed(1));
-setText('calcF',    (BASE_F * val).toFixed(1));
-setText('calcC',    (BASE_C * val).toFixed(1));
-setText('calcCost', (BASE_TOTAL_COST * ratio).toFixed(2));
-
-// Ингредиенты
-document.querySelectorAll('.ing-item[data-base-amount]').forEach(item => {
-    const newAmt  = parseFloat(item.dataset.baseAmount) * ratio;
-    const baseP   = parseFloat(item.dataset.basePrice);
-    const amtEl   = item.querySelector('.ing-amount-val');
-    const priceEl = item.querySelector('.ing-price-val');
-    const calEl   = item.querySelector('.ing-cal-val');
-    if (amtEl)   amtEl.textContent   = newAmt < 10 ? newAmt.toFixed(1) : Math.round(newAmt);
-    if (priceEl) priceEl.textContent = (baseP * newAmt / 100).toFixed(1);
-    if (calEl) {
-    if (!calEl.dataset.base) calEl.dataset.base = calEl.textContent;
-calEl.textContent = Math.round(parseFloat(calEl.dataset.base) * ratio);
-}
-});
-}
-
-document.getElementById('srvMinus').addEventListener('click', () => updateServings(currentServings - 1));
-document.getElementById('srvPlus') .addEventListener('click', () => updateServings(currentServings + 1));
-
- function openDeleteModal(id, name) {
-     document.getElementById("delRecipeId").value = id;
-     document.getElementById("delRecipeName").textContent = name;
-     document.getElementById("delForm").action = "/Recipe/Delete";
-     document.getElementById("delBackdrop").classList.add("open");
- }
- function closeDeleteModal(e) {
-     if (!e || e.target === document.getElementById("delBackdrop"))
-         document.getElementById("delBackdrop").classList.remove("open");
- }
- document.addEventListener("keydown", e => {
-     if (e.key === "Escape") document.getElementById("delBackdrop").classList.remove("open");
- });
-
- const shareButton = document.getElementById('share-button');
-
- shareButton.addEventListener('click', async () => {
-     // Проверяем поддержку Web Share API
-     if (!navigator.share) {
-         alert('Функция «Поделиться» не поддерживается в вашем браузере');
-         return;
-     }
-
-     try {
-         await navigator.share({
-             title: document.title,
-             text: 'Посмотрите эту интересную страницу!',
-             url: window.location.href
-         });
-         console.log('Ссылка успешно отправлена');
-     } catch (error) {
-         if (error.name !== 'AbortError') {
-             console.error('Ошибка при попытке поделиться:', error);
-         }
-     }
- });
-let _currentTags = @((int)Model.Tags);
-
-// Переключить тег по клику
-document.querySelectorAll('.tag-pill').forEach(btn => {
-    btn.addEventListener('click', function () {
-        const val = parseInt(this.dataset.tag);
-        _currentTags ^= val;   // XOR — включить/выключить бит
-        this.classList.toggle('active');
-        document.getElementById('tagsSaveStatus').style.display = 'none';
-    });
-});
-
-// Сохранить теги через AJAX
-async function saveTags(recipeId) {
-    const btn = document.getElementById('saveTagsBtn');
-    btn.disabled = true;
-    btn.textContent = '...';
-
-    try {
-        const params = new URLSearchParams({
-            id: recipeId,
-            tags: _currentTags,
-            __RequestVerificationToken: document.querySelector('input[name="__RequestVerificationToken"]')?.value ?? ''
-        });
-        const res  = await fetch('/Recipe/SetTags', { method: 'POST', body: params });
-        const data = await res.json();
-
-        if (data.success) {
-            _currentTags = data.tags;
-            const status = document.getElementById('tagsSaveStatus');
-            status.style.display = 'inline';
-            setTimeout(() => status.style.display = 'none', 2000);
-        }
-    } catch (e) {
-        alert('Ошибка сохранения');
-    } finally {
-        btn.disabled = false;
-        btn.textContent = 'Сохранить теги';
+    // Вспомогательная функция безопасной установки текста
+    function setText(id, val) {
+        const el = document.getElementById(id);
+        if (el) el.textContent = val;
     }
-}
 
-// Автоподбор тегов по названию — вызывает SeedTags только для этого рецепта
-async function autoTag(recipeId, recipeName) {
-    // Простой клиентский автотег по названию (зеркало серверной логики)
-    const n = recipeName.toLowerCase();
-    let tags = 0;
+    // ── Калькулятор порций и ингредиентов ───────────────────────────────────
+    function updateServings(val) {
+        val = Math.max(1, Math.min(100, val));
+        currentServings = val;
+        
+        const srvInput = document.getElementById('srvInput'); // Если это input, обновляем его value
+        if (srvInput) srvInput.value = val;
+        
+        setText('srvDisplay', val);
 
-    const Soup=16, Salad=32, Drink=512, Dessert=256, Garnish=128,
-          MainCourse=64, Breakfast=1, Lunch=2, Dinner=4, Snack=8;
+        const ratio = val / BASE_SERVINGS;
 
-    if (/суп|борщ|щи|солянк|уха|рассольник/.test(n)) tags |= Soup;
-    if (/салат/.test(n))                                tags |= Salad;
-    if (/чай|кофе|сок|компот|смузи|какао|морс|кисель|напиток/.test(n)) tags |= Drink;
-    if (/торт|пирожн|десерт|мороженое|пудинг|желе|вафл/.test(n)) tags |= Dessert;
-    if (/рис|гречк|пюре|картофел|макарон|лапш|гарнир|перловк|булгур/.test(n)) tags |= Garnish;
-    if (/каша|омлет|яичниц|мюсли|тост|запеканк|сырник|творог|блин/.test(n)) tags |= Breakfast;
+        // Общее КБЖУ рецепта
+        setText('calcKcal', Math.round(BASE_KCAL * val));
+        setText('calcP',    (BASE_P * val).toFixed(1));
+        setText('calcF',    (BASE_F * val).toFixed(1));
+        setText('calcC',    (BASE_C * val).toFixed(1));
+        setText('calcCost', (BASE_TOTAL_COST * ratio).toFixed(2));
 
-    const isAux = tags & (Soup | Salad | Drink | Dessert | Garnish);
-    if (!isAux) tags |= MainCourse;
+        // Пересчет каждого ингредиента в списке
+        document.querySelectorAll('.ing-item[data-base-amount]').forEach(item => {
+            const newAmt  = parseFloat(item.dataset.baseAmount) * ratio;
+            const basePrice = parseFloat(item.dataset.basePrice || 0);
+            
+            const amtEl   = item.querySelector('.ing-amount-val');
+            const priceEl = item.querySelector('.ing-price-val');
+            const calEl   = item.querySelector('.ing-cal-val');
 
-    if (tags & Drink || tags & Dessert) tags |= Breakfast | Lunch | Dinner | Snack;
-    if (tags & MainCourse || tags & Garnish) tags |= Lunch | Dinner;
-    if (tags & Soup || tags & Salad) tags |= Lunch | Dinner;
-    if (tags & Salad || tags & Dessert || tags & Drink) tags |= Snack;
-    if (!(tags & (Breakfast | Lunch | Dinner | Snack))) tags |= Lunch | Dinner;
+            if (amtEl)   amtEl.textContent = newAmt < 10 ? newAmt.toFixed(1) : Math.round(newAmt);
+            if (priceEl) priceEl.textContent = (basePrice * newAmt / 100).toFixed(1);
+            
+            if (calEl) {
+                // Ленивая инициализация базового значения калорийности под конкретный вес
+                if (!calEl.dataset.base) calEl.dataset.base = calEl.textContent;
+                calEl.textContent = Math.round(parseFloat(calEl.dataset.base) * ratio);
+            }
+        });
+    }
 
-    _currentTags = tags;
+    // Слушатели кликов порций
+    const btnMinus = document.getElementById('srvMinus');
+    const btnPlus = document.getElementById('srvPlus');
+    const srvInput = document.getElementById('srvInput');
 
-    // Обновляем кнопки
-    document.querySelectorAll('.tag-pill').forEach(btn => {
-        const val = parseInt(btn.dataset.tag);
-        btn.classList.toggle('active', !!(tags & val));
+    if (btnMinus) btnMinus.addEventListener('click', () => updateServings(currentServings - 1));
+    if (btnPlus)  btnPlus.addEventListener('click', () => updateServings(currentServings + 1));
+    
+    // Поддержка ручного ввода порций в input (если он есть)
+    if (srvInput) {
+        srvInput.addEventListener('input', function() {
+            const val = parseInt(this.value);
+            if (!isNaN(val)) updateServings(val);
+        });
+    }
+
+    // ── Управление модалкой удаления ────────────────────────────────────────
+    window.openDeleteModal = function(id, name) {
+        const delRecipeId = document.getElementById("delRecipeId");
+        const delRecipeName = document.getElementById("delRecipeName");
+        const delForm = document.getElementById("delForm");
+        const backdrop = document.getElementById("delBackdrop");
+
+        if (delRecipeId) delRecipeId.value = id;
+        if (delRecipeName) delRecipeName.textContent = name;
+        if (delForm) delForm.action = "/Recipe/Delete";
+        if (backdrop) backdrop.classList.add("open");
+    };
+
+    window.closeDeleteModal = function(e) {
+        const backdrop = document.getElementById("delBackdrop");
+        if (backdrop && (!e || e.target === backdrop)) {
+            backdrop.classList.remove("open");
+        }
+    };
+
+    document.addEventListener("keydown", e => {
+        if (e.key === "Escape") {
+            const backdrop = document.getElementById("delBackdrop");
+            if (backdrop) backdrop.classList.remove("open");
+        }
     });
 
-    await saveTags(recipeId);
-}
+    // ── Кнопка «Поделиться» (с фоллбэком на буфер обмена) ────────────────────
+    const shareButton = document.getElementById('share-button');
+    if (shareButton) {
+        shareButton.addEventListener('click', async () => {
+            if (navigator.share) {
+                try {
+                    await navigator.share({
+                        title: document.title,
+                        text: 'Посмотрите этот крутой рецепт!',
+                        url: window.location.href
+                    });
+                } catch (error) {
+                    if (error.name !== 'AbortError') console.error('Ошибка Share:', error);
+                }
+            } else {
+                // Фоллбэк: копируем в буфер, если Web Share не поддерживается
+                try {
+                    await navigator.clipboard.writeText(window.location.href);
+                    alert('Ссылка успешно скопирована в буфер обмена!');
+                } catch (err) {
+                    alert('Не удалось скопировать ссылку.');
+                }
+            }
+        });
+    }
+
+    // ── Управление Битовыми Масками Тегов ───────────────────────────────────
+    document.querySelectorAll('.tag-pill').forEach(btn => {
+        btn.addEventListener('click', function () {
+            const val = parseInt(this.dataset.tag);
+            _currentTags ^= val; // Инвертируем выбранный бит
+            this.classList.toggle('active');
+            
+            const status = document.getElementById('tagsSaveStatus');
+            if (status) status.style.display = 'none';
+        });
+    });
+
+    // Сохранение тегов
+    window.saveTags = async function(recipeId) {
+        const btn = document.getElementById('saveTagsBtn');
+        if (!btn) return;
+
+        btn.disabled = true;
+        const originalText = btn.textContent;
+        btn.textContent = 'Сохранение...';
+
+        try {
+            const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value ?? '';
+            const params = new URLSearchParams({
+                id: recipeId,
+                tags: _currentTags,
+                __RequestVerificationToken: token
+            });
+
+            const res = await fetch('/Recipe/SetTags', { method: 'POST', body: params });
+            const data = await res.json();
+
+            if (data.success) {
+                _currentTags = data.tags;
+                const status = document.getElementById('tagsSaveStatus');
+                if (status) {
+                    status.style.display = 'inline';
+                    setTimeout(() => status.style.display = 'none', 2500);
+                }
+            }
+        } catch (e) {
+            alert('Не удалось сохранить изменения');
+        } finally {
+            btn.disabled = false;
+            btn.textContent = originalText;
+        }
+    };
+
+    // Автоподбор тегов (Регулярные выражения)
+    window.autoTag = async function(recipeId, recipeName) {
+        const n = recipeName.toLowerCase();
+        let tags = 0;
+
+        // Сверяем значения строго по битам C# Enum
+        const Breakfast  = 1,      // 1 << 0
+            Lunch      = 2,      // 1 << 1
+            Dinner     = 4,      // 1 << 2
+            Snack      = 8,      // 1 << 3
+            Soup       = 16,     // 1 << 4
+            Salad      = 32,     // 1 << 5
+            MainCourse = 64,     // 1 << 6
+            Garnish    = 128,    // 1 << 7
+            Dessert    = 256,    // 1 << 8
+            Drink      = 512,    // 1 << 9
+            Quick      = 1024,   // 1 << 10 (Новый)
+            Festive    = 2048;   // 1 << 11 (Новый)
+
+        // ── 1. Классификация по типу блюда ──────────────────────────────────────
+        if (/суп|борщ|щи|солянк|уха|рассольник|окрошк|бульон|шурпа|лагман|хаш|гаспачо/.test(n)) tags |= Soup;
+        if (/салат|винегрет|цезарь|оливье/.test(n)) tags |= Salad;
+        if (/чай|кофе|сок|компот|смузи|какао|морс|кисель|напиток|коктейл|лимонад|фреш|матча|латте|капучино/.test(n)) tags |= Drink;
+        if (/торт|пирожн|десерт|мороженое|пудинг|желе|вафл|варень|джем|печень|пирог|кекс|чизкейк|конфет|капкейк|круассан|маффин|брауни|штрудель|синнабон|мусс|пастила|зефир/.test(n)) tags |= Dessert;
+        if (/рис|гречк|пюре|картоф|картош|макарон|лапш|гарнир|перловк|булгур|кускус|киноа|нут|чечевиц|вермишел|спагетти|фунчоз/.test(n)) tags |= Garnish;
+        if (/каша|омлет|яичниц|мюсли|тост|запеканк|сырник|творог|блин|оладь|панкейк|гранола|бутерброд|сэндвич|круассан|шакшук/.test(n)) tags |= Breakfast;
+        if (/котлет|куриц|кур|мясо|рыб|стейк|плов|гуляш|тефтел|фрикадел|шашлык|пицц|лазань|фарш|говядин|свинин|индейк|наггетс|гусь|утк|креветк|кальмар|мидии|стейк|пюре с|мясо по/.test(n)) tags |= MainCourse;
+
+        // Пересечения
+        if (/паста|болоньез|карбонар/.test(n)) {
+            tags |= MainCourse;
+            tags |= Garnish;
+        }
+        if (/бутерброд|сэндвич|тост/.test(n)) tags |= Snack;
+
+        // ── 2. НОВЫЕ ТЕГИ: Быстрое (Quick) и Праздничное (Festive) ───────────────
+
+        // Праздничные маркеры: запеченная утка, шашлык, торты, имбирные пряники, новогодние салаты и т.д.
+        if (/шашлык|запечен|новогод|рождеств|пасха|празднич|оливье|цезарь|торт|кальмар|креветк|мидии|стейк|гусь|утк|рулет/.test(n)) {
+            tags |= Festive;
+        }
+
+        // Быстрые блюда (то, что обычно готовится мгновенно: яичницы, бутерброды, смузи, коктейли)
+        if (/яичниц|омлет|тост|бутерброд|сэндвич|смузи|коктейл|фреш|наггетс|салат за|салат с|гренки|чипсы|закуск/.test(n)) {
+            tags |= Quick;
+        }
+
+        // ── 3. Логика простановки времени приёма пищи (Тайминги) ──────────────────
+        const isAux = tags & (Soup | Salad | Drink | Dessert | Garnish);
+        if (!isAux) tags |= MainCourse; // Если никуда не подошло — это основное блюдо
+
+        if (tags & Drink || tags & Dessert) tags |= Breakfast | Lunch | Dinner | Snack;
+        if (tags & MainCourse || tags & Garnish) tags |= Lunch | Dinner;
+        if (tags & Soup || tags & Salad) tags |= Lunch | Dinner;
+        if (tags & Salad || tags & Dessert || tags & Drink) tags |= Snack;
+
+        // Страховка: если ни один тайминг не зацепился, ставим стандартные обед/ужин
+        if (!(tags & (Breakfast | Lunch | Dinner | Snack))) {
+            tags |= Lunch | Dinner;
+        }
+
+        _currentTags = tags;
+
+        // Синхронизируем визуальное состояние кнопок `.tag-pill` на фронтенде
+        document.querySelectorAll('.tag-pill').forEach(btn => {
+            const val = parseInt(btn.dataset.tag);
+            btn.classList.toggle('active', !!(tags & val));
+        });
+
+        // Отправляем AJAX запрос на сервер (`/Recipe/SetTags`)
+        await window.saveTags(recipeId);
+    };
+})();
 </script>
-}

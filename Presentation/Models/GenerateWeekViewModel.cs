@@ -49,7 +49,7 @@ public class GenerateWeekViewModel
     public decimal DailyBudget => ConsiderBudget ? Math.Round(WeeklyBudget / 7, 2) : decimal.MaxValue;
 
     // ── Настройки структуры плана ──
-    [Range(3, 6, ErrorMessage = "Количество приёмов пищи должно быть от 3 до 6")]
+    [Range(2, 7, ErrorMessage = "Количество приёмов пищи должно быть от 2 до 7")]
     public int MealsPerDay { get; set; } = 3;
     public bool IncludeSnacks { get; set; }
     public bool AvoidRepeats { get; set; }

@@ -30,11 +30,13 @@ namespace Domain.Entities
 
         // ── Вычисляемые поля ──────────────────────────────────────────────────
 
-        public decimal TotalCost     => Ingredients.Sum(i => (i.Product?.PricePerUnit ?? 0) * i.Amount / 100);
+        public decimal TotalCost => Ingredients.Sum(i =>
+            (i.Product?.PricePerUnit ?? 0) * (i.GetGrams() / 100));
         public decimal TotalCalories => Ingredients.Sum(i => i.Calories ?? 0);
         public decimal TotalProtein  => Ingredients.Sum(i => i.Protein  ?? 0);
         public decimal TotalFat      => Ingredients.Sum(i => i.Fat      ?? 0);
         public decimal TotalCarbs    => Ingredients.Sum(i => i.Carbs    ?? 0);
+        public decimal CostPerServing => DefaultServings > 0 ? TotalCost / DefaultServings : 0;
 
         public decimal CaloriesPerServing => DefaultServings > 0 ? TotalCalories / DefaultServings : 0;
         public decimal ProteinPerServing  => DefaultServings > 0 ? TotalProtein  / DefaultServings : 0;

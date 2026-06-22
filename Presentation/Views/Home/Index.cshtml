@@ -1,3 +1,4 @@
+@using System.Security.Claims
 @using Domain.Entities
 @{
     ViewData["Title"] = "NutriX — Умное питание";
@@ -21,7 +22,18 @@
             carbs    = (int)((m.Recipe?.CarbsPerServing    ?? 0) * m.Servings)
         })
     );
+    
+    var kbzuViewData = new ViewDataDictionary(ViewData);
+    kbzuViewData["calGoal"]   = calGoal.ToString("F0", System.Globalization.CultureInfo.InvariantCulture);
+    kbzuViewData["protGoal"]  = protGoal.ToString("F0", System.Globalization.CultureInfo.InvariantCulture);
+    kbzuViewData["fatGoal"]   = fatGoal.ToString("F0", System.Globalization.CultureInfo.InvariantCulture);
+    kbzuViewData["carbGoal"]  = carbGoal.ToString("F0", System.Globalization.CultureInfo.InvariantCulture);
+    kbzuViewData["todayKcal"] = (int)ViewBag.TodayKcal;
+    kbzuViewData["todayP"]    = (int)ViewBag.TodayP;
+    kbzuViewData["todayF"]    = (int)ViewBag.TodayF;
+    kbzuViewData["todayC"]    = (int)ViewBag.TodayC;
 }
+@Html.AntiForgeryToken()
 
 @* ── Data bridge: передаём Razor-данные в JS ───────────────────────────────── *@
 <script>
@@ -97,11 +109,23 @@
         {
             @foreach (var r in recipes)
             {
-                @await Html.PartialAsync("_RecipeCard", r)
+                @await Html.PartialAsync("_RecipeCard", r, 
+                    new ViewDataDictionary(ViewData) { ["ShowActions"] = true })
             }
         }
     </div>
 </section>
+
+@* <section class="fridge-section"> *@
+@*     <div class="sec-head"> *@
+@*         <h2 class="sec-title">Что приготовить из того, что есть?</h2> *@
+@*     </div> *@
+@*     <form asp-action="SearchByIngredients" asp-controller="Recipe" class="fridge-form"> *@
+@*         <input type="text" name="ingredients" placeholder="курица, рис, помидоры..." class="form-control" /> *@
+@*         <button type="submit" class="btn-primary-soft">Найти рецепты</button> *@
+@*     </form> *@
+@* </section> *@
+
 
 @* ── МЕНЮ НА ДЕНЬ ──────────────────────────────────────────────────────────── *@
 <section class="day-section">
@@ -133,6 +157,7 @@
         else
         {
             @await Html.PartialAsync("_DayMenuBody", todaySlots)
+            @await Html.PartialAsync("_AccountKbzu", kbzuViewData)
         }
     </div>
 

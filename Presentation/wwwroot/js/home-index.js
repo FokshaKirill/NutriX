@@ -1,10 +1,4 @@
-﻿/**
- * home-index.js
- * Логика главной страницы: прогресс КБЖУ, "съедено", замена рецепта.
- * Данные читаются из window.NutriX, который инициализируется в Index.cshtml.
- */
-
-(function () {
+﻿(function () {
     'use strict';
 
     // ── Данные со страницы (инициализируются через window.NutriX в Index.cshtml) ──
@@ -32,6 +26,57 @@
         localStorage.setItem(DONE_KEY, JSON.stringify([...s]));
     }
 
+    // ── Стрик: ключи и функции вынесены на уровень модуля,
+    //    чтобы быть доступны и из toggleDone, и из recalcProgress, и из restore() ──
+    const TODAY_KEY  = new Date().toISOString().slice(0, 10); // "2025-06-17"
+    const STREAK_KEY = 'nutrix_streak';
+
+    function loadStreak() {
+        try { return JSON.parse(localStorage.getItem(STREAK_KEY) || '{"count":0,"lastDate":""}'); }
+        catch { return { count: 0, lastDate: '' }; }
+    }
+
+    function saveStreak(obj) {
+        localStorage.setItem(STREAK_KEY, JSON.stringify(obj));
+    }
+
+    function updateStreak(anyDone) {
+        const s = loadStreak();
+
+        if (!anyDone) {
+            // Если сегодня ничего не съедено — стрик сегодняшнего дня не засчитан,
+            // но прошлые дни не сбрасываем (пользователь может ещё отметить)
+            renderStreak(s.count, s.lastDate);
+            return;
+        }
+
+        if (s.lastDate === TODAY_KEY) {
+            // Сегодня уже засчитано
+            renderStreak(s.count, s.lastDate);
+            return;
+        }
+
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        const yesterdayKey = yesterday.toISOString().slice(0, 10);
+
+        const newCount = s.lastDate === yesterdayKey ? s.count + 1 : 1;
+        const updated  = { count: newCount, lastDate: TODAY_KEY };
+        saveStreak(updated);
+        renderStreak(newCount, TODAY_KEY);
+    }
+
+    function renderStreak(count, lastDate) {
+        const el = document.getElementById('streakCount');
+        if (el) el.textContent = count;
+
+        // Подсветить кружок текущего дня если стрик активен сегодня
+        const todayDot = document.querySelector('.streak-dot[data-date="' + TODAY_KEY + '"]');
+        if (todayDot && lastDate === TODAY_KEY) {
+            todayDot.classList.add('done');
+        }
+    }
+
     // ── Пересчёт прогресс-баров ──────────────────────────────────────────────────
     function recalcProgress() {
         const done = getDone();
@@ -45,6 +90,9 @@
             fat  += m.fat;
             carb += m.carbs;
         }
+
+        // Стрик пересчитываем один раз после подсчёта итогов, а не на каждой итерации
+        updateStreak(done.size > 0);
 
         function setBar(barId, valId, val, goal) {
             const pct = Math.min(val / Math.max(goal, 1) * 100, 100).toFixed(1);
@@ -91,6 +139,14 @@
             if (c) c.textContent = '✓';
         }
         recalcProgress();
+        document.querySelectorAll('.streak-dot.past').forEach(dot => {
+            const date    = dot.dataset.date;
+            const doneKey = 'nutrix_done_' + date;
+            try {
+                const arr = JSON.parse(localStorage.getItem(doneKey) || '[]');
+                if (arr.length > 0) dot.classList.add('done');
+            } catch { /* ignore */ }
+        });
     })();
 
     // ── CSRF токен ───────────────────────────────────────────────────────────────
