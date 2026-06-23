@@ -6,197 +6,137 @@ public static class DefaultSlotTemplates
 {
     public static List<SlotTemplate> Get(GenerateWeekRequest req)
     {
-        var breakfast = new SlotTemplate
+        int total = req.AdjustedDailyCalories;
+
+        SlotTemplate Breakfast() => new()
         {
-            MealType       = req.BreakfastType,
-            TargetCalories = req.BreakfastTarget,
+            MealType = req.BreakfastType,
             Roles =
             [
-                new() { Tag = RecipeTag.Breakfast,  IsRequired = true,  CalorieFraction = 0.70 },
-                new() { Tag = RecipeTag.MainCourse, IsRequired = false, CalorieFraction = 0.70 }, 
-                new() { Tag = RecipeTag.Drink,      IsRequired = false, CalorieFraction = 0.30,
+                // Сумма не-аддонов = 1.0: 0.55 + 0.45 = 1.0
+                new() { Tag = RecipeTag.Breakfast,  IsRequired = false, CalorieFraction = 0.55 },
+                new() { Tag = RecipeTag.MainCourse, IsRequired = false, CalorieFraction = 0.45 },
+                new() { Tag = RecipeTag.Drink, IsRequired = false, CalorieFraction = 0.30,
                     IsAddon = true, AddonChance = 0.35 }
             ]
         };
 
-        var lunch = new SlotTemplate
+        SlotTemplate Lunch() => new()
         {
-            MealType       = req.LunchType,
-            TargetCalories = req.LunchTarget,
+            MealType = req.LunchType,
             Roles =
             [
-                new() { Tag = RecipeTag.Soup,       IsRequired = false, CalorieFraction = 0.28 },
-                new() { Tag = RecipeTag.MainCourse, IsRequired = true,  CalorieFraction = 0.44 },
-                new() { Tag = RecipeTag.Garnish,    IsRequired = false, CalorieFraction = 0.15 },
-                new() { Tag = RecipeTag.Salad,      IsRequired = false, CalorieFraction = 0.13 },
-                new() { Tag = RecipeTag.Drink,      IsRequired = false, CalorieFraction = 0.10,
+                // Сумма не-аддонов = 1.0: 0.22 + 0.45 + 0.18 + 0.15 = 1.0
+                new() { Tag = RecipeTag.Soup,       IsRequired = false, CalorieFraction = 0.22 },
+                new() { Tag = RecipeTag.MainCourse, IsRequired = false, CalorieFraction = 0.45 },
+                new() { Tag = RecipeTag.Garnish,    IsRequired = false, CalorieFraction = 0.18 },
+                new() { Tag = RecipeTag.Salad,      IsRequired = false, CalorieFraction = 0.15 },
+                new() { Tag = RecipeTag.Drink, IsRequired = false, CalorieFraction = 0.10,
                     IsAddon = true, AddonChance = 0.30 }
             ]
         };
 
-        var dinner = new SlotTemplate
+        SlotTemplate Dinner() => new()
         {
-            MealType       = req.DinnerType,
-            TargetCalories = req.DinnerTarget,
+            MealType = req.DinnerType,
             Roles =
             [
-                new() { Tag = RecipeTag.MainCourse, IsRequired = true,  CalorieFraction = 0.55 },
-                new() { Tag = RecipeTag.Garnish,    IsRequired = false, CalorieFraction = 0.28 },
-                new() { Tag = RecipeTag.Salad,      IsRequired = false, CalorieFraction = 0.17 },
-                new() { Tag = RecipeTag.Drink,      IsRequired = false, CalorieFraction = 0.10,
+                // Сумма не-аддонов = 1.0: 0.50 + 0.30 + 0.20 = 1.0
+                new() { Tag = RecipeTag.MainCourse, IsRequired = false, CalorieFraction = 0.50 },
+                new() { Tag = RecipeTag.Garnish,    IsRequired = false, CalorieFraction = 0.30 },
+                new() { Tag = RecipeTag.Salad,      IsRequired = false, CalorieFraction = 0.20 },
+                new() { Tag = RecipeTag.Drink, IsRequired = false, CalorieFraction = 0.10,
                     IsAddon = true, AddonChance = 0.30 }
             ]
         };
 
-        SlotTemplate? MakeSnack(int targetKcal, double drinkChance = 0.7) =>
+        SlotTemplate? Snack() =>
             req.SnackType == null ? null : new SlotTemplate
             {
-                MealType       = req.SnackType,
-                TargetCalories = targetKcal,
+                MealType = req.SnackType,
                 Roles =
                 [
-                    new() { Tag = RecipeTag.Snack,      IsRequired = false, CalorieFraction = 0.65 },
-                    new() { Tag = RecipeTag.Dessert,    IsRequired = false, CalorieFraction = 0.65 },
-                    new() { Tag = RecipeTag.MainCourse, IsRequired = false, CalorieFraction = 0.65 },
-                    new() { Tag = RecipeTag.Drink,      IsRequired = false, CalorieFraction = 0.35,
-                        IsAddon = true, AddonChance = drinkChance }
+                    // Сумма не-аддонов = 1.0: 0.50 + 0.50 = 1.0
+                    new() { Tag = RecipeTag.Snack,      IsRequired = false, CalorieFraction = 0.50 },
+                    new() { Tag = RecipeTag.Dessert,    IsRequired = false, CalorieFraction = 0.50 },
+                    new() { Tag = RecipeTag.Drink,      IsRequired = false, CalorieFraction = 0.65,
+                        IsAddon = true, AddonChance = 0.40 }
                 ]
             };
 
-        var lightBreakfast = new SlotTemplate
+        // ── Веса (относительные доли дня, не абсолютные ккал) ──
+        List<(SlotTemplate Slot, double Weight)> plan;
+
+        switch (req.MealsPerDay)
         {
-            MealType       = req.BreakfastType,
-            TargetCalories = req.BreakfastTarget,
-            Roles =
-            [
-                new() { Tag = RecipeTag.Breakfast,  IsRequired = false, CalorieFraction = 0.60 },
-                new() { Tag = RecipeTag.Drink,      IsRequired = false, CalorieFraction = 0.40,
-                    IsAddon = true, AddonChance = 0.80 }
-            ]
-        };
+            case 2:
+                plan =
+                [
+                    (Breakfast(), 0.45),
+                    (Dinner(),    0.55)
+                ];
+                break;
 
-        var heavyBreakfast = new SlotTemplate
-        {
-            MealType       = req.BreakfastType,
-            TargetCalories = req.BreakfastTarget,
-            Roles =
-            [
-                new() { Tag = RecipeTag.Breakfast,  IsRequired = true,  CalorieFraction = 0.55 },
-                new() { Tag = RecipeTag.Garnish,    IsRequired = false, CalorieFraction = 0.30 },
-                new() { Tag = RecipeTag.Drink,      IsRequired = false, CalorieFraction = 0.15,
-                    IsAddon = true, AddonChance = 0.50 }
-            ]
-        };
+            case 4 when Snack() is { } s4:
+                plan =
+                [
+                    (Breakfast(), 0.25),
+                    (Lunch(),     0.35),
+                    (s4,          0.10),
+                    (Dinner(),    0.30)
+                ];
+                break;
 
-        var lightLunch = new SlotTemplate
-        {
-            MealType       = req.LunchType,
-            TargetCalories = req.LunchTarget,
-            Roles =
-            [
-                new() { Tag = RecipeTag.Soup,  IsRequired = false, CalorieFraction = 0.50 },
-                new() { Tag = RecipeTag.Salad, IsRequired = true,  CalorieFraction = 0.50 },
-                new() { Tag = RecipeTag.Drink, IsRequired = false, CalorieFraction = 0.15,
-                    IsAddon = true, AddonChance = 0.40 }
-            ]
-        };
+            case 5 when Snack() is { } s5a && Snack() is { } s5b:
+                plan =
+                [
+                    (Breakfast(), 0.22),
+                    (s5a,         0.08),
+                    (Lunch(),     0.32),
+                    (s5b,         0.08),
+                    (Dinner(),    0.30)
+                ];
+                break;
 
-        var fullLunch = new SlotTemplate
-        {
-            MealType       = req.LunchType,
-            TargetCalories = req.LunchTarget,
-            Roles =
-            [
-                new() { Tag = RecipeTag.Soup,       IsRequired = true,  CalorieFraction = 0.25 },
-                new() { Tag = RecipeTag.MainCourse, IsRequired = true,  CalorieFraction = 0.40 },
-                new() { Tag = RecipeTag.Garnish,    IsRequired = false, CalorieFraction = 0.20 },
-                new() { Tag = RecipeTag.Salad,      IsRequired = false, CalorieFraction = 0.15 },
-                new() { Tag = RecipeTag.Drink,      IsRequired = false, CalorieFraction = 0.10,
-                    IsAddon = true, AddonChance = 0.40 }
-            ]
-        };
+            case 6 when Snack() is { } s6a && Snack() is { } s6b && Snack() is { } s6c:
+                plan =
+                [
+                    (Breakfast(), 0.20),
+                    (s6a,         0.07),
+                    (Lunch(),     0.28),
+                    (s6b,         0.07),
+                    (Dinner(),    0.28),
+                    (s6c,         0.10)
+                ];
+                break;
 
-        var lightDinner = new SlotTemplate
-        {
-            MealType       = req.DinnerType,
-            TargetCalories = req.DinnerTarget,
-            Roles =
-            [
-                new() { Tag = RecipeTag.MainCourse, IsRequired = true,  CalorieFraction = 0.65 },
-                new() { Tag = RecipeTag.Salad,      IsRequired = false, CalorieFraction = 0.35 }
-            ]
-        };
+            case 7 when Snack() is { } s7a && Snack() is { } s7b && Snack() is { } s7c && Snack() is { } s7d:
+                plan =
+                [
+                    (Breakfast(), 0.16),
+                    (s7a,         0.08),
+                    (Lunch(),     0.22),
+                    (s7b,         0.08),
+                    (Dinner(),    0.22),
+                    (s7c,         0.08),
+                    (s7d,         0.16)
+                ];
+                break;
 
-        var fullDinner = new SlotTemplate
-        {
-            MealType       = req.DinnerType,
-            TargetCalories = req.DinnerTarget,
-            Roles =
-            [
-                new() { Tag = RecipeTag.MainCourse, IsRequired = true,  CalorieFraction = 0.45 },
-                new() { Tag = RecipeTag.Garnish,    IsRequired = false, CalorieFraction = 0.28 },
-                new() { Tag = RecipeTag.Salad,      IsRequired = false, CalorieFraction = 0.15 },
-                new() { Tag = RecipeTag.Dessert,    IsRequired = false, CalorieFraction = 0.12,
-                    IsAddon = true, AddonChance = 0.50 },
-                new() { Tag = RecipeTag.Drink,      IsRequired = false, CalorieFraction = 0.10,
-                    IsAddon = true, AddonChance = 0.30 }
-            ]
-        };
+            default:
+                plan =
+                [
+                    (Breakfast(), 0.25),
+                    (Lunch(),     0.40),
+                    (Dinner(),    0.35)
+                ];
+                break;
+        }
 
-        var snack      = MakeSnack(req.SnackTarget);
-        var halfSnack  = MakeSnack(req.SnackTarget / 2);
+        double weightSum = plan.Sum(p => p.Weight);
+        foreach (var (slot, weight) in plan)
+            slot.TargetCalories = (int)Math.Round(total * weight / weightSum);
 
-        return req.MealsPerDay switch
-        {
-            2 => [
-                new SlotTemplate
-                {
-                    MealType       = req.BreakfastType,
-                    TargetCalories = (int)(req.AdjustedDailyCalories * 0.45),
-                    Roles =
-                    [
-                        new() { Tag = RecipeTag.Breakfast,  IsRequired = false, CalorieFraction = 0.50 },
-                        new() { Tag = RecipeTag.MainCourse, IsRequired = true,  CalorieFraction = 0.50 },
-                        new() { Tag = RecipeTag.Drink,      IsRequired = false, CalorieFraction = 0.15,
-                            IsAddon = true, AddonChance = 0.50 }
-                    ]
-                },
-                new SlotTemplate
-                {
-                    MealType       = req.DinnerType,
-                    TargetCalories = (int)(req.AdjustedDailyCalories * 0.55),
-                    Roles =
-                    [
-                        new() { Tag = RecipeTag.MainCourse, IsRequired = true,  CalorieFraction = 0.45 },
-                        new() { Tag = RecipeTag.Garnish,    IsRequired = false, CalorieFraction = 0.28 },
-                        new() { Tag = RecipeTag.Salad,      IsRequired = false, CalorieFraction = 0.15 },
-                        new() { Tag = RecipeTag.Dessert,    IsRequired = false, CalorieFraction = 0.12,
-                            IsAddon = true, AddonChance = 0.40 }
-                    ]
-                }
-            ],
-
-            // 3 приёма: стандарт
-            3 => [breakfast, lunch, dinner],
-
-            // 4 приёма: + 1 перекус после обеда
-            4 when snack != null => [breakfast, lunch, snack, dinner],
-            4                    => [breakfast, lunch, dinner],
-
-            // 5 приёмов: + 2 перекуса
-            5 when halfSnack != null => [breakfast, halfSnack, fullLunch, halfSnack, fullDinner],
-            5                        => [breakfast, fullLunch, fullDinner],
-
-            // 6 приёмов: лёгкий завтрак, перекус, обед, перекус, ужин, вечерний перекус
-            6 when halfSnack != null => [lightBreakfast, halfSnack, fullLunch, halfSnack, fullDinner, halfSnack],
-            6                        => [lightBreakfast, fullLunch, fullDinner],
-
-            // 7 приёмов: максимальная дробность
-            7 when halfSnack != null => [lightBreakfast, halfSnack, lightLunch, halfSnack, fullLunch, halfSnack, lightDinner],
-            7                        => [lightBreakfast, lightLunch, fullLunch, lightDinner],
-
-            // Любое другое значение — стандартные 3
-            _ => [breakfast, lunch, dinner]
-        };
+        return plan.Select(p => p.Slot).ToList();
     }
 }

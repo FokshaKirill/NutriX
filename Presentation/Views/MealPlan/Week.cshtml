@@ -36,6 +36,8 @@ string DayAbbr(DateTime d) => d.ToString("ddd", new System.Globalization.Culture
         <span>Новый план питания успешно сгенерирован!</span>
     </div>
     }
+    
+    @if (TempData["BudgetWarning"] != null) { <div class="warning">@TempData["BudgetWarning"]</div> }
 
     <div class="wp-head no-print">
         <div>
@@ -292,12 +294,12 @@ string DayAbbr(DateTime d) => d.ToString("ddd", new System.Globalization.Culture
 @section Scripts {
 @Html.AntiForgeryToken()
 <script>
-    // Все привязки к DOM — только после загрузки страницы
-    document.addEventListener('DOMContentLoaded', function () {
+// Все привязки к DOM — только после загрузки страницы
+document.addEventListener('DOMContentLoaded', function () {
 
-        const PLAN_ID = '@Model.MealPlanId';
+    const PLAN_ID = '@Model.MealPlanId';
         const CSRF    = document.querySelector('input[name="__RequestVerificationToken"]')?.value ?? '';
-
+        
         let _recipes    = null;   // кэш всех рецептов
         let _selAdd     = null;   // выбранный рецепт в модалке добавления
         let _selReplace = null;   // выбранный рецепт в модалке замены
@@ -305,8 +307,8 @@ string DayAbbr(DateTime d) => d.ToString("ddd", new System.Globalization.Culture
         let _addType    = '';
         let _replaceMealId = null;
         const _typeCache = {};
-
-// ── POST ──────────────────────────────────────────────────────────────────
+        
+        // ── POST ──────────────────────────────────────────────────────────────────
         function post(url, data) {
             return fetch(url, {
                 method: 'POST',
@@ -314,8 +316,8 @@ string DayAbbr(DateTime d) => d.ToString("ddd", new System.Globalization.Culture
                 body: new URLSearchParams({ ...data, __RequestVerificationToken: CSRF })
             }).then(r => r.json());
         }
-
-// ── Toast ─────────────────────────────────────────────────────────────────
+        
+        // ── Toast ─────────────────────────────────────────────────────────────────
         function showToast(msg, err = false) {
             const t = document.getElementById('toast');
             t.textContent = msg;
@@ -323,8 +325,8 @@ string DayAbbr(DateTime d) => d.ToString("ddd", new System.Globalization.Culture
             t.classList.add('show');
             setTimeout(() => t.classList.remove('show'), 2600);
         }
-
-// ── Загрузка рецептов ─────────────────────────────────────────────────────
+        
+        // ── Загрузка рецептов ─────────────────────────────────────────────────────
         async function loadRecipes() {
             if (_recipes) return _recipes;
             try {
@@ -337,8 +339,8 @@ string DayAbbr(DateTime d) => d.ToString("ddd", new System.Globalization.Culture
             }
             return _recipes;
         }
-
-// ── Общая функция рендера результатов поиска ──────────────────────────────
+        
+        // ── Общая функция рендера результатов поиска ──────────────────────────────
         function renderSearchResults(query, resultsEl, onSelect) {
             if (!query || !_recipes) { resultsEl.style.display = 'none'; return; }
             const q = query.toLowerCase();
@@ -357,14 +359,14 @@ string DayAbbr(DateTime d) => d.ToString("ddd", new System.Globalization.Culture
                 });
             });
         }
-
-// ── Вспомогательные ───────────────────────────────────────────────────────
+        
+        // ── Вспомогательные ───────────────────────────────────────────────────────
         function getDayOffset(el) {
             let n = el;
             while (n && !n.id?.startsWith('day-row-')) n = n.parentElement;
             return n ? n.id.replace('day-row-', '') : '0';
         }
-
+        
         function recalcDay(dayOffset) {
             const row = document.getElementById('day-row-' + dayOffset);
             if (!row) return;
@@ -379,7 +381,7 @@ string DayAbbr(DateTime d) => d.ToString("ddd", new System.Globalization.Culture
             if (k) k.textContent = Math.round(kcal);
             if (c) c.textContent = cost.toFixed(0) + ' ₽';
         }
-
+        
         function recalcShopTotal() {
             let total = 0;
             document.querySelectorAll('.shop-row').forEach(row => {
@@ -392,7 +394,7 @@ string DayAbbr(DateTime d) => d.ToString("ddd", new System.Globalization.Culture
             if (cell) cell.textContent = fmt;
             if (disp) disp.innerHTML = total.toFixed(2) + ' ₽ <span>итого</span>';
         }
-
+        
         async function getMealTypeId(name) {
             if (_typeCache[name]) return _typeCache[name];
             try {
@@ -401,9 +403,9 @@ string DayAbbr(DateTime d) => d.ToString("ddd", new System.Globalization.Culture
                 if (d.id) _typeCache[name] = d.id;
                 return d.id;
             } catch { return null; }
-}
-
-// ── Порции ────────────────────────────────────────────────────────────────
+        }
+        
+        // ── Порции ────────────────────────────────────────────────────────────────
         async function changeServings(mealId, delta) {
             const entry = document.getElementById('meal-' + mealId);
             if (!entry) return;
@@ -419,12 +421,11 @@ string DayAbbr(DateTime d) => d.ToString("ddd", new System.Globalization.Culture
                 if (m) m.textContent = d.calories + ' ккал';
                 recalcDay(getDayOffset(entry));
             } catch { showToast('Ошибка соединения', true); }
-}
+        }
         window.changeServings = changeServings;
-
-// ── Удаление блюда ────────────────────────────────────────────────────────
+        
+        // ── Удаление блюда ────────────────────────────────────────────────────────
         async function removeMeal(id, btn, dayOffset, typeName) {
-            if (!confirm('Удалить это блюдо?')) return;
             btn.classList.add('spinning'); btn.textContent = '…';
             try {
                 const d = await post('/MealPlan/RemoveMeal', { plannedMealId: id });
@@ -444,10 +445,10 @@ string DayAbbr(DateTime d) => d.ToString("ddd", new System.Globalization.Culture
                 showToast('Блюдо удалено');
             } catch { showToast('Ошибка удаления', true); }
             finally { btn.classList.remove('spinning'); btn.textContent = '✕'; }
-}
+        }
         window.removeMeal = removeMeal;
-
-// ── Применить замену в DOM ────────────────────────────────────────────────
+        
+        // ── Применить замену в DOM ────────────────────────────────────────────────
         function applyReplaceInDOM(mealId, d) {
             const entry = document.getElementById('meal-' + mealId);
             if (!entry) return;
@@ -470,31 +471,31 @@ string DayAbbr(DateTime d) => d.ToString("ddd", new System.Globalization.Culture
             }
             recalcDay(getDayOffset(entry));
         }
-
-// ══ МОДАЛКА ДОБАВЛЕНИЯ ═══════════════════════════════════════════════════
-
+        
+        // ══ МОДАЛКА ДОБАВЛЕНИЯ ═══════════════════════════════════════════════════
+        
         window.openAddModal = async function(planId, dayOffset, typeName) {
             _addDay  = dayOffset;
             _addType = typeName;
             _selAdd  = null;
-
+        
             document.getElementById('addType').value = typeName;
             document.getElementById('addSearch').value = '';
             document.getElementById('addResults').style.display = 'none';
             document.getElementById('addPreview').classList.remove('show');
             document.getElementById('addServings').value = 1;
-
+        
             document.getElementById('addModal').classList.add('open');
             await loadRecipes();
         };
-
+        
         document.getElementById('addCancel').addEventListener('click', () => {
             document.getElementById('addModal').classList.remove('open');
         });
         document.getElementById('addModal').addEventListener('click', function(e) {
             if (e.target === this) this.classList.remove('open');
         });
-
+        
         document.getElementById('addSearch').addEventListener('input', async function () {
             await loadRecipes();
             renderSearchResults(this.value.trim(), document.getElementById('addResults'), r => {
@@ -508,14 +509,14 @@ string DayAbbr(DateTime d) => d.ToString("ddd", new System.Globalization.Culture
                 document.getElementById('addPreview').classList.add('show');
             });
         });
-
+        
         document.getElementById('addConfirm').addEventListener('click', async function () {
             if (!_selAdd) { showToast('Выберите рецепт', true); return; }
             const typeName = document.getElementById('addType').value;
             const servings = parseInt(document.getElementById('addServings').value) || 1;
             const typeId   = await getMealTypeId(typeName);
             if (!typeId) { showToast('Тип приёма пищи не найден', true); return; }
-
+        
             this.disabled = true; this.textContent = '…';
             try {
                 const d = await post('/MealPlan/AddMeal', {
@@ -528,8 +529,8 @@ string DayAbbr(DateTime d) => d.ToString("ddd", new System.Globalization.Culture
                 showToast('Добавлено: «' + d.name + '»');
             } catch { showToast('Ошибка добавления', true); }
             finally { this.disabled = false; this.textContent = 'Добавить'; }
-});
-
+        });
+        
         function injectMeal(d, dayOffset, typeName, servings) {
             const cell = document.getElementById('cell-' + dayOffset + '-' + typeName);
             if (!cell) return;
@@ -539,31 +540,30 @@ string DayAbbr(DateTime d) => d.ToString("ddd", new System.Globalization.Culture
                 ? `<img class="mi-img" src="${d.imageUrl}" alt="${d.name}"/>`
                 : `<div class="mi-img-ph">·</div>`;
             const html = `
-    <div class="meal-item" id="meal-${d.plannedMealId}"
-         data-meal-id="${d.plannedMealId}" data-servings="${srv}"
-         data-kcal-per-srv="${(d.calories/srv).toFixed(2)}"
-         data-cost-per-srv="${(d.cost/srv).toFixed(4)}">
-        ${thumb}
-        <div class="mi-info">
-            <a class="mi-name" href="/Recipe/Details/${d.recipeId}">${d.name}</a>
-            <div class="mi-kcal" id="macros-${d.plannedMealId}">${d.calories} ккал</div>
-        </div>
-        <div class="mi-srv">
-            <button class="srv-btn" onclick="changeServings('${d.plannedMealId}',-1)">−</button>
-            <span class="srv-val" id="srv-${d.plannedMealId}">${srv}</span>
-            <button class="srv-btn" onclick="changeServings('${d.plannedMealId}',1)">+</button>
-        </div>
-        <div class="mi-actions no-print">
-            <button class="mi-act-btn" onclick="openReplaceModal('${d.plannedMealId}')" title="Заменить">↺</button>
-            <button class="mi-act-btn del" onclick="removeMeal('${d.plannedMealId}',this,'${dayOffset}','${typeName}')" title="Удалить">✕</button>
-        </div>
-    </div>`;
-            cell.querySelector('.add-btn').insertAdjacentHTML('beforebegin', html);
-            recalcDay(dayOffset);
-        }
-
-// ══ МОДАЛКА ЗАМЕНЫ ═══════════════════════════════════════════════════════
-
+            <div class="meal-item" id="meal-${d.plannedMealId}"
+                 data-meal-id="${d.plannedMealId}" data-servings="${srv}"
+                 data-kcal-per-srv="${(d.calories/srv).toFixed(2)}"
+                 data-cost-per-srv="${(d.cost/srv).toFixed(4)}">
+                ${thumb}
+                <div class="mi-info">
+                    <a class="mi-name" href="/Recipe/Details/${d.recipeId}">${d.name}</a>
+                    <div class="mi-kcal" id="macros-${d.plannedMealId}">${d.calories} ккал</div>
+                </div>
+                <div class="mi-srv">
+                    <button class="srv-btn" onclick="changeServings('${d.plannedMealId}',-1)">−</button>
+                    <span class="srv-val" id="srv-${d.plannedMealId}">${srv}</span>
+                    <button class="srv-btn" onclick="changeServings('${d.plannedMealId}',1)">+</button>
+                </div>
+                <div class="mi-actions no-print">
+                    <button class="mi-act-btn" onclick="openReplaceModal('${d.plannedMealId}')" title="Заменить">↺</button>
+                    <button class="mi-act-btn del" onclick="removeMeal('${d.plannedMealId}',this,'${dayOffset}','${typeName}')" title="Удалить">✕</button>
+                </div>
+            </div>`;
+                    cell.querySelector('.add-btn').insertAdjacentHTML('beforebegin', html);
+                    recalcDay(dayOffset);
+                }
+        
+        // ══ МОДАЛКА ЗАМЕНЫ ═══════════════════════════════════════════════════════
         window.openReplaceModal = async function(mealId) {
             _replaceMealId = mealId;
             _selReplace    = null;
@@ -590,7 +590,7 @@ string DayAbbr(DateTime d) => d.ToString("ddd", new System.Globalization.Culture
             if (e.target === this) this.classList.remove('open');
         });
 
-// Автоподбор
+        // Автоподбор
         document.getElementById('replaceAutoBtn').addEventListener('click', async function () {
             this.disabled = true; this.textContent = 'Подбираем…';
             try {
@@ -601,9 +601,9 @@ string DayAbbr(DateTime d) => d.ToString("ddd", new System.Globalization.Culture
                 showToast('Заменено на «' + d.name + '»');
             } catch { showToast('Ошибка замены', true); }
             finally { this.disabled = false; this.textContent = 'Подобрать автоматически'; }
-});
-
-// Поиск в модалке замены
+        });
+        
+        // Поиск в модалке замены
         document.getElementById('replaceSearch').addEventListener('input', async function () {
             await loadRecipes();
             renderSearchResults(this.value.trim(), document.getElementById('replaceResults'), r => {
@@ -619,7 +619,7 @@ string DayAbbr(DateTime d) => d.ToString("ddd", new System.Globalization.Culture
             });
         });
 
-// Заменить выбранным из поиска
+        // Заменить выбранным из поиска
         document.getElementById('replaceSearchConfirm').addEventListener('click', async function () {
             if (!_selReplace) { showToast('Выберите рецепт', true); return; }
             this.disabled = true; this.textContent = '…';
@@ -634,15 +634,15 @@ string DayAbbr(DateTime d) => d.ToString("ddd", new System.Globalization.Culture
                 showToast('Заменено на «' + d.name + '»');
             } catch { showToast('Ошибка замены', true); }
             finally { this.disabled = false; this.textContent = 'Заменить выбранным'; }
-});
-
-// ── Покупки ───────────────────────────────────────────────────────────────
+        });
+        
+        // ── Покупки ───────────────────────────────────────────────────────────────
         function toggleChecked(cb) {
             cb.closest('tr').classList.toggle('checked', cb.checked);
             recalcShopTotal();
         }
         window.toggleChecked = toggleChecked;
-
+        
         document.getElementById('checkAll').addEventListener('change', function () {
             document.querySelectorAll('.shop-check').forEach(cb => {
                 cb.checked = this.checked;
@@ -650,8 +650,8 @@ string DayAbbr(DateTime d) => d.ToString("ddd", new System.Globalization.Culture
             });
             recalcShopTotal();
         });
-
-// ── Табы ──────────────────────────────────────────────────────────────────
+        
+        // ── Табы ──────────────────────────────────────────────────────────────────
         function switchTab(name, btn) {
             document.querySelectorAll('.wp-tab').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.wp-section').forEach(s => s.classList.remove('active'));
@@ -659,14 +659,14 @@ string DayAbbr(DateTime d) => d.ToString("ddd", new System.Globalization.Culture
             document.getElementById('tab' + name).classList.add('active');
         }
         window.switchTab = switchTab;
-
+        
         function printSection(s) {
             document.body.classList.add(s === 'meal' ? 'print-meal-plan' : 'print-shop-list');
             window.print();
             setTimeout(() => document.body.classList.remove('print-meal-plan', 'print-shop-list'), 1000);
         }
         window.printSection = printSection;
-
+        
         function exportShopList() {
             const lines = [...document.querySelectorAll('.shop-row')].map(r => {
                 const c = r.querySelectorAll('td');
@@ -675,13 +675,12 @@ string DayAbbr(DateTime d) => d.ToString("ddd", new System.Globalization.Culture
             navigator.clipboard.writeText(lines.join('\n')).then(() => showToast('Список скопирован!'));
         }
         window.exportShopList = exportShopList;
-
-// Escape закрывает любую открытую модалку
+        
+        // Escape закрывает любую открытую модалку
         document.addEventListener('keydown', e => {
             if (e.key !== 'Escape') return;
             document.querySelectorAll('.modal-bg.open').forEach(m => m.classList.remove('open'));
         });
-
-    }); // конец DOMContentLoaded
+}); 
 </script>
 }

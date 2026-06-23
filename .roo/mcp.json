@@ -1,0 +1,26 @@
+{
+	"mcpServers": {
+		"ollama-mcp": {
+			"command": "node",
+			"args": [
+				"D:\\OllamaModels\\Ollama-mcp-main\\build\\index.js"
+			],
+			"env": {
+				"OLLAMA_HOST": "http://127.0.0.1:11434"
+			},
+			"disabled": false,
+			"alwaysAllow": [
+				"serve",
+				"create",
+				"show",
+				"run",
+				"pull",
+				"push",
+				"list",
+				"cp",
+				"rm",
+				"chat_completion"
+			]
+		}
+	}
+}

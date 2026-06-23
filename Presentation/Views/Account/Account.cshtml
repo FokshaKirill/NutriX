@@ -18,11 +18,33 @@
                         ? user.LastLoginAt.Value.ToLocalTime().ToString("dd MMM yyyy HH:mm")
                         : "сегодня";
 
-    var calGoal    = (double)(user?.DailyCalorieGoal ?? 2000);
-    var protGoal   = (double)(user?.DailyProteinGoal ?? 120);
-    var fatGoal    = (double)(user?.DailyFatGoal     ?? 70);
-    var carbGoal   = (double)(user?.DailyCarbsGoal   ?? 250);
-        
+    // ── КБЖУ: логика как на Home/Index ──
+    // Цели = сумма КБЖУ из today-слотов (плановые), fallback на DailyCalorieGoal из профиля
+    var todaySlots = ViewBag.TodaySlots as List<Domain.Entities.MealSlot> ?? new();
+    var allItems   = todaySlots.SelectMany(s => s.Items).ToList();
+    var calGoal    = allItems.Count > 0
+        ? allItems.Sum(m => (int)((m.Recipe?.CaloriesPerServing ?? 0) * m.Servings))
+        : (int)(user?.DailyCalorieGoal ?? 2000);
+    var protGoal   = allItems.Count > 0
+        ? allItems.Sum(m => (int)((m.Recipe?.ProteinPerServing  ?? 0) * m.Servings))
+        : (int)(user?.DailyProteinGoal ?? 120);
+    var fatGoal    = allItems.Count > 0
+        ? allItems.Sum(m => (int)((m.Recipe?.FatPerServing      ?? 0) * m.Servings))
+        : (int)(user?.DailyFatGoal ?? 70);
+    var carbGoal   = allItems.Count > 0
+        ? allItems.Sum(m => (int)((m.Recipe?.CarbsPerServing    ?? 0) * m.Servings))
+        : (int)(user?.DailyCarbsGoal ?? 250);
+
+    var mealsJson = System.Text.Json.JsonSerializer.Serialize(
+        allItems.Select(m => new {
+            id       = m.Id.ToString(),
+            calories = (int)((m.Recipe?.CaloriesPerServing ?? 0) * m.Servings),
+            protein  = (int)((m.Recipe?.ProteinPerServing  ?? 0) * m.Servings),
+            fat      = (int)((m.Recipe?.FatPerServing      ?? 0) * m.Servings),
+            carbs    = (int)((m.Recipe?.CarbsPerServing    ?? 0) * m.Servings)
+        })
+    );
+
     var kbzuViewData = new ViewDataDictionary(ViewData);
     kbzuViewData["calGoal"]   = calGoal.ToString("F0", System.Globalization.CultureInfo.InvariantCulture);
     kbzuViewData["protGoal"]  = protGoal.ToString("F0", System.Globalization.CultureInfo.InvariantCulture);
@@ -42,21 +64,29 @@
 @* ── Шрифты ────────────────────────────────────────────────────────────────── *@
 <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
 
-@* ── Data bridge ───────────────────────────────────────────────────────────── *@
+@* ── Data bridge: как в Home/Index ──────────────────────────────────────────── *@
 <script>
     window.AccountData = {
         goals: {
-            kcal: @calGoal.ToString("F0", System.Globalization.CultureInfo.InvariantCulture),
-            p:    @protGoal.ToString("F0", System.Globalization.CultureInfo.InvariantCulture),
-            f:    @fatGoal.ToString("F0", System.Globalization.CultureInfo.InvariantCulture),
-            c:    @carbGoal.ToString("F0", System.Globalization.CultureInfo.InvariantCulture)
+            kcal: @calGoal,
+            p:    @protGoal,
+            f:    @fatGoal,
+            c:    @carbGoal
         },
         today: {
             kcal: @((int)ViewBag.TodayKcal),
             p:    @((int)ViewBag.TodayP),
             f:    @((int)ViewBag.TodayF),
             c:    @((int)ViewBag.TodayC)
-        }
+        },
+        mealData: (function () {
+            const arr = @Html.Raw(mealsJson);
+            const map = {};
+            arr.forEach(function (m) {
+                map[m.id] = { calories: m.calories, protein: m.protein, fat: m.fat, carbs: m.carbs };
+            });
+            return map;
+        })()
     };
 </script>
 
@@ -109,7 +139,7 @@
             <p class="card-label">Статистика</p>
             <div class="stat-row"><span class="stat-label">Мои рецепты</span><span class="stat-val">@(user?.Recipes.Count ?? 0)</span></div>
             <div class="stat-row"><span class="stat-label">Избранных</span><span class="stat-val">@favorites.Count()</span></div>
-            <div class="stat-row"><span class="stat-label">Планов питания</span><span class="stat-val">@(user?.MealPlans.Count ?? 0)</span></div>
+            <div class="stat-row"><span class="stat-label">Планов питания</span><span class="stat-val">@((int)ViewBag.PlanCount + (int)ViewBag.ArchivedPlanCount)</span></div>
             <div class="stat-row"><span class="stat-label">Подписка</span><span class="stat-val text-green">@(isPro ? "Pro" : "Free")</span></div>
             <div class="stat-row"><span class="stat-label">Регистрация</span><span class="stat-val">@createdAt</span></div>
             <div class="stat-row"><span class="stat-label">Email подтверждён</span><span class="stat-val">@(user?.IsEmailConfirmed == true ? "✓ Да" : "Нет")</span></div>
@@ -215,9 +245,3 @@
     <script src="~/js/auth.js" asp-append-version="true"></script>
     <script src="~/js/account.js" asp-append-version="true"></script>
 }
-
-<style>
-    .streak-card {
-        display: none;
-    }
-</style>

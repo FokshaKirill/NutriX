@@ -5,10 +5,11 @@ namespace Presentation.Models;
 public class GenerateWeekViewModel
 {
     // ── Базовые настройки калоража и целей ──
+    // DailyCalories: базовая норма, введённая пользователем.
+    // Коррекция по цели (Goal) применяется в GenerateWeekRequest.AdjustedDailyCalories.
     [Required]
     [Range(1000, 4500, ErrorMessage = "Калории должны быть в диапазоне от 1000 до 4500")]
     public int DailyCalories { get; set; } = 2000;
-    public int AdjustedDailyCalories { get; set; } = 2000;
 
     [Required]
     public string Goal { get; set; } = "maintain"; // maintain, lose, lose_fast, gain, gain_lean
@@ -55,28 +56,9 @@ public class GenerateWeekViewModel
     public bool AvoidRepeats { get; set; }
     public bool IncludeDrinks { get; set; } = true;
 
-    // ── Распределение калорий по типам приемов пищи ──
-    // (Вычисляется динамически на основе скорректированного калоража)
-    public int BreakfastTarget => (int)Math.Round(AdjustedCalories * 0.25);
-    public int LunchTarget => (int)Math.Round(AdjustedCalories * 0.35);
-    public int DinnerTarget => (int)Math.Round(AdjustedCalories * 0.30);
-    public int SnackTarget => (int)Math.Round(AdjustedCalories * 0.10);
-
-    // Корректировка калорий в зависимости от глобальной цели
-    public int AdjustedCalories
-    {
-        get
-        {
-            return Goal switch
-            {
-                "lose" => DailyCalories - 400,
-                "lose_fast" => DailyCalories - 700,
-                "gain" => DailyCalories + 400,
-                "gain_lean" => DailyCalories + 200,
-                _ => DailyCalories
-            };
-        }
-    }
+    // Распределение калорий по приёмам пищи — рассчитывается ТОЛЬКО в JS для UI preview.
+    // Фактическое распределение (с учётом Goal) выполняется в GenerateWeekRequest.AdjustedDailyCalories
+    // и DefaultSlotTemplates. Эти свойства оставлены для обратной совместимости View, но не используются в генерации.
 
     /// <summary>
     /// Вспомогательный метод парсинга исключений для контроллера

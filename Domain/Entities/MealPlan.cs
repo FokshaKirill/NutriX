@@ -37,5 +37,6 @@
         /// Архивированный план или ещё действует
         /// </summary>
         public bool IsArchived { get; set; } = false;
+        public bool BudgetWasInfeasible { get; set; } = false;
     }
 }

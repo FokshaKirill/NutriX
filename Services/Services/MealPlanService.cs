@@ -37,6 +37,10 @@ namespace Services.Services
                     .ThenInclude(m => m.Recipe)
                     .ThenInclude(r => r.Ingredients)
                     .ThenInclude(i => i.Product)
+                // ── УДАЛЕНО: .ThenInclude(m => m.MealSlot) ──────────────────
+                // EF Core автоматически заполняет PlannedMeal.MealSlot через fix-up
+                // при загрузке Slots → Items. Явный Include вызывал краш:
+                // NavigationBaseIncludeIgnored: 'PlannedMeal.MealSlot' was ignored.
                 .Where(p => p.UserId    == userId
                          && p.StartDate >= monday
                          && p.StartDate <  monday.AddDays(7))
@@ -75,6 +79,7 @@ namespace Services.Services
                     .ThenInclude(m => m.Recipe)
                     .ThenInclude(r => r.Ingredients)
                     .ThenInclude(i => i.Product)
+                // MealSlot заполняется EF автоматически — явный Include не нужен
                 .FirstOrDefaultAsync(p => p.Id == id);
         }
 
@@ -124,7 +129,6 @@ namespace Services.Services
         // Операции с MealSlot
         // ══════════════════════════════════════════════════════════════════════
 
-        /// <summary>Добавляет новый слот (приём пищи) в план.</summary>
         public async Task AddSlotAsync(MealSlot slot)
         {
             if (slot.Id == Guid.Empty) slot.Id = Guid.NewGuid();
@@ -149,9 +153,6 @@ namespace Services.Services
                 .FirstOrDefaultAsync(m => m.Id == id);
         }
 
-        /// <summary>
-        /// Добавляет новое блюдо в существующий слот.
-        /// </summary>
         public async Task AddPlannedMealAsync(PlannedMeal meal)
         {
             if (meal.Id == Guid.Empty)
@@ -161,9 +162,6 @@ namespace Services.Services
             await _plannedMeals.SaveChangesAsync();
         }
 
-        /// <summary>
-        /// Заменяет рецепт в уже существующем PlannedMeal.
-        /// </summary>
         public async Task ReplaceMealRecipeAsync(Guid plannedMealId, Guid newRecipeId)
         {
             var meal = await _plannedMeals.Query()
@@ -180,11 +178,6 @@ namespace Services.Services
         // Список покупок
         // ══════════════════════════════════════════════════════════════════════
 
-        /// <summary>
-        /// Генерирует сводный список покупок для плана.
-        /// Количество каждого ингредиента умножается на Servings конкретного PlannedMeal.
-        /// Одинаковые продукты в одних единицах измерения суммируются.
-        /// </summary>
         public async Task<List<RecipeIngredient>> GenerateShoppingListAsync(Guid mealPlanId)
         {
             var plan = await _plans.Query()
@@ -217,7 +210,7 @@ namespace Services.Services
                 .OrderBy(i => i.Product?.Name)
                 .ToList();
         }
-        
+
         public async Task UpdateServingsAsync(Guid plannedMealId, int servings)
         {
             var meal = await _plannedMeals.Query()
@@ -237,7 +230,6 @@ namespace Services.Services
             await _plannedMeals.SaveChangesAsync();
         }
 
-        
         public async Task<List<MealPlan>> GetHistoryAsync(Guid userId)
         {
             return await _plans.Query()
@@ -249,6 +241,18 @@ namespace Services.Services
                 .ThenInclude(r => r.Ingredients)
                 .ThenInclude(ri => ri.Product)
                 .ToListAsync();
+        }
+
+        public async Task DeleteAllForUserAsync(Guid userId)
+        {
+            var plans = await _plans.Query()
+                .Where(p => p.UserId == userId && p.IsArchived)
+                .ToListAsync();
+
+            foreach (var plan in plans)
+                await _plans.DeleteAsync(plan);
+
+            await _plans.SaveChangesAsync();
         }
     }
 }

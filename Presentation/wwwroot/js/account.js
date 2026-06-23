@@ -62,10 +62,8 @@
             const pct = Math.min(val / Math.max(goal, 1) * 100, 100).toFixed(1);
             const bar = document.getElementById(barId);
             const el  = document.getElementById(valId);
-            if (bar) {
-                bar.style.width      = pct + '%';
-            }
-            if (el) el.textContent = Math.round(val);
+            if (bar) bar.style.width = pct + '%';
+            if (el)  el.textContent  = Math.round(val);
         }
 
         setBar('barKcal', 'eatenKcal', d.today.kcal, d.goals.kcal);
@@ -73,7 +71,7 @@
         setBar('barFat',  'eatenFat',  d.today.f,    d.goals.f);
         setBar('barCarb', 'eatenCarb', d.today.c,    d.goals.c);
 
-        // Стрик
+        // Стрик: максимально простая логика
         const STREAK_KEY = 'nutrix_streak';
         const TODAY_KEY  = new Date().toISOString().slice(0, 10);
         try {
@@ -85,14 +83,5 @@
                 dot?.classList.add('done');
             }
         } catch { /* ignore */ }
-
-        // Прошлые дни стрика
-        document.querySelectorAll('.streak-dot.past').forEach(dot => {
-            const key = 'nutrix_done_' + dot.dataset.date;
-            try {
-                if (JSON.parse(localStorage.getItem(key) || '[]').length > 0)
-                    dot.classList.add('done');
-            } catch { /* ignore */ }
-        });
     })();
 })();

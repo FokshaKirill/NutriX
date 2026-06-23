@@ -62,6 +62,42 @@ namespace Services.Services
             return (added, updated);
         }
 
+        /// <summary>
+        /// Парсит PDB.html и обновляет ТОЛЬКО цены продуктов, не трогая остальные поля.
+        /// </summary>
+        public async Task<int> UpdatePricesOnlyAsync()
+        {
+            string htmlPath = Path.Combine(
+                Directory.GetCurrentDirectory(), "wwwroot", "data", "PDB.html");
+
+            if (!File.Exists(htmlPath))
+                throw new FileNotFoundException("Файл PDB.html не найден", htmlPath);
+
+            var html = await File.ReadAllTextAsync(htmlPath);
+            var productsFromHtml = ParseHtml(html);
+
+            var existingProducts = await _productRepo.Query().ToListAsync();
+            var existingDict = existingProducts.ToDictionary(p => p.Name.ToLower().Trim());
+
+            int updated = 0;
+
+            foreach (var p in productsFromHtml)
+            {
+                var key = p.Name.ToLower().Trim();
+
+                if (existingDict.TryGetValue(key, out var existing))
+                {
+                    existing.PricePerUnit = p.PricePerUnit;
+                    existing.UpdatedAt    = DateTime.UtcNow;
+                    updated++;
+                }
+            }
+
+            await _productRepo.SaveChangesAsync();
+            _logger.LogInformation("Обновление цен из HTML завершено. Обновлено: {Updated}", updated);
+            return updated;
+        }
+
         private List<Product> ParseHtml(string html)
         {
             var products = new List<Product>();
@@ -115,7 +151,7 @@ namespace Services.Services
 
         private string Clean(string s) =>
             System.Web.HttpUtility.HtmlDecode(
-                Regex.Replace(s, @"<[^>]+>", "").Trim()); // убираем теги вроде <span class="cat">
+                Regex.Replace(s, @"<[^>]+>", "").Trim()); 
 
         private decimal? ParseDec(string s) =>
             decimal.TryParse(

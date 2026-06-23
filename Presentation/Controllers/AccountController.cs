@@ -12,19 +12,22 @@ public class AccountController : Controller
     private readonly IFavoriteService             _favoriteService;
     private readonly IRecipeService               _recipeService;
     private readonly INutritionSummaryService     _nutritionSummary;
+    private readonly IMealPlanService             _mealPlanService;
 
     public AccountController(
         ILogger<AccountController> logger,
         IUserService               userService,
         IFavoriteService           favoriteService,
         IRecipeService             recipeService,
-        INutritionSummaryService   nutritionSummary)
+        INutritionSummaryService   nutritionSummary,
+        IMealPlanService           mealPlanService)
     {
         _logger           = logger;
         _userService      = userService;
         _favoriteService  = favoriteService;
         _recipeService    = recipeService;
         _nutritionSummary = nutritionSummary;
+        _mealPlanService  = mealPlanService;
     }
 
     private Guid? CurrentUserId
@@ -78,16 +81,30 @@ public class AccountController : Controller
         if (!CurrentUserId.HasValue)
             return RedirectToAction("AuthPage");
 
-        var user      = await _userService.GetByIdAsync(CurrentUserId.Value);
-        var favorites = await _favoriteService.GetFavoritesAsync(CurrentUserId.Value);
-        var myRecipes = await _recipeService.GetByAuthorAsync(CurrentUserId.Value);
-
-        var summary = await _nutritionSummary.GetTodayAsync(CurrentUserId.Value);
+        var user        = await _userService.GetByIdAsync(CurrentUserId.Value);
+        var favorites   = await _favoriteService.GetFavoritesAsync(CurrentUserId.Value);
+        var myRecipes   = await _recipeService.GetByAuthorAsync(CurrentUserId.Value);
+        var summary     = await _nutritionSummary.GetTodayAsync(CurrentUserId.Value);
+        var todayMeals  = await _mealPlanService.GetTodayMealsAsync(CurrentUserId.Value);
 
         ViewBag.TodayKcal   = summary.Kcal;
         ViewBag.TodayP      = summary.Protein;
         ViewBag.TodayF      = summary.Fat;
         ViewBag.TodayC      = summary.Carbs;
+        ViewBag.TodayMeals  = todayMeals;
+        ViewBag.PlanCount   = todayMeals.Count > 0 ? 1 : 0;
+
+        // TodaySlots — как на Home/Index: группируем PlannedMeal по MealSlot
+        var todaySlots = todayMeals
+            .Where(m => m.MealSlot != null)
+            .GroupBy(m => m.MealSlot)
+            .Select(g => g.Key)
+            .OrderBy(s => s.MealType?.Order ?? 0)
+            .ToList();
+        ViewBag.TodaySlots = todaySlots;
+
+        ViewBag.ArchivedPlanCount = (await _mealPlanService.GetHistoryAsync(CurrentUserId.Value)).Count;
+
         ViewBag.CurrentUser = user;
         ViewBag.Favorites   = favorites;
         ViewBag.MyRecipes   = myRecipes;

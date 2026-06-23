@@ -70,7 +70,7 @@ public class MealPlanController : Controller
             protein  = (int)Math.Round(meal.Recipe.ProteinPerServing  * servings),
             fat      = (int)Math.Round(meal.Recipe.FatPerServing      * servings),
             carbs    = (int)Math.Round(meal.Recipe.CarbsPerServing    * servings),
-            cost     = Math.Round(meal.Recipe.TotalCost * servings, 2)
+            cost     = Math.Round(meal.Recipe.CostPerServing * servings, 2)
         });
     }
 
@@ -184,6 +184,8 @@ public class MealPlanController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> GenerateWeek(GenerateWeekViewModel model)
     {
+        Console.WriteLine($"[DEBUG] Получено с формы: DailyCalories={model.DailyCalories}, Goal={model.Goal}, MealsPerDay={model.MealsPerDay}, WeeklyBudget={model.WeeklyBudget}, ConsiderBudget={model.ConsiderBudget}");
+        
         if (!CurrentUserId.HasValue) return RedirectToAction("AuthPage", "Account");
         if (!ModelState.IsValid)     return View(model);
 
@@ -199,9 +201,7 @@ public class MealPlanController : Controller
         {
             UserId                = CurrentUserId.Value,
             DailyCalories         = model.DailyCalories,
-            Goal = Enum.TryParse<NutritionGoal>(model.Goal, out var goal)
-                ? goal
-                : NutritionGoal.Maintain,
+            Goal = MapGoal(model.Goal),
             ConsiderBudget        = model.ConsiderBudget,
             WeeklyBudget          = model.WeeklyBudget,
             Vegetarian            = model.Vegetarian,
@@ -219,6 +219,9 @@ public class MealPlanController : Controller
             LunchType             = lunch,
             DinnerType            = dinner,
             SnackType             = snack,
+            ProteinGoal           = model.ProteinGoal,
+            FatGoal               = model.FatGoal,
+            CarbsGoal             = model.CarbsGoal,
         };
 
         var newPlan = _generator.Generate(request);
@@ -227,6 +230,14 @@ public class MealPlanController : Controller
         {
             ModelState.AddModelError("", "Нет подходящих рецептов. Попробуйте смягчить ограничения.");
             return View(model);
+        }
+
+        if (newPlan.BudgetWasInfeasible)
+        {
+            TempData["BudgetWarning"] =
+                $"Бюджет {model.WeeklyBudget:F0}₽/нед слишком мал для {model.DailyCalories} ккал/день " +
+                $"при {model.MealsPerDay} приёмах пищи в день. План сгенерирован, но калорийность ниже цели. " +
+                $"Увеличьте бюджет или уменьшите калорийность для точного соответствия.";
         }
 
         newPlan.ConsiderBudget   = model.ConsiderBudget;
@@ -289,7 +300,7 @@ public class MealPlanController : Controller
         if (plan == null) return NotFound();
 
         var currentKcal = meal.Recipe?.CaloriesPerServing ?? 0;
-        var currentCost = meal.Recipe?.TotalCost         ?? 0;
+        var currentCost = meal.Recipe?.CostPerServing ?? 0;
         // Роль блюда — чтобы подбирать замену с тем же тегом
         var role = meal.Role;
 
@@ -331,7 +342,7 @@ public class MealPlanController : Controller
             .Where(r => !usedIds.Contains(r.Id))
             .Where(r => !HasExcludedIngredients(r, excluded))
             .Where(r => MatchesDiet(r, dietModel))
-            .Where(r => !plan.ConsiderBudget || r.TotalCost <= budgetLimit)
+            .Where(r => !plan.ConsiderBudget || r.CostPerServing <= budgetLimit)
             // Подбираем замену с тем же тегом роли (если тег задан)
             .Where(r => role == RecipeTag.None || r.HasTag(role))
             .ToList();
@@ -345,7 +356,7 @@ public class MealPlanController : Controller
                 .Where(r => !usedIds.Contains(r.Id))
                 .Where(r => !HasExcludedIngredients(r, excluded))
                 .Where(r => MatchesDiet(r, dietModel))
-                .Where(r => !plan.ConsiderBudget || r.TotalCost <= budgetLimit)
+                .Where(r => !plan.ConsiderBudget || r.CostPerServing <= budgetLimit)
                 .ToList();
         }
 
@@ -374,7 +385,7 @@ public class MealPlanController : Controller
             protein  = (int)Math.Round(replacement.ProteinPerServing),
             fat      = (int)Math.Round(replacement.FatPerServing),
             carbs    = (int)Math.Round(replacement.CarbsPerServing),
-            cost     = Math.Round(replacement.TotalCost, 2)
+            cost     = Math.Round(replacement.CostPerServing, 2)
         });
     }
     
@@ -398,7 +409,7 @@ public class MealPlanController : Controller
             protein  = (int)Math.Round(recipe.ProteinPerServing),
             fat      = (int)Math.Round(recipe.FatPerServing),
             carbs    = (int)Math.Round(recipe.CarbsPerServing),
-            cost     = Math.Round(recipe.TotalCost, 2)
+            cost     = Math.Round(recipe.CostPerServing, 2)
         });
     }
 
@@ -462,7 +473,7 @@ public class MealPlanController : Controller
             protein       = (int)Math.Round(recipe.ProteinPerServing  * servings),
             fat           = (int)Math.Round(recipe.FatPerServing      * servings),
             carbs         = (int)Math.Round(recipe.CarbsPerServing    * servings),
-            cost          = Math.Round(recipe.TotalCost * servings, 2)
+            cost          = Math.Round(recipe.CostPerServing * servings, 2)
         });
     }
 
@@ -489,16 +500,16 @@ public class MealPlanController : Controller
         foreach (var r in recipes)
         {
             if (model.AvoidRepeats && used.Contains(r.Id))        continue;
-            if (model.ConsiderBudget && r.TotalCost > budgetLimit) continue;
+            if (model.ConsiderBudget && r.CostPerServing > budgetLimit) continue;
 
             double kcalDiff  = Math.Abs((double)r.CaloriesPerServing - targetKcal);
             double kcalScore = 1.0 - Math.Min(kcalDiff / stats.KcalRange, 1.0);
 
             double costScore = preferCostNear >= 0
                 ? 1.0 - Math.Min(
-                    Math.Abs((double)(r.TotalCost - preferCostNear)) / stats.CostRange, 1.0)
+                    Math.Abs((double)(r.CostPerServing - preferCostNear)) / stats.CostRange, 1.0)
                 : 1.0 - Math.Min(
-                    ((double)r.TotalCost - stats.CostMin) / stats.CostRange, 1.0);
+                    ((double)r.CostPerServing - stats.CostMin) / stats.CostRange, 1.0);
 
             double score = wKcal * kcalScore
                            + wCost * costScore
@@ -520,7 +531,7 @@ public class MealPlanController : Controller
         foreach (var r in recipes)
         {
             double k = (double)r.CaloriesPerServing;
-            double c = (double)r.TotalCost;
+            double c = (double)r.CostPerServing;
             if (k < kcalMin) kcalMin = k;
             if (k > kcalMax) kcalMax = k;
             if (c < costMin) costMin = c;
@@ -591,6 +602,16 @@ public class MealPlanController : Controller
     private static MealType RequireMealType(IEnumerable<MealType> types, string name) =>
         types.FirstOrDefault(mt => mt.Name == name)
         ?? throw new InvalidOperationException($"Тип приёма пищи '{name}' не найден в БД.");
+
+    private static NutritionGoal MapGoal(string goal) => goal.ToLowerInvariant() switch
+    {
+        "lose" => NutritionGoal.Deficit,
+        "lose_fast" => NutritionGoal.Deficit,
+        "gain" => NutritionGoal.Surplus,
+        "gain_lean" => NutritionGoal.Surplus,
+        "maintain" => NutritionGoal.Maintain,
+        _ => NutritionGoal.Maintain
+    };
 
     private record RecipeStats(double KcalMin, double KcalRange, double CostMin, double CostRange);
     
@@ -664,6 +685,22 @@ public class MealPlanController : Controller
         if (plan == null || plan.UserId != CurrentUserId.Value) return NotFound();
 
         await _mealPlanService.DeleteAsync(id);
+        return RedirectToAction("History");
+    }
+
+    /// <summary>
+    /// POST /MealPlan/DeleteAllPlans — удалить все archived-планы пользователя.
+    /// Активный план (IsArchived = false) не удаляется.
+    /// </summary>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> DeleteAllPlans()
+    {
+        if (!CurrentUserId.HasValue) return RedirectToAction("AuthPage", "Account");
+
+        await _mealPlanService.DeleteAllForUserAsync(CurrentUserId.Value);
+
+        TempData["SuccessMessage"] = "Все архивные планы удалены.";
         return RedirectToAction("History");
     }
 }

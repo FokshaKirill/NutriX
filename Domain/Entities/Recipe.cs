@@ -1,4 +1,7 @@
-﻿using Domain.Enums;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using Domain.Enums;
 
 namespace Domain.Entities
 {
@@ -45,5 +48,9 @@ namespace Domain.Entities
 
         /// <summary>Проверяет наличие тега (поддерживает комбинированные флаги).</summary>
         public bool HasTag(RecipeTag tag) => Tags.HasFlag(tag);
+        
+        public bool IsRealisticSingleServing =>
+            CaloriesPerServing >= 30 && CaloriesPerServing <= 1500 &&
+            CostPerServing >= 0 && CostPerServing <= 500;
     }
 }

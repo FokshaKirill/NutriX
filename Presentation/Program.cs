@@ -126,16 +126,18 @@ using (var scope = app.Services.CreateScope())
         var context = services.GetRequiredService<DatabaseContext>();
         context.Database.Migrate();
         
-        // DatabaseInitializer.Seed(context);
-        var mealTypes = new[]
+        if (!context.MealTypes.Any())
         {
-            new MealType { Id = Guid.NewGuid(), Name = "Завтрак", Order = 0 },
-            new MealType { Id = Guid.NewGuid(), Name = "Обед", Order = 1 },
-            new MealType { Id = Guid.NewGuid(), Name = "Ужин", Order = 2 },
-            new MealType { Id = Guid.NewGuid(), Name = "Перекус", Order = 3 }
-        };
-
-        context.MealTypes.AddRange(mealTypes);
+            var mealTypes = new[]
+            {
+                new MealType { Id = Guid.NewGuid(), Name = "Завтрак", Order = 0 },
+                new MealType { Id = Guid.NewGuid(), Name = "Обед", Order = 1 },
+                new MealType { Id = Guid.NewGuid(), Name = "Ужин", Order = 2 },
+                new MealType { Id = Guid.NewGuid(), Name = "Перекус", Order = 3 }
+            };
+            
+            context.MealTypes.AddRange(mealTypes);
+        }
         context.SaveChanges();
     }
     catch (Exception ex)

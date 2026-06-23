@@ -67,5 +67,10 @@ namespace Services.Interfaces
         Task UpdateServingsAsync(Guid plannedMealId, int servings);
         Task RemoveMealAsync(Guid plannedMealId);
         Task<List<MealPlan>> GetHistoryAsync(Guid userId);
+        
+        /// <summary>
+        /// Удалить все планы пользователя (кроме текущего).
+        /// </summary>
+        Task DeleteAllForUserAsync(Guid userId);
     }
 }
